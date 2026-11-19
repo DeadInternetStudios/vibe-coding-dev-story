@@ -154,6 +154,14 @@ describe('your best score of the day', () => {
     }
   });
 
+  it('does not mistake a name from the object prototype for a day', () => {
+    vi.stubGlobal('localStorage', fakeStorage());
+    for (const key of ['constructor', 'toString', '__proto__']) {
+      expect(loadDailyBest(key)).toBeNull();
+      expect(recordDaily(key, run(5))).toEqual({ best: run(5), improved: false });
+    }
+  });
+
   it('keeps the good days when another day in the saved value is junk', () => {
     vi.stubGlobal('localStorage', fakeStorage({ 'vcds.daily.v1': '{"2026-11-18":{"score":70,"rank":"B"},"2026-11-19":"oops"}' }));
     expect(loadDailyBest('2026-11-18')).toEqual(run(70));

@@ -40,14 +40,14 @@ function isBest(v: unknown): v is DailyBest {
   return typeof b.score === 'number' && Number.isFinite(b.score) && typeof b.rank === 'string';
 }
 
-function loadStore(): Record<string, DailyBest> {
+function loadStore(): Map<string, DailyBest> {
   const raw = readJson<unknown>(STORE_KEY);
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
-  return Object.fromEntries(Object.entries(raw).filter(([, v]) => isBest(v)));
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return new Map();
+  return new Map(Object.entries(raw).filter((entry): entry is [string, DailyBest] => isBest(entry[1])));
 }
 
 export function loadDailyBest(key: string): DailyBest | null {
-  return loadStore()[key] ?? null;
+  return loadStore().get(key) ?? null;
 }
 
 export interface DailyResult {
@@ -60,11 +60,11 @@ export interface DailyResult {
 /** Keep the score if it is the best of its day. Only the newest days are kept. */
 export function recordDaily(key: string, run: DailyBest): DailyResult {
   const store = loadStore();
-  const old = store[key];
+  const old = store.get(key);
   const improved = old !== undefined && run.score > old.score;
   const best = old === undefined || improved ? run : old;
-  store[key] = best;
-  const days = Object.keys(store).sort().slice(-KEEP_DAYS);
-  writeJson(STORE_KEY, Object.fromEntries(days.map((d) => [d, store[d]])));
+  store.set(key, best);
+  const days = [...store.keys()].sort().slice(-KEEP_DAYS);
+  writeJson(STORE_KEY, Object.fromEntries(days.map((d) => [d, store.get(d)])));
   return { best, improved };
 }
