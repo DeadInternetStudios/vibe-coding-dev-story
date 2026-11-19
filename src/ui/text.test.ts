@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { fit } from './text';
+import { KINDS } from '../content/kinds';
+import { fit, payWord } from './text';
+
+describe('payWord', () => {
+  it('gives every kind in the game a word, from the lowest paying to the highest', () => {
+    const order = ['PEANUTS', 'A BIT', 'OK', 'WELL', 'HUGE'];
+    const words = KINDS.map((k) => payWord(k.money));
+    for (const w of words) expect(order).toContain(w);
+    expect(new Set(words)).toEqual(new Set(order));
+    for (let money = 2; money < 10; money++) expect(order.indexOf(payWord(money + 1))).toBeGreaterThanOrEqual(order.indexOf(payWord(money)));
+  });
+
+  it('fits the title row of the smallest wizard with its heading', () => {
+    for (const money of [2, 4, 6, 8, 10]) expect(`PAYS ${payWord(money)}`.length).toBeLessThanOrEqual(12);
+  });
+});
 
 describe('fit', () => {
   it('leaves short text alone', () => {

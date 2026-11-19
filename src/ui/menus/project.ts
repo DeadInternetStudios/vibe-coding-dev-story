@@ -15,7 +15,7 @@ import { Modal } from '../modal';
 import { FACE_H, FACE_PITCH, FACE_ROW_H, NAME_H, START_FROM_BOTTOM, START_H, wizardRows } from './projectLayout';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
-import { STAT_WORD_7 } from '../text';
+import { STAT_WORD_7, payWord } from '../text';
 
 const COLORS: Record<StatKey, number> = { vibes: C.pink, features: C.sky, polish: C.yellow, stability: C.mint, security: C.violet2 };
 
@@ -107,7 +107,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     () => (unlocked(game, c.kinds[st.kind]!.unlock) ? `kind_${c.kinds[st.kind]!.id}` : 'lock'),
     () => {
       const k = c.kinds[st.kind]!;
-      return unlocked(game, k.unlock) ? `PAYS ${'$'.repeat(Math.max(1, Math.round(k.money / 2)))}` : '';
+      return unlocked(game, k.unlock) ? `PAYS ${payWord(k.money)}` : '';
     },
   );
   const nicheRow = cycler(
@@ -210,7 +210,11 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   // narrow layout: the name row sits right above, and the tail of the Q must not reach the first bar
   const qLabel = label(scene, fx + rw - 2, fy - (wide ? 2 : 4), '', { font: F.title, tint: C.teal1, origin: [1, 0] });
   m.add(qLabel);
+  // the number is the one-line verdict on the build, so it says what it is
+  const qWord = label(scene, fx + rw - 2, fy + 1, 'QUALITY', { font: F.caps, tint: C.teal1, origin: [1, 0] });
+  m.add(qWord);
   const statBars = new Map<StatKey, ReturnType<typeof bar>>();
+  const statNums = new Map<StatKey, Phaser.GameObjects.BitmapText>();
   const barX = fx + 49;
   const barW = rw - 71;
   const ticks: Phaser.GameObjects.Image[] = [];
@@ -221,6 +225,8 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     const b = bar(scene, barX, y, barW, 6, COLORS[k], 0);
     m.add(b);
     statBars.set(k, b);
+    const num = m.add(label(scene, fx + rw - 1, y, '', { font: F.body, tint: C.ink3, origin: [1, 0] }));
+    statNums.set(k, num);
     const tick = rect(scene, barX, y - 1, 1, 8, C.white, 0.9);
     m.add(tick);
     ticks.push(tick);
@@ -262,7 +268,10 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     const lockedNiche = !unlocked(game, n.unlock);
     const p = plan();
     const fc = game.forecast({ kind: p.kind, scope: p.scope, tool: p.tool, team: p.team });
-    for (const key of STAT_KEYS) statBars.get(key)?.set(Math.min(1, fc.stats[key] / 100), true);
+    for (const key of STAT_KEYS) {
+      statBars.get(key)?.set(Math.min(1, fc.stats[key] / 100), true);
+      statNums.get(key)?.setText(String(Math.round(fc.stats[key])));
+    }
     const kneeAt = kneeOf(st.scope, yearOf(s.day)).at;
     for (const tick of ticks) {
       tick.setVisible(kneeAt < 100);
@@ -270,7 +279,8 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     }
     tickNote.setText(kneeAt < 100 ? 'Small builds stall past the tick.' : '');
     const q = Math.round(qualityOf(c, k.id, fc.stats));
-    qLabel.setText(`Q${q}`);
+    qLabel.setText(String(q));
+    qWord.setX(qLabel.x - qLabel.width - 3);
     const weeks = fc.days / 7;
     timeLabel.setText(`About ${weeks < 1.2 ? `${fc.days} days` : `${weeks.toFixed(1)} weeks`} of work`);
     const err = lockedKind ? 'That kind of app is still locked.' : lockedNiche ? 'That audience is still locked.' : game.canStart(p);
