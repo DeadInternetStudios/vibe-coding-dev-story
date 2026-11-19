@@ -16,6 +16,9 @@ import { openHall } from '../ui/modals/hall';
 import { RANK_COLOR, RANK_NAME } from '../ui/ranks';
 import { Speech } from '../ui/speech';
 
+/** The ending card when it opens: the orange bar and a strip under it. It grows from there. */
+const OPENING_H = 24;
+
 const SKY: Record<string, [number, number, number]> = {
   S: [0x2a1650, 0x7a4ad1, 0xff8a30],
   A: [0x23356e, 0x3f6bd1, 0x72aaf5],
@@ -140,8 +143,38 @@ export class EndingScene extends Phaser.Scene {
     const x = Math.floor((L.W - w) / 2);
     const y = Math.floor((L.H - h) / 2);
     const card = this.add.container(x, y).setDepth(DEPTH.panel);
-    const frame = panel(this, 0, 0, w, h, 'paper');
+    // the card is only as tall as what is on it: it opens as the bar with a strip under it and grows a step as each part lands,
+    // so there is never a tall empty slab waiting for the stamp or the numbers
+    const frame = panel(this, 0, 0, w, instant ? h : OPENING_H, 'paper');
     card.add(frame);
+    let drawnH = instant ? h : OPENING_H;
+    let wantedH = drawnH;
+    let growing: Phaser.Tweens.Tween | null = null;
+    const growTo = (to: number): Promise<void> => {
+      const target = Math.min(h, Math.ceil(to));
+      if (target <= wantedH) return Promise.resolve();
+      wantedH = target;
+      growing?.stop();
+      if (instant || this.fast || app.settings.reducedMotion) {
+        drawnH = target;
+        frame.setBoxSize(w, target);
+        return Promise.resolve();
+      }
+      return new Promise<void>((res) => {
+        growing = this.tweens.addCounter({
+          from: drawnH,
+          to: target,
+          duration: 150,
+          ease: 'Sine.easeOut',
+          onUpdate: (tw) => {
+            drawnH = Math.round(tw.getValue() ?? target);
+            frame.setBoxSize(w, drawnH);
+          },
+          onComplete: () => res(),
+          onStop: () => res(),
+        });
+      });
+    };
     card.add(panel(this, 0, 0, w, 15, rank === 'F' || rank === 'D' ? 'btnBerry' : 'btnOrange', false));
     card.add(label(this, w / 2, 3, s.daily ? `THE END - ${dailyTag(s.daily)}` : 'THE END', { font: F.caps, tint: C.white, origin: [0.5, 0] }));
     if (!instant) {
@@ -173,7 +206,13 @@ export class EndingScene extends Phaser.Scene {
     if (instant) {
       bodyT.setText(text);
     } else {
-      frame.setBoxSize(w, wordsH);
+      // the card unfolds to hold the title and the words, which come in as it opens
+      for (const t of [titleT, tagT]) {
+        t.setAlpha(0);
+        this.tweens.add({ targets: t, alpha: 1, duration: 200 });
+      }
+      await growTo(wordsH);
+      if (!alive()) return;
       const more = hintChip(this, w - 6, wordsH - 17, 'TAP: SHOW ALL', true);
       card.add(more);
       const sp = new Speech(this, bodyT);
@@ -186,19 +225,14 @@ export class EndingScene extends Phaser.Scene {
       more.destroy();
       if (!alive()) return;
       await this.wait(250);
-      // the card drops down to hold the stamp and the numbers
-      if (app.settings.reducedMotion) frame.setBoxSize(w, h);
-      else {
-        await new Promise<void>((res) => {
-          this.tweens.addCounter({ from: wordsH, to: h, duration: 240, ease: 'Sine.easeOut', onUpdate: (tw) => frame.setBoxSize(w, Math.round(tw.getValue() ?? h)), onComplete: () => res() });
-        });
-      }
       if (!alive()) return;
     }
 
-    // the rank stamp
+    // the rank stamp: the card drops down just far enough to hold it
     const sx = wide ? w - 54 : w / 2;
     const sy = wide ? 52 : bodyY + bodyH + 38;
+    await growTo(sy + 38);
+    if (!alive()) return;
     const stamp = this.add.container(sx, sy);
     stamp.add(rect(this, -27, -30, 54, 60, C.ink0, 1));
     stamp.add(rect(this, -26, -29, 52, 58, col, 1));
@@ -235,6 +269,7 @@ export class EndingScene extends Phaser.Scene {
       const [name, val, tint] = rows[i]!;
       const rx = 10 + (i % 2) * (colW + 4);
       const ry = gy + Math.floor(i / 2) * (rowH + 2);
+      void growTo(ry + rowH + 6);
       card.add(panel(this, rx, ry, colW, rowH, 'paperDim', false));
       card.add(label(this, rx + 4, ry + 4, name, { font: F.body, tint: C.ink2 }));
       const v = label(this, rx + colW - 4, ry + 3, val, { font: F.caps, tint, origin: [1, 0] });
@@ -249,6 +284,7 @@ export class EndingScene extends Phaser.Scene {
     }
 
     const sy2 = gy + Math.ceil(rows.length / 2) * (rowH + 2) + 3;
+    void growTo(sy2 + (this.dailyResult ? 26 + 9 : 15 + 9) + 6);
     const scoreT = label(this, w / 2, sy2, '', { font: F.head, tint: C.ink1, origin: [0.5, 0] });
     card.add(scoreT);
     const hallT = label(this, w / 2, sy2 + 15, '', { font: F.body, tint: C.ink3, origin: [0.5, 0] });
@@ -288,7 +324,8 @@ export class EndingScene extends Phaser.Scene {
     }
     if (!alive()) return;
 
-    // buttons
+    // buttons: the card reaches its full height under them
+    void growTo(h);
     const by = h - 24;
     const count = 4;
     const bw = Math.floor((w - 12 - (count - 1) * 4) / count);
