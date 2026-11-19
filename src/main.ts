@@ -76,8 +76,11 @@ function onResize() {
   cancelAnimationFrame(pending);
   pending = requestAnimationFrame(() => {
     const next = currentViewport();
-    game.scale.setZoom(next.cssPerPx);
     if (next.w !== game.scale.width || next.h !== game.scale.height) game.scale.resize(next.w, next.h);
+    // Last, and every time. resize() only restyles the canvas when the zoom is not 1, so at zoom 1 (a small window on a screen
+    // with one device pixel per CSS pixel) turning the screen on its side left the old width and height on the canvas.
+    // setZoom() always writes them, and measures the canvas again so taps land where they should.
+    game.scale.setZoom(next.cssPerPx);
   });
 }
 app.refreshViewport = onResize;
