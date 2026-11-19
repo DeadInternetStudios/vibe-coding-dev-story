@@ -8,7 +8,7 @@ import {
   type Adsr,
   type EnvPoint,
 } from './synth/envelope';
-import { CEILING, KNEE, PEAK_LIMIT, softClipCurve, volumeToGain } from './synth/master';
+import { CEILING, GUARD_KNEE, GUARD_MAX, KNEE, PEAK_LIMIT, guardCurve, softClipCurve, volumeToGain } from './synth/master';
 import {
   centsToRatio,
   clamp,
@@ -280,6 +280,31 @@ describe('master limiter curve', () => {
     expect(gainToDb(CEILING)).toBeCloseTo(-3.5, 1);
     expect(gainToDb(PEAK_LIMIT)).toBeCloseTo(-3, 1);
     expect(CEILING).toBeLessThan(PEAK_LIMIT);
+  });
+
+  describe('the guard stage after it', () => {
+    const g = guardCurve(8193);
+    const gat = (x: number) => g[Math.round(((x + 1) / 2) * (g.length - 1))]!;
+
+    it('is exactly transparent up to just above the limiter ceiling', () => {
+      expect(GUARD_KNEE).toBeGreaterThan(CEILING);
+      for (const x of [0, 0.2, 0.5, CEILING, GUARD_KNEE - 0.001, -CEILING, -0.3]) expect(gat(x)).toBeCloseTo(x, 3);
+    });
+
+    it('never outputs more than the promised peak, even for input far past full scale', () => {
+      expect(GUARD_MAX).toBeLessThan(PEAK_LIMIT);
+      expect(Math.max(...g)).toBeLessThanOrEqual(GUARD_MAX);
+      expect(Math.min(...g)).toBeGreaterThanOrEqual(-GUARD_MAX);
+      expect(gat(1)).toBeGreaterThan(GUARD_MAX - 0.001);
+    });
+
+    it('is odd, monotonic, and soaks up the limiter overshoot smoothly', () => {
+      for (let i = 0; i < g.length; i++) expect(g[i]).toBeCloseTo(-g[g.length - 1 - i]!, 6);
+      for (let i = 1; i < g.length; i++) expect(g[i]!).toBeGreaterThanOrEqual(g[i - 1]! - 1e-9);
+      // a +0.4 dB overshoot above the ceiling lands under the promise, a +1.6 dB one too
+      expect(gat(CEILING * 1.047)).toBeLessThan(GUARD_MAX);
+      expect(gat(CEILING * 1.2)).toBeLessThan(GUARD_MAX);
+    });
   });
 
   it('slider volumes are squared, clamped and NaN safe', () => {

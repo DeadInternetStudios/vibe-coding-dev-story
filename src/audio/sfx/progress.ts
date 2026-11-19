@@ -1,8 +1,7 @@
 import type { SfxIdOf } from '../ids';
-import type { LayerSpec } from '../synth/voice';
+import { BELL } from './parts';
 import { hit, noise, slide, tone, type SfxBody } from './dsl';
 
-const BELL: readonly LayerSpec[] = [{ wave: 'sine' }, { wave: 'sine', ratio: 2.4, vol: 0.4 }, { wave: 'sine', ratio: 4.1, vol: 0.12 }];
 const LEVEL_UP_RUN = ['C5', 'E5', 'G5', 'C6', 'E6'] as const;
 const GO_RUN = ['C5', 'E5', 'G5', 'C6', 'E6', 'G6', 'C7'] as const;
 
