@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import { label, rect, type LabelOpts, type Scene } from './kit';
+import { pagesOf, type Page } from './scrollMath';
 
 /** Where a letter of the run sits, measured once: its left edge and its right edge in pixels from the start of the run. */
 interface Span {
@@ -41,6 +42,17 @@ export class ScrollText {
   /** x of the run's left end, as last placed. */
   get x(): number {
     return this.runX;
+  }
+
+  /** The run cut into screenfuls that fit the window, with no word cut. */
+  pages(window: number): Page[] {
+    return pagesOf(this.full, this.spans, window);
+  }
+
+  /** Shows just the letters of one page, with its first letter at x. */
+  showPage(page: Page, x: number): void {
+    this.setWindow(x, x + (page.to - page.from) + 0.5);
+    this.place(x - page.from);
   }
 
   setWindow(left: number, right: number): void {

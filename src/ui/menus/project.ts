@@ -56,8 +56,10 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const rngName = () => productName(new Rng(st.nameSeed), c.kinds[st.kind]!, c.niches[st.niche]!, s.shipped.map((a) => a.name));
 
   // ------------------------------------------------------------ cyclers
-  const cycler = (y: number, title: string, text: () => string, sub: () => string, subTint: () => number, step: (d: number) => void, icon: () => string) => {
+  const cycler = (y: number, title: string, text: () => string, sub: () => string, subTint: () => number, step: (d: number) => void, icon: () => string, tag?: () => string) => {
     m.add(label(scene, 6, y, title, { font: F.caps, tint: C.ink3 }));
+    // a short fact about the pick, on the title row at the right: it never has to wrap onto the row below
+    const tagText = tag ? m.add(label(scene, lw - 4, y, '', { font: F.caps, tint: C.green1, origin: [1, 0] })) : null;
     m.add(button(scene, 6, y + 9, 13, 15, '<', () => step(-1), { kind: 'plum' }));
     m.add(button(scene, lw - 7, y + 9, 13, 15, '>', () => step(1), { kind: 'plum' }));
     const face = panel(scene, 21, y + 9, lw - 30, 15, 'paperDim', false);
@@ -72,6 +74,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     return {
       paint: () => {
         t.setText(text());
+        tagText?.setText(tag?.() ?? '');
         sb.setText(sub());
         sb.setTint(subTint());
         const name = icon();
@@ -93,7 +96,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     },
     () => {
       const k = c.kinds[st.kind]!;
-      return unlocked(game, k.unlock) ? `${k.blurb}  Pays ${'$'.repeat(Math.max(1, Math.round(k.money / 2)))}` : lockText(k.unlock);
+      return unlocked(game, k.unlock) ? k.blurb : lockText(k.unlock);
     },
     () => (unlocked(game, c.kinds[st.kind]!.unlock) ? C.ink3 : C.berry1),
     (d) => {
@@ -102,6 +105,10 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       repaint();
     },
     () => (unlocked(game, c.kinds[st.kind]!.unlock) ? `kind_${c.kinds[st.kind]!.id}` : 'lock'),
+    () => {
+      const k = c.kinds[st.kind]!;
+      return unlocked(game, k.unlock) ? `PAYS ${'$'.repeat(Math.max(1, Math.round(k.money / 2)))}` : '';
+    },
   );
   const nicheRow = cycler(
     63,
@@ -200,7 +207,8 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   // ------------------------------------------------------------ forecast
   const fx = rx;
   m.add(label(scene, fx, fy, 'FORECAST', { font: F.caps, tint: C.ink3 }));
-  const qLabel = label(scene, fx + rw - 2, fy - 2, '', { font: F.title, tint: C.teal1, origin: [1, 0] });
+  // narrow layout: the name row sits right above, and the tail of the Q must not reach the first bar
+  const qLabel = label(scene, fx + rw - 2, fy - (wide ? 2 : 4), '', { font: F.title, tint: C.teal1, origin: [1, 0] });
   m.add(qLabel);
   const statBars = new Map<StatKey, ReturnType<typeof bar>>();
   const barX = fx + 49;

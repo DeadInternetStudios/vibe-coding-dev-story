@@ -58,3 +58,40 @@ export function coast(vel: number, dtMs: number): Coast {
   const next = vel * decay;
   return { move: vel * COAST_MS * (1 - decay), vel: Math.abs(next) < COAST_STOP ? 0 : next };
 }
+
+/** Where one letter of a line sits: its index in the text and its left and right edge, in pixels from the start of the line. */
+export interface LetterSpan {
+  idx: number;
+  left: number;
+  right: number;
+}
+
+/** One screenful of a line: the letters from `from` to `to`, in pixels from the start of the line. */
+export interface Page {
+  from: number;
+  to: number;
+}
+
+/**
+ * The screenfuls of a line that is read a window at a time, for a line that does not move: each is held for a moment,
+ * then the next. No word is cut, except one that is wider than the window, which is cut where the window ends.
+ */
+export function pagesOf(text: string, letters: readonly LetterSpan[], window: number): Page[] {
+  const pages: Page[] = [];
+  let i = 0;
+  while (i < letters.length) {
+    const from = letters[i]!.left;
+    let last = i;
+    let lastWordEnd = -1;
+    for (let j = i; j < letters.length && letters[j]!.right - from <= window; j++) {
+      last = j;
+      const after = letters[j + 1];
+      if (!after || text[after.idx] === ' ') lastWordEnd = j;
+    }
+    const end = lastWordEnd >= i ? lastWordEnd : last;
+    pages.push({ from, to: letters[end]!.right });
+    i = end + 1;
+    while (i < letters.length && text[letters[i]!.idx] === ' ') i++;
+  }
+  return pages;
+}

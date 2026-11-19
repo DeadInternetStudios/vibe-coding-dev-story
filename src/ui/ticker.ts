@@ -4,6 +4,7 @@ import { C, DEPTH, F } from '../core/theme';
 import { Rng } from '../sim/rng';
 import { label, rect } from './kit';
 import type { Layout } from './layout';
+import type { Page } from './scrollMath';
 import { BAND_END_W, bandEnds, ScrollText } from './scrollText';
 
 /** Pixels the strip moves each second. Slow enough to read on a phone. */
@@ -12,6 +13,8 @@ const HEADS_PER_RUN = 5;
 const BADGE_W = 27;
 const HEIGHT = 9;
 const SEPARATOR = '      +++      ';
+/** With reduced motion nothing slides: a headline is read a screenful at a time, each held this long. */
+const PAGE_MS = 2800;
 
 /**
  * A news strip under the top bar. The world comments on your startup in the
@@ -27,6 +30,9 @@ export class Ticker {
   private bag: string[] = [];
   private x = 0;
   private held = 0;
+  private reduced = false;
+  private pages: Page[] = [];
+  private page = 0;
 
   constructor(scene: Phaser.Scene, L: Layout, y: number, headlines: readonly string[]) {
     this.scene = scene;
@@ -47,10 +53,29 @@ export class Ticker {
 
   private show(y: number, depth: number): void {
     const text = new ScrollText(this.scene, y + 1, this.L.x0 + BADGE_W, this.L.x0 + this.L.cw, { font: F.body, tint: C.cream, depth: depth + 1 });
-    text.setRun(this.nextRun());
     this.text = text;
     this.parts.push(text.view);
-    this.x = app.settings.reducedMotion ? this.L.x0 + BADGE_W + BAND_END_W : this.L.x0 + this.L.cw;
+    this.reduced = app.settings.reducedMotion;
+    this.begin();
+  }
+
+  /** Start a new run of headlines in the way the player's motion setting asks for. */
+  private begin(): void {
+    const text = this.text!;
+    const { x0, cw } = this.L;
+    text.setRun(this.nextRun());
+    if (this.reduced) {
+      // the window is the clear middle of the strip, so no letter ever sits in a soft end
+      const left = x0 + BADGE_W + BAND_END_W;
+      const right = x0 + cw - BAND_END_W;
+      this.pages = text.pages(right - left);
+      this.page = 0;
+      this.held = 0;
+      text.showPage(this.pages[0]!, left);
+      return;
+    }
+    text.setWindow(x0 + BADGE_W, x0 + cw);
+    this.x = x0 + cw;
     text.place(this.x);
   }
 
@@ -67,13 +92,20 @@ export class Ticker {
   update(dtMs: number): void {
     const text = this.text;
     if (!text) return;
-    if (app.settings.reducedMotion) {
+    if (app.settings.reducedMotion !== this.reduced) {
+      this.reduced = app.settings.reducedMotion;
+      this.begin();
+    }
+    if (this.reduced) {
       this.held += dtMs;
-      if (this.held > 7000) {
-        this.held = 0;
-        text.setRun(this.nextRun());
-        text.place(this.x);
+      if (this.held < PAGE_MS) return;
+      this.held = 0;
+      this.page += 1;
+      if (this.page >= this.pages.length) {
+        this.begin();
+        return;
       }
+      text.showPage(this.pages[this.page]!, this.L.x0 + BADGE_W + BAND_END_W);
       return;
     }
     this.x -= (SPEED * dtMs) / 1000;
