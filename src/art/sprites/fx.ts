@@ -26,8 +26,8 @@ const SOLID: Record<string, readonly string[]> = {
   note: ['.VVV..', '.VvVV.', '.Vv.VV', '.Vv..V', 'VVv...', 'vv....'],
   // a drop of cold sweat
   sweat: ['.s..', '.ss.', 'swss', 'ssss', 'sBBB', '.BB.'],
-  // smoke that came out of something it should not have
-  puff: ['.we.e.', 'weeeee', 'eeeeeA', 'eeeAAA', '.AAAA.'],
+  // smoke that came out of something it should not have, and is not impressed
+  puff: ['.we.e.', 'weeeee', 'exeexA', 'eexxAA', '.AAAA.'],
   puffSmall: ['.we.', 'weee', '.AA.'],
   // a sleeper's letter, big and small
   zzz: ['wwwww', '...ss', '..ss.', '.ss..', 'sBBBB'],

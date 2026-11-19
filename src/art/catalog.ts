@@ -13,6 +13,7 @@ import { PORTRAIT_LOOKS, portraitPx } from './sprites/portraits';
 import { FX_NAMES, fxPx } from './sprites/fx';
 import { nightCity } from './sprites/scenery';
 import { logoPx } from './sprites/logo';
+import { glyphs } from './glyphs';
 import type { VoiceId } from '../content/vo';
 
 export interface CatalogItem {
@@ -38,6 +39,17 @@ function person(name: string, look: Look, pose: Pose, face: Face): CatalogItem {
 
 const POSES: Pose[] = ['stand', 'walkA', 'walkB', 'typeA', 'typeB', 'think', 'cheer', 'slump'];
 const FACES: Face[] = ['normal', 'happy', 'sad', 'panic', 'sleep', 'angry', 'smug', 'dead'];
+
+/** The title screen as the art is meant to sit: the logo over the night city. */
+function titleMock(): Px {
+  const W = 420;
+  const c = nightCity(W, 232);
+  const logo = logoPx();
+  c.blit(logo, Math.round((W - logo.w) / 2), 26);
+  const prompt = 'PRESS START';
+  glyphs(c, prompt, Math.round((W - (prompt.length * 4 - 1)) / 2), 104, 'white');
+  return c;
+}
 
 function mockOffice(floor: 'carpet' | 'wood' = 'carpet'): Px {
   const W = 14 * TILE;
@@ -91,7 +103,11 @@ export const CATALOG: Record<string, CatalogItem[]> = {
   decorCorner: decorGroup(['rack', 'barista']),
   boxes: (Object.keys(BOX_STYLES) as BoxName[]).map((name) => ({ name, make: () => box(28, 16, BOX_STYLES[name]) })),
   logo: [{ name: 'logo', make: logoPx }],
-  backdrop: [{ name: 'night-city', make: () => nightCity(420, 232) }, { name: 'night-city-tall', make: () => nightCity(252, 440) }],
+  backdrop: [
+    { name: 'night-city', make: () => nightCity(420, 232) },
+    { name: 'night-city-tall', make: () => nightCity(252, 440) },
+    { name: 'title-mock', make: titleMock },
+  ],
   mock: [{ name: 'office-carpet', make: () => mockOffice('carpet') }, { name: 'office-wood', make: () => mockOffice('wood') }],
   people: LOOKS.map((look, i) => person(`look${i}`, look, 'stand', 'normal')),
   poses: POSES.map((pose, i) => person(pose, LOOKS[i % LOOKS.length]!, pose, 'normal')),
