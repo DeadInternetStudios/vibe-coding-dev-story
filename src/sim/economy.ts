@@ -152,12 +152,16 @@ export function finalScore(ctx: Ctx): number {
   return Math.round(raw * Math.max(0.35, 1 - dilution));
 }
 
+/**
+ * Cut points set from bot runs: a careful bot lands near 28M, a sloppy one near 26M, a
+ * reckless one near 34M with luck, a button masher under 1M. S needs a better run than any bot's median.
+ */
 export function rankFor(score: number): EndingResult['rank'] {
-  if (score >= 20_000_000) return 'S';
-  if (score >= 11_000_000) return 'A';
-  if (score >= 5_000_000) return 'B';
-  if (score >= 1_500_000) return 'C';
-  if (score >= 400_000) return 'D';
+  if (score >= 36_000_000) return 'S';
+  if (score >= 26_000_000) return 'A';
+  if (score >= 14_000_000) return 'B';
+  if (score >= 4_000_000) return 'C';
+  if (score >= 800_000) return 'D';
   return 'F';
 }
 

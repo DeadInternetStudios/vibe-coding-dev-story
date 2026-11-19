@@ -20,6 +20,9 @@ interface Drifter {
   h: number;
   /** float position, the container gets the rounded one */
   y: number;
+  /** the stretch of screen it may float through, so it never crosses the logo or the buttons */
+  y0: number;
+  y1: number;
 }
 
 /** The front door. A night city, a bouncing logo, and Reddit comments floating up past the skyline. */
@@ -62,8 +65,6 @@ export class TitleScene extends Phaser.Scene {
     this.add.image(0, H - farH - 8, bake(this, `far:${W}x${farH}`, () => skyline(W, farH, 21, 0))).setOrigin(0, 0).setDepth(3);
     this.add.image(0, H - nearH, bake(this, `near:${W}x${nearH}`, () => skyline(W, nearH, 5, 1))).setOrigin(0, 0).setDepth(5);
 
-    this.buildDrifters(L.W, L.H);
-
     // logo, buttons: measure first so nothing collides
     const save = loadSave();
     const lh = (this.cache.bitmapFont.get(F.title + '-o').data as { lineHeight: number }).lineHeight;
@@ -75,7 +76,7 @@ export class TitleScene extends Phaser.Scene {
     const logoH = 2 * (lh * scale - (scale === 3 ? 12 : 6));
     const free = H - stripH - logoH - 14 - menuH;
     const logoY = Math.max(4, Math.floor(free * 0.32));
-    this.buildLogo(L.cx, logoY, scale, lh * scale - (scale === 3 ? 12 : 6));
+    const logoHalf = this.buildLogo(L.cx, logoY, scale, lh * scale - (scale === 3 ? 12 : 6));
     const subY = logoY + logoH + 2;
     const sub = label(this, L.cx, subY, 'a startup sim where the AI writes the code', { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     this.tweens.add({ targets: sub, alpha: { from: 1, to: 0.55 }, duration: 1300, yoyo: true, repeat: -1 });
@@ -99,6 +100,7 @@ export class TitleScene extends Phaser.Scene {
     }
     add('HALL OF FAME', 'cream', () => openHall(this), 'trophy');
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
+    this.buildDrifters(L, { half: Math.max(logoHalf, bw / 2), menuBottom: y, stripH });
 
     // ticker
     rect(this, 0, H - stripH, W, stripH, C.ink0, 0.92).setDepth(DEPTH.hud);
@@ -133,11 +135,14 @@ export class TitleScene extends Phaser.Scene {
     fadeTo(this, 'Office');
   }
 
-  private buildLogo(cx: number, y: number, scale: number, lineStep: number): void {
+  /** Returns half the width of the widest logo line, so other things can keep clear of it. */
+  private buildLogo(cx: number, y: number, scale: number, lineStep: number): number {
+    let half = 0;
     const place = (text: string, yy: number, tints: number[]) => {
       const data = this.cache.bitmapFont.get(F.title + '-o').data as { chars: Record<number, { xAdvance: number }> };
       const adv = (ch: string) => (data.chars[ch.charCodeAt(0)]?.xAdvance ?? 8) * scale;
       const total = [...text].reduce((s, ch) => s + adv(ch), 0);
+      half = Math.max(half, total / 2);
       let x = cx - total / 2;
       [...text].forEach((ch, i) => {
         if (ch !== ' ') {
@@ -150,9 +155,15 @@ export class TitleScene extends Phaser.Scene {
     };
     place(TITLE_A, y, [C.orange2, C.yellow]);
     place(TITLE_B, y + lineStep, [C.cream, C.mint]);
+    return half;
   }
 
-  private buildDrifters(W: number, H: number): void {
+  /**
+   * Reddit comments floating up past the city. Wide screens give them the lanes on both
+   * sides of the logo; narrow ones give them the strip between the buttons and the skyline.
+   */
+  private buildDrifters(L: ReturnType<typeof layoutOf>, at: { half: number; menuBottom: number; stripH: number }): void {
+    const { W, H } = L;
     const rng = new Rng(77);
     const amb = app.content.ambient.length ? app.content.ambient : [];
     const pool = amb.length
@@ -162,21 +173,33 @@ export class TitleScene extends Phaser.Scene {
           { user: 'u/clod', text: 'You are absolutely right!' },
           { user: 'u/karen', text: 'I want to speak to your AI' },
         ];
-    const count = Math.max(3, Math.min(6, Math.floor(W / 80)));
+    const w = 96;
+    const gap = 8;
+    const lanes: { x0: number; x1: number; y0: number; y1: number }[] = [];
+    const leftMax = L.cx - at.half - gap - w;
+    const rightMin = L.cx + at.half + gap;
+    const bottom = H - at.stripH - 4;
+    if (leftMax >= 4 && W - w - 4 >= rightMin) {
+      lanes.push({ x0: 4, x1: leftMax, y0: 26, y1: bottom });
+      lanes.push({ x0: rightMin, x1: W - w - 4, y0: 4, y1: bottom });
+    } else {
+      lanes.push({ x0: 2, x1: Math.max(2, W - w - 2), y0: at.menuBottom + 4, y1: bottom });
+    }
+    if (lanes[0]!.y1 - lanes[0]!.y0 < 40) return;
+    const count = lanes.length === 1 ? Math.min(3, Math.max(1, Math.floor((lanes[0]!.y1 - lanes[0]!.y0) / 60))) : 4;
     const picks = rng.shuffle(pool).slice(0, count);
     picks.forEach((p, i) => {
-      const w = 96;
-      const c = this.add.container(0, 0).setDepth(4);
+      const lane = lanes[i % lanes.length]!;
+      const c = this.add.container(0, 0).setDepth(6);
       const text = p.text.length > 56 ? `${p.text.slice(0, 54)}..` : p.text;
       const t = label(this, 5, 12, text, { font: F.body, tint: C.cream, maxWidth: w - 10 });
       const h = Math.max(24, 16 + t.height);
-      const bg = panel(this, 0, 0, w, h, 'night', false);
-      c.add([bg, t, label(this, 5, 3, p.user, { font: F.caps, tint: C.orange2 })]);
-      c.setAlpha(0.88);
-      const x = Math.floor(((i + 0.5) / count) * W - w / 2 + rng.range(-10, 10));
-      const y0 = rng.range(-h, H + H * 0.4);
-      c.setPosition(Math.max(2, Math.min(W - w - 2, x)), Math.round(y0));
-      this.drifters.push({ c, speed: rng.range(7, 13), h, y: y0 });
+      c.add([panel(this, 0, 0, w, h, 'night', false), t, label(this, 5, 3, p.user, { font: F.caps, tint: C.orange2 })]);
+      const x = lane.x1 > lane.x0 ? Math.round(rng.range(lane.x0, lane.x1)) : lane.x0;
+      const span = lane.y1 - lane.y0 + h;
+      const y = lane.y0 + ((i * 0.37 + rng.next() * 0.3) % 1) * span - h;
+      c.setPosition(x, Math.round(y));
+      this.drifters.push({ c, speed: rng.range(7, 12), h, y, y0: lane.y0, y1: lane.y1 });
     });
   }
 
@@ -186,8 +209,10 @@ export class TitleScene extends Phaser.Scene {
     for (const l of this.letters) l.t.y = Math.round(l.y + (reduce ? 0 : Math.sin(this.clock * 2.6 + l.i * 0.55) * 2));
     for (const d of this.drifters) {
       d.y -= (dt / 1000) * d.speed;
-      if (d.y < -d.h - 4) d.y = this.scale.height + 10;
+      if (d.y + d.h < d.y0) d.y = d.y1;
       d.c.y = Math.round(d.y);
+      const fade = Math.min(1, Math.max(0, (d.y + d.h - d.y0) / 14), Math.max(0, (d.y1 - d.y) / 14));
+      d.c.setAlpha(0.9 * fade);
     }
     if (this.ticker) {
       this.tickerX -= (dt / 1000) * 28;

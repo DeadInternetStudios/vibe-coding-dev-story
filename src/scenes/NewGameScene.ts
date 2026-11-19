@@ -145,11 +145,12 @@ export class NewGameScene extends Phaser.Scene {
     const cards: { box: ReturnType<typeof panel>; id: number }[] = [];
     const cardH = 31;
     FOUNDER_ORIGINS.forEach((o, i) => {
-      const box = panel(this, rightX, ry, rightW, cardH, i === f.origin ? 'sky' : 'paperDim');
+      const on = i === f.origin;
+      const box = panel(this, rightX, ry, rightW, cardH, on ? 'btnTeal' : 'paperDim');
       const top = Object.entries(o.skills).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => `+${ORIGIN_SKILL_NAMES[k] ?? k}`);
-      label(this, rightX + 5, ry + 4, o.name.toUpperCase(), { font: F.caps, tint: C.ink1 });
-      label(this, rightX + rightW - 5, ry + 4, top.join(' '), { font: F.body, tint: C.teal1, origin: [1, 0] });
-      label(this, rightX + 5, ry + 14, o.blurb, { font: F.body, tint: C.ink2, maxWidth: rightW - 10 });
+      label(this, rightX + 5, ry + 4, o.name.toUpperCase(), { font: F.caps, tint: on ? C.white : C.ink1 });
+      label(this, rightX + rightW - 5, ry + 4, top.join(' '), { font: F.body, tint: on ? C.yellow : C.teal1, origin: [1, 0] });
+      label(this, rightX + 5, ry + 14, o.blurb, { font: F.body, tint: on ? C.cream : C.ink2, maxWidth: rightW - 10 });
       const z = this.add.zone(rightX, ry, rightW, cardH).setOrigin(0, 0).setInteractive({ useHandCursor: true });
       z.on('pointerup', () => {
         f.origin = i;
@@ -167,7 +168,7 @@ export class NewGameScene extends Phaser.Scene {
     const dw = Math.floor((rightW - gap * 2) / 3);
     const dbtns: ButtonObj[] = [];
     DIFFICULTIES.forEach((d, i) => {
-      const b = button(this, rightX + i * (dw + gap), ry, dw, 15, d.name.toUpperCase(), () => {
+      const b = button(this, rightX + i * (dw + gap), ry, dw, 15, d.id.toUpperCase(), () => {
         f.difficulty = i;
         dbtns.forEach((bb, j) => bb.setKind(j === i ? 'teal' : 'plum'));
         blurb.setText(DIFFICULTIES[i]!.blurb);

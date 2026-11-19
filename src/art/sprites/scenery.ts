@@ -6,15 +6,24 @@ import { Px, type InkName } from '../pixel';
 import { Rng } from '../../sim/rng';
 
 /** Banded night sky, dark at the top, plum and orange glow at the horizon, with dithered seams. */
+/** 4x4 ordered dither thresholds, the classic pixel art way to fade one color into the next. */
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5] as const;
+
 export function nightSky(w: number, h: number): Px {
   const c = new Px(w, h);
-  const bands: InkName[] = ['ink0', 'ink1', 'violet0', 'violet1', 'berry0', 'orange0'];
-  const bh = Math.ceil(h / bands.length);
-  bands.forEach((b, i) => {
-    c.rect(0, i * bh, w, bh, b);
-    const next = bands[i + 1];
-    if (next) c.dither(0, (i + 1) * bh - 2, w, 2, b, next, 'checker');
-  });
+  // deep night at the top, a city sunset at the horizon, blended pixel by pixel
+  const ramp: InkName[] = ['ink0', 'ink0', 'ink1', 'blue0', 'violet0', 'violet1', 'berry0', 'berry1', 'orange0'];
+  const stops = [0, 0.16, 0.32, 0.46, 0.58, 0.7, 0.82, 0.93, 1];
+  for (let y = 0; y < h; y++) {
+    const t = h > 1 ? y / (h - 1) : 0;
+    let i = 0;
+    while (i < stops.length - 2 && t > stops[i + 1]!) i++;
+    const f = (t - stops[i]!) / (stops[i + 1]! - stops[i]!);
+    for (let x = 0; x < w; x++) {
+      const threshold = (BAYER[(y % 4) * 4 + (x % 4)]! + 0.5) / 16;
+      c.set(x, y, f > threshold ? ramp[i + 1]! : ramp[i]!);
+    }
+  }
   return c;
 }
 
