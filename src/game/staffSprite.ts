@@ -3,6 +3,7 @@ import { bakeIcon, bakePerson, bakeSeated } from '../core/bake';
 import { C, F } from '../core/theme';
 import type { Face, Pose } from '../art/sprites/people';
 import type { Staff } from '../sim/types';
+import { floatUp } from '../ui/fx';
 import { label, panel } from '../ui/kit';
 
 export type Mode = 'desk' | 'roam' | 'away' | 'arrive' | 'leave';
@@ -42,6 +43,8 @@ export class StaffSprite {
   private flash: { pose: Pose; face: Face; until: number } | null = null;
   working = false;
   tired = false;
+  /** seconds until the next little thing floats off this person */
+  private fxIn = 2 + Math.random() * 5;
   staff: Staff;
   private lastKey = '';
   roam = { x0: 0, y0: 0, x1: 100, y1: 100 };
@@ -148,6 +151,32 @@ export class StaffSprite {
   /** A burst pose: cheer on level up, slump on bad news. */
   emote(pose: Pose, face: Face, ms = 1400): void {
     this.flash = { pose, face, until: this.t + ms / 1000 };
+    if (pose === 'cheer') {
+      this.puff('heart', -5, 0);
+      this.puff('heart', 5, 220);
+      this.puff('sparkle', 0, 110);
+    } else if (pose === 'slump') {
+      this.puff('sweat', 6, 0);
+      this.puff('puffSmall', -5, 260);
+    }
+  }
+
+  /** One effect sprite floating up from just above the head. */
+  private puff(name: string, dx: number, delay = 0, rise = 14): void {
+    const top = this.mode === 'desk' ? this.root.y - 22 : this.root.y - 25;
+    floatUp(this.scene, name, this.root.x + dx, top, { parent: this.parent, delay, rise, sway: name === 'zzz' || name === 'zzzSmall' ? 2 : 1 });
+  }
+
+  /** Moods you can see: a sleeper snores, a happy one sends up a heart, a furious one steams. */
+  private ambient(): void {
+    if (this.tired && this.mode === 'desk') {
+      this.puff('zzz', 5, 0, 16);
+      this.puff('zzzSmall', 8, 500, 14);
+      return;
+    }
+    const mood = this.staff.mood;
+    if (mood >= 82 && Math.random() < 0.7) this.puff('heart', 3);
+    else if (mood < 22) this.puff(Math.random() < 0.5 ? 'vein' : 'sweat', 5);
   }
 
   say(text: string, ms = 3200): void {
@@ -221,6 +250,13 @@ export class StaffSprite {
     }
     this.img.setFlipX(this.flip);
     this.followBubble();
+    if (running && (this.mode === 'desk' || this.mode === 'roam')) {
+      this.fxIn -= ds;
+      if (this.fxIn <= 0) {
+        this.fxIn = 4 + Math.random() * 6;
+        this.ambient();
+      }
+    }
   }
 
   private step(ds: number, running: boolean): void {

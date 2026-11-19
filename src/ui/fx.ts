@@ -1,7 +1,79 @@
 import type Phaser from 'phaser';
 import { app } from '../core/app';
+import { bake } from '../core/bake';
 import { C, DEPTH } from '../core/theme';
+import { fxPx } from '../art/sprites/fx';
 import { rect } from './kit';
+
+/** The texture of one of the little effect sprites (heart, coin, sweat, zzz...). */
+export function fxKey(scene: Phaser.Scene, name: string): string {
+  return bake(scene, `fx:${name}`, () => fxPx(name)!);
+}
+
+export interface FloatOpts {
+  /** pixels it climbs */
+  rise?: number;
+  ms?: number;
+  /** side to side wobble, pixels */
+  sway?: number;
+  delay?: number;
+  depth?: number;
+  /** a container to live in, so it moves with the room */
+  parent?: Phaser.GameObjects.Container;
+}
+
+/** A small sprite that pops in above a point, drifts up and fades out. Cleans itself up. */
+export function floatUp(scene: Phaser.Scene, name: string, x: number, y: number, opts: FloatOpts = {}): void {
+  if (app.settings.reducedMotion) return;
+  const rise = opts.rise ?? 14;
+  const sway = opts.sway ?? 0;
+  const ms = opts.ms ?? 1500;
+  const img = scene.add.image(Math.round(x), Math.round(y), fxKey(scene, name)).setOrigin(0.5, 1).setDepth(opts.depth ?? 9600).setAlpha(0);
+  opts.parent?.add(img);
+  scene.tweens.addCounter({
+    from: 0,
+    to: 1,
+    duration: ms,
+    delay: opts.delay ?? 0,
+    onUpdate: (tw) => {
+      const k = tw.getValue() ?? 0;
+      img.setPosition(Math.round(x + Math.sin(k * Math.PI * 2) * sway), Math.round(y - rise * (1 - (1 - k) * (1 - k))));
+      img.setAlpha(k < 0.15 ? k / 0.15 : k > 0.6 ? (1 - k) / 0.4 : 1);
+    },
+    onComplete: () => img.destroy(),
+  });
+}
+
+/** The way a coin turns: face, three quarters, edge, three quarters again. */
+const COIN_TURN = ['coin', 'coinTurn', 'coinEdge', 'coinTurn'] as const;
+
+/** Coins thrown up from a point that spin and fall. For money that is worth a fuss. */
+export function coinShower(scene: Phaser.Scene, x: number, y: number, count = 8, depth: number = DEPTH.top): void {
+  if (app.settings.reducedMotion) return;
+  const coins = Array.from({ length: count }, (_, i) => {
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
+    const v = 70 + Math.random() * 70;
+    const img = scene.add.image(x, y, fxKey(scene, 'coin')).setOrigin(0.5, 0.5).setDepth(depth);
+    return { img, vx: Math.cos(a) * v, vy: Math.sin(a) * v, spin: 7 + Math.random() * 4, phase: i };
+  });
+  const seconds = 1.6;
+  scene.tweens.addCounter({
+    from: 0,
+    to: 1,
+    duration: seconds * 1000,
+    onUpdate: (tw) => {
+      const k = tw.getValue() ?? 0;
+      const t = k * seconds;
+      for (const c of coins) {
+        if (!c.img.active) continue;
+        const turn = Math.floor(t * c.spin + c.phase) % 4;
+        c.img.setTexture(fxKey(scene, COIN_TURN[turn]!)).setFlipX(turn === 3);
+        c.img.setPosition(Math.round(x + c.vx * t), Math.round(y + c.vy * t + 0.5 * GRAVITY * t * t)).setAlpha(k > 0.75 ? (1 - k) / 0.25 : 1);
+      }
+    },
+    onComplete: () => coins.forEach((c) => c.img.destroy()),
+  });
+}
 
 const COLORS = [C.yellow, C.pink, C.sky, C.mint, C.orange2, C.violet2, C.white];
 /** pixels per second squared, scaled to the small canvas */

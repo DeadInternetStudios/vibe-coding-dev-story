@@ -20,7 +20,7 @@ import { layoutOf, responsive } from '../ui/layout';
 import type { Modal } from '../ui/modal';
 import { Chatter } from '../ui/chatter';
 import { Dash, addLine, hash7, type TermKind, type TermLine } from '../ui/dash';
-import { confettiBurst } from '../ui/fx';
+import { coinShower, confettiBurst } from '../ui/fx';
 import { Ticker } from '../ui/ticker';
 import { Toasts } from '../ui/toasts';
 import type { UiCtx } from '../ui/ctx';
@@ -313,6 +313,10 @@ export class OfficeScene extends Phaser.Scene {
         break;
       case 'cash':
         this.cashPop(n.amount);
+        if (n.amount >= 5000) {
+          const at = this.room.toScreen(this.room.w / 2, this.room.h * 0.6);
+          coinShower(this, at.x, at.y, Math.min(14, 4 + Math.round(n.amount / 4000)));
+        }
         audio.sfx(n.amount > 0 ? (n.amount > 5000 ? 'coins' : 'coin') : 'bill');
         break;
       case 'idea':

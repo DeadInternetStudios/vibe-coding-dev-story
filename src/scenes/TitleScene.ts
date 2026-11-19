@@ -3,16 +3,15 @@ import { app } from '../core/app';
 import { bake } from '../core/bake';
 import { loadHall, loadSave } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
-import { moon, nightSky, skyline, stars } from '../art/sprites/scenery';
+import { nightCity } from '../art/sprites/scenery';
+import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
+import { fxPx } from '../art/sprites/fx';
 import { button, label, panel, rect, type ButtonKind } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { openSettings } from '../ui/modals/settings';
 import { openHall } from '../ui/modals/hall';
 import { Session } from '../game/session';
 import { Rng } from '../sim/rng';
-
-const TITLE_A = 'VIBE CODING';
-const TITLE_B = 'DEV STORY';
 
 interface Drifter {
   c: Phaser.GameObjects.Container;
@@ -27,7 +26,8 @@ interface Drifter {
 
 /** The front door. A night city, a bouncing logo, and Reddit comments floating up past the skyline. */
 export class TitleScene extends Phaser.Scene {
-  private letters: { t: Phaser.GameObjects.BitmapText; y: number; i: number }[] = [];
+  private logo: { img: Phaser.GameObjects.Image; y: number } | null = null;
+  private twinkles: Phaser.GameObjects.Image[] = [];
   private drifters: Drifter[] = [];
   private ticker: Phaser.GameObjects.BitmapText | null = null;
   private tickerW = 0;
@@ -45,39 +45,29 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private build(): void {
-    this.letters = [];
+    this.logo = null;
+    this.twinkles = [];
     this.drifters = [];
     const L = layoutOf(this);
     const { W, H } = L;
-    const portrait = L.portrait;
 
-    // sky and stars
-    this.add.image(0, 0, bake(this, `sky:${W}x${H}`, () => nightSky(W, H))).setOrigin(0, 0).setDepth(DEPTH.bg);
-    const a = this.add.image(0, 0, bake(this, `starsA:${W}x${H}`, () => stars(W, H, 3, Math.floor(W * H / 420)))).setOrigin(0, 0).setDepth(1);
-    const b = this.add.image(0, 0, bake(this, `starsB:${W}x${H}`, () => stars(W, H, 9, Math.floor(W * H / 520)))).setOrigin(0, 0).setDepth(1);
-    this.tweens.add({ targets: a, alpha: { from: 1, to: 0.25 }, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    this.tweens.add({ targets: b, alpha: { from: 0.25, to: 1 }, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    this.add.image(W - 44, portrait ? 26 : 22, bake(this, 'moon', moon)).setOrigin(0, 0).setDepth(2);
-
-    // skyline
-    const farH = portrait ? 120 : 76;
-    const nearH = portrait ? 80 : 50;
-    this.add.image(0, H - farH - 8, bake(this, `far:${W}x${farH}`, () => skyline(W, farH, 21, 0))).setOrigin(0, 0).setDepth(3);
-    this.add.image(0, H - nearH, bake(this, `near:${W}x${nearH}`, () => skyline(W, nearH, 5, 1))).setOrigin(0, 0).setDepth(5);
+    // the whole night: sky, moon, skyline, billboard, taxi and street in one picture
+    this.add.image(0, 0, bake(this, `city:${W}x${H}`, () => nightCity(W, H))).setOrigin(0, 0).setDepth(DEPTH.bg);
+    this.twinkle(W, H);
 
     // logo, buttons: measure first so nothing collides
     const save = loadSave();
-    const lh = (this.cache.bitmapFont.get(F.title + '-o').data as { lineHeight: number }).lineHeight;
     const buttons = save ? 4 : 3;
     const menuH = buttons * 27 + (save ? 9 : 0);
     const stripH = 13;
-    const fits = (sc: number) => 8 + 2 * lh * sc - 8 + 14 + menuH + stripH + 8 <= H;
-    const scale = !portrait && fits(3) && W >= 330 ? 3 : 2;
-    const logoH = 2 * (lh * scale - (scale === 3 ? 12 : 6));
+    const fits = (sc: number) => 6 + LOGO_H * sc + 14 + 14 + menuH + stripH + 6 <= H;
+    let scale = Math.max(1, Math.min(3, Math.floor((W - 16) / LOGO_W)));
+    while (scale > 1 && !fits(scale)) scale--;
+    const logoH = LOGO_H * scale;
     const free = H - stripH - logoH - 14 - menuH;
     const logoY = Math.max(4, Math.floor(free * 0.32));
-    const logoHalf = this.buildLogo(L.cx, logoY, scale, lh * scale - (scale === 3 ? 12 : 6));
-    const subY = logoY + logoH + 2;
+    const logoHalf = this.buildLogo(L.cx, logoY, scale);
+    const subY = logoY + logoH + 4;
     const sub = label(this, L.cx, subY, 'a startup sim where the AI writes the code', { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     this.tweens.add({ targets: sub, alpha: { from: 1, to: 0.55 }, duration: 1300, yoyo: true, repeat: -1 });
 
@@ -135,27 +125,31 @@ export class TitleScene extends Phaser.Scene {
     fadeTo(this, 'Office');
   }
 
-  /** Returns half the width of the widest logo line, so other things can keep clear of it. */
-  private buildLogo(cx: number, y: number, scale: number, lineStep: number): number {
-    let half = 0;
-    const place = (text: string, yy: number, tints: number[]) => {
-      const data = this.cache.bitmapFont.get(F.title + '-o').data as { chars: Record<number, { xAdvance: number }> };
-      const adv = (ch: string) => (data.chars[ch.charCodeAt(0)]?.xAdvance ?? 8) * scale;
-      const total = [...text].reduce((s, ch) => s + adv(ch), 0);
-      half = Math.max(half, total / 2);
-      let x = cx - total / 2;
-      [...text].forEach((ch, i) => {
-        if (ch !== ' ') {
-          const t = label(this, x, yy, ch, { font: F.title, outline: true, tint: tints[i % tints.length]!, depth: DEPTH.hud });
-          t.setScale(scale);
-          this.letters.push({ t, y: yy, i });
-        }
-        x += adv(ch);
-      });
-    };
-    place(TITLE_A, y, [C.orange2, C.yellow]);
-    place(TITLE_B, y + lineStep, [C.cream, C.mint]);
-    return half;
+  /** The wordmark, whole, at a whole-number scale. Returns half its width so other things can keep clear of it. */
+  private buildLogo(cx: number, y: number, scale: number): number {
+    const img = this.add.image(cx, y, bake(this, 'logo', logoPx)).setOrigin(0.5, 0).setScale(scale).setDepth(DEPTH.hud);
+    this.logo = { img, y };
+    if (!app.settings.reducedMotion) {
+      img.setAlpha(0).setScale(scale * 0.9);
+      this.tweens.add({ targets: img, alpha: 1, scale, duration: 420, ease: 'Back.easeOut' });
+    }
+    return (LOGO_W * scale) / 2;
+  }
+
+  /** A few stars that blink, over the still ones in the picture. */
+  private twinkle(W: number, H: number): void {
+    const rng = new Rng(2027);
+    const key = bake(this, 'fx:sparkleSmall', () => fxPx('sparkleSmall')!);
+    const count = Math.max(6, Math.floor((W * H) / 9000));
+    for (let i = 0; i < count; i++) {
+      const img = this.add.image(Math.round(rng.range(6, W - 6)), Math.round(rng.range(4, H * 0.5)), key).setDepth(DEPTH.bg + 1).setAlpha(0);
+      this.twinkles.push(img);
+      if (app.settings.reducedMotion) {
+        img.setAlpha(0.7);
+        continue;
+      }
+      this.tweens.add({ targets: img, alpha: { from: 0, to: 1 }, duration: 600 + rng.int(0, 700), yoyo: true, repeat: -1, delay: rng.int(0, 2600), hold: rng.int(200, 900), repeatDelay: rng.int(1200, 3600) });
+    }
   }
 
   /**
@@ -206,7 +200,7 @@ export class TitleScene extends Phaser.Scene {
   update(_t: number, dt: number): void {
     this.clock += dt / 1000;
     const reduce = app.settings.reducedMotion;
-    for (const l of this.letters) l.t.y = Math.round(l.y + (reduce ? 0 : Math.sin(this.clock * 2.6 + l.i * 0.55) * 2));
+    if (this.logo) this.logo.img.y = this.logo.y + (reduce ? 0 : Math.round(Math.sin(this.clock * 2.2) * 2));
     for (const d of this.drifters) {
       d.y -= (dt / 1000) * d.speed;
       if (d.y + d.h < d.y0) d.y = d.y1;
