@@ -17,6 +17,9 @@ const DEVICES: [string, number, number, number, number, number][] = [
   // wide desktops stay as they were
   ['laptop 1440x900@1', 1440, 900, 1, 480, 300],
   ['full hd 1920x1080@1', 1920, 1080, 1, 480, 270],
+  // big windows with one device pixel per CSS pixel: an art pixel is many pixels wide, so the canvas stops short of the edge instead of sticking out
+  ['ultrawide 3440x1440@1', 3440, 1440, 1, 573, 240],
+  ['4k 3840x2160@1', 3840, 2160, 1, 426, 240],
 ];
 
 describe('viewport', () => {
@@ -31,7 +34,21 @@ describe('viewport', () => {
     for (const [, w, h, dpr] of DEVICES) {
       const v = computeViewport(w, h, dpr);
       expect(Number.isInteger(v.scale)).toBe(true);
-      expect(v.w * v.scale).toBeGreaterThanOrEqual(Math.round(w * dpr));
+    }
+  });
+
+  it('never sticks out of the window by more than a pixel on a side, and never stops short by more than an art pixel', () => {
+    for (const dpr of [1, 1.25, 1.5, 2, 2.625, 3]) {
+      for (let w = 320; w <= 3840; w += 37) {
+        for (const h of [568, 640, 844, 900, 1080, 1440, 2160]) {
+          const v = computeViewport(w, h, dpr);
+          for (const [art, dev] of [[v.w, Math.round(w * dpr)], [v.h, Math.round(h * dpr)]] as const) {
+            const overhang = (art * v.scale - dev) / 2 / v.dpr;
+            expect(overhang).toBeLessThanOrEqual(1);
+            expect(dev - art * v.scale).toBeLessThan(v.scale);
+          }
+        }
+      }
     }
   });
 

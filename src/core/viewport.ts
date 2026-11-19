@@ -53,9 +53,23 @@ export function computeViewport(cssW: number, cssH: number, dprRaw: number, pref
     if (roomy) scale = Math.min(scale, Math.floor(devW / NEED_LANDSCAPE_W));
   }
   scale = Math.max(1, scale);
-  const w = Math.ceil(devW / scale);
-  const h = Math.ceil(devH / scale);
+  const w = coverSide(devW, scale, dpr);
+  const h = coverSide(devH, scale, dpr);
   return { w, h, scale, dpr, cssPerPx: scale / dpr, portrait };
+}
+
+/** The most the canvas may stick out past the window on one side, in CSS pixels. Past this a page check calls it cut off. */
+const MAX_OVERHANG = 1;
+
+/**
+ * How many art pixels one side of the window takes. Rounded up, so the art reaches the edge and no strip of bare page shows.
+ * On a big window with one device pixel per CSS pixel an art pixel is many pixels wide, and rounding up could push the canvas
+ * more than a pixel past each side. Then it is rounded down and the page's own colour fills the sliver.
+ */
+function coverSide(dev: number, scale: number, dpr: number): number {
+  const up = Math.ceil(dev / scale);
+  const overhang = (up * scale - dev) / 2 / dpr;
+  return overhang <= MAX_OVERHANG ? up : Math.floor(dev / scale);
 }
 
 /** The widest block of UI we lay out, wider screens get side margins. */
