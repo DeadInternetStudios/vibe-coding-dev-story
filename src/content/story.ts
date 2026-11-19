@@ -147,6 +147,8 @@ export const FUNDING: Record<string, DialogueStep[]> = {
     s('narrator', 'In a glass room, the founder meets the money. The money is wearing a vest.'),
     s('vc', 'Thanks for coming in. Let me look at your numbers. Mm. Mm-hm. Fascinating. I am not reading them.'),
     s('chad', 'As you can see, our growth chart is basically a rocket. Or a cliff. Depends how you read it.'),
+    s('vc', 'Is there a version of this deck with fewer words and more ARR?'),
+    s('chad', "We're pre-revenue, but we are post-vibes. That's the hard part."),
     s('vc', "I'm going to be honest with you. I don't get it. Here is a check."),
     s('clod', "Congratulations! You're absolutely right to take the money! I will also take some. In tokens."),
     s('dave', 'Now we have money. Which means we will have meetings. Please give the money back.', 'flat, tired'),
@@ -166,7 +168,7 @@ export const FRIDAY: Record<string, DialogueStep[]> = {
   ask: [
     s('narrator', 'It is Friday afternoon. The app is ready. The weekend waits. Fate holds its breath.'),
     s('dave', 'Please. I am begging you. Do not deploy on a Friday.', 'tired, begging'),
-    s('chad', 'The market never sleeps, Dave! Why should we?'),
+    s('chad', 'The market never sleeps, old timer! Why should we?'),
     s('dave', 'Because we are people, Chad. The market is a graph.', 'flat'),
     s('clod', "You're absolutely right, both of you! Deploy on Friday! Or do not! I am excited either way!"),
   ],
