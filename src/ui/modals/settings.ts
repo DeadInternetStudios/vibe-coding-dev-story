@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { app } from '../../core/app';
-import { saveSettings } from '../../core/save';
+import { loadSave, saveSettings, writeSave } from '../../core/save';
+import { decodeSave, encodeSave } from '../../core/saveCode';
 import { C, F } from '../../core/theme';
 import { button, label, slider, uiEvents } from '../kit';
 import { Modal } from '../modal';
@@ -10,7 +11,7 @@ import { layoutOf } from '../layout';
 export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClose?: () => void): Modal {
   const L = layoutOf(scene);
   const w = Math.min(L.W - 8, 250);
-  const h = Math.min(L.H - 8, 170);
+  const h = Math.min(L.H - 8, 190);
   const m = new Modal(scene, { w, h, title: 'SETTINGS', closable: true, hold, onClose });
   const s = app.settings;
   const commit = () => {
@@ -69,6 +70,48 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
   }, { kind: 'cream' });
   m.add(sizeBtn);
   y += 20;
-  m.add(label(scene, w / 2, h - 12, 'tap anywhere outside to close', { font: F.body, tint: C.ink3, origin: [0.5, 0] }));
+  // the save as one line of text: copy it here, paste it on another device
+  const FOOT = 'tap anywhere outside to close';
+  const foot = label(scene, w / 2, h - 12, FOOT, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 8, align: 'center' });
+  m.add(foot);
+  const say = (text: string) => {
+    foot.setText(text);
+    scene.time.delayedCall(3200, () => foot.active && foot.setText(FOOT));
+  };
+  m.add(label(scene, 10, y + 4, 'SAVE CODE', { font: F.caps, tint: C.ink1 }));
+  m.add(button(scene, w - 124, y, 54, 14, 'COPY', () => void copySave(scene).then(say), { kind: 'cream' }));
+  m.add(button(scene, w - 66, y, 56, 14, 'LOAD', () => void loadSaveCode().then(say), { kind: 'cream' }));
   return m;
+}
+
+/** The running game when there is one (the saved copy can be a week old), else what the browser has stored. */
+async function copySave(scene: Phaser.Scene): Promise<string> {
+  const state = (scene.scene.key === 'Office' ? app.session?.s : undefined) ?? loadSave();
+  if (!state) return 'No save yet. Play a bit first.';
+  const code = encodeSave(state);
+  try {
+    await navigator.clipboard.writeText(code);
+    return 'Save code copied. Paste it anywhere safe.';
+  } catch {
+    window.prompt('Copy your save code (select all, copy):', code);
+    return 'Save code ready.';
+  }
+}
+
+/** Reads a save code from the clipboard, or asks for it, and puts it in as the save. The page reloads so the title offers CONTINUE. */
+async function loadSaveCode(): Promise<string> {
+  let code: string | null = null;
+  try {
+    code = await navigator.clipboard.readText();
+  } catch {
+    code = null;
+  }
+  if (!code || !decodeSave(code)) code = window.prompt('Paste your save code here:', '');
+  if (!code) return 'Nothing loaded.';
+  const state = decodeSave(code);
+  if (!state) return 'That is not a save code from this game.';
+  if (loadSave() && !window.confirm('Replace the save on this device with that one?')) return 'Kept your current save.';
+  if (!writeSave(state)) return 'The browser would not store it.';
+  window.setTimeout(() => window.location.reload(), 900);
+  return 'Save loaded. Restarting...';
 }
