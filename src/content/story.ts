@@ -15,19 +15,14 @@ const s = (voice: VoiceId, text: string, delivery?: string): DialogueStep => ({
  */
 export const INTRO: DialogueStep[] = [
   s('narrator', 'And here, in the glow of the monitor, we observe the vibe coder in its natural habitat.'),
-  s('narrator', 'It prompts. It waits. It accepts everything. Such is the circle of life.'),
   s('narrator', 'This one quit a stable job. It owns forty thousand dollars, a garage, and no plan.'),
   s('chad', "Listen. We're not just building an app. We're building a feeling."),
   s('clod', "You're absolutely right! A feeling is a great product! I will agree with everything you say. Forever."),
-  s('chad', "I told the investors we have AI. We now have AI. You're welcome."),
-  s('narrator', 'Beside him, the intern. First day. Wide eyed. Already lost.'),
   s('jenny', 'Can I ask a dumb question? What is a database?'),
   s('narrator', 'Little does the founder know, the database is already gone.'),
-  s('bro', "Bro, I don't write code anymore. I describe vibes to a machine. It's basically poetry."),
   s('chad', 'Clod, build me an app.'),
   s('clod', "I'm sorry, I can't help with that. Just kidding! Doing it now!"),
   s('narrator', 'The runway is three months long. The optimism is infinite.'),
-  s('chad', 'Rise and grind, baby! Another day, another pivot!'),
 ];
 
 /**

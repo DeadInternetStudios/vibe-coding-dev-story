@@ -88,6 +88,17 @@ export function installDriver(game: Phaser.Game): void {
     return true;
   };
 
+  /** Tap through the dialogue that is on screen, one step. */
+  const next = (): boolean => {
+    const sc = active();
+    const talking = sc?.children.getByName('dialogue') as Phaser.GameObjects.Container | null | undefined;
+    if (!sc || !talking?.active) return false;
+    const dim = collect(sc).find((c) => c.dim && rootOf(c.obj) === talking);
+    if (!dim) return false;
+    press(dim, sc);
+    return true;
+  };
+
   const rnd = <T,>(a: T[]): T | undefined => a[Math.floor(Math.random() * a.length)];
   const stats = { clicks: 0, ticks: 0, talks: 0, menus: 0, prompts: 0, starts: 0, apps: 0, day: 0, scene: '', stuck: 0 };
   let stuckAt: string[] = [];
@@ -223,6 +234,7 @@ export function installDriver(game: Phaser.Game): void {
   const api = {
     list: () => list().map((c) => ({ label: c.label, depth: c.depth, x: Math.round(c.x), y: Math.round(c.y), dim: c.dim })),
     click,
+    next,
     scene: () => active()?.scene.key ?? null,
     errors,
     stats,
