@@ -17,6 +17,7 @@ import { projectView } from '../sim/views';
 import { Rng } from '../sim/rng';
 import type { EventOutcome, Prompt } from '../sim/types';
 import { bar, button, chip, choiceButton, iconImg, label, rect, type ButtonObj } from './kit';
+import { channelRows, channelTextY } from './channelRows';
 import { layoutOf, popupH } from './layout';
 import { hash7 } from './dash';
 import { Modal, NUMBER_KEYS } from './modal';
@@ -332,7 +333,8 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   }
   const wide = !L.portrait && L.W >= 360;
   const w = Math.min(L.W - 4, wide ? 392 : 246);
-  const h = popupH(L, wide ? 232 : 408);
+  // wide: room for eight rows of two lines where the screen has it; a phone on its side gets one line per row
+  const h = popupH(L, wide ? 258 : 408);
   const m = new Modal(scene, { w, h, title: 'READY TO LAUNCH', style: 'paper' });
   ctx.sfx('fanfare_small');
   const view = projectView(c, p);
@@ -379,7 +381,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     const ch = c.channel(selected);
     launchBtnRef.b?.setText(`LAUNCH ON ${ch.where.toUpperCase()}`.slice(0, 26));
   };
-  const rowH = Math.min(wide ? 21 : 24, Math.floor((h - cy - 34) / Math.max(1, c.channels.length)));
+  const { rowH, inline } = channelRows(h, cy, c.channels.length);
   for (const ch of c.channels) {
     const ok = unlocked(game, ch.unlock);
     const cost = costOf(ch.id);
@@ -399,11 +401,11 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     const art = hasIcon(`chan_${ch.id}`) && rowH >= 15;
     if (art) m.add(iconImg(scene, `chan_${ch.id}`, cx + 3, cy + Math.floor((rowH - 1 - 12) / 2)).setAlpha(ok ? 1 : 0.4));
     const tx = cx + (art ? 18 : 4);
-    // the two lines (name, then what it does) sit in the middle of the row with air under them
-    const ty = cy + Math.max(1, Math.floor((rowH - 1 - 17) / 2));
+    // the name and what it does sit in the middle of the row: stacked when the row is tall enough, side by side when it is not
+    const ty = cy + channelTextY(rowH, inline);
     const t1 = label(scene, tx, ty, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : C.ink4 });
     const sub = ok ? `hype +${ch.hype}${ch.roast > 0.5 ? '  spicy' : ''}` : ch.unlock.karma ? `needs ${ch.unlock.karma} karma` : `year ${ch.unlock.year ?? 2}`;
-    const t2 = label(scene, tx, ty + 9, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
+    const t2 = label(scene, inline ? tx + t1.width + 6 : tx, inline ? ty : ty + 9, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
     m.add(t1);
     m.add(t2);
     // a locked channel shows a padlock, not a price: nobody can pay it yet
