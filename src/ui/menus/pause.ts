@@ -13,15 +13,15 @@ export function openPause(ctx: UiCtx, onClose: () => void): Modal {
   const scene = ctx.scene;
   const s = ctx.session.s;
   const w = 190;
-  const h = 174;
+  const h = 194;
   const m = new Modal(scene, { w, h, title: 'PAUSED', style: 'paper', closable: true, hold: ctx.hold, onClose });
   m.add(label(scene, w / 2, 21, s.company.name.toUpperCase(), { font: F.caps, tint: C.orange1, origin: [0.5, 0], maxWidth: w - 16 }));
   m.add(label(scene, w / 2, 31, `${dateLabel(s.day)}   ${money(s.company.cash)}   ${s.shipped.length} shipped`, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 12 }));
   const bw = w - 24;
   let y = 46;
   const add = (text: string, kind: ButtonKind, fn: () => void) => {
-    m.add(button(scene, 12, y, bw, 20, text, fn, { kind }));
-    y += 24;
+    m.add(button(scene, 12, y, bw, 24, text, fn, { kind }));
+    y += 28;
   };
   add('RESUME', 'orange', () => m.close());
   add('TROPHIES', 'cream', () => {
