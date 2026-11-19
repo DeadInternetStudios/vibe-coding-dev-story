@@ -26,6 +26,8 @@ export interface NewGameOptions {
   difficulty: DifficultyId;
   /** how the founder looks, random when left out */
   look?: Look;
+  /** the UTC date of the daily challenge. The seed and the difficulty are the caller's job, see core/daily.ts */
+  daily?: string;
 }
 
 export const SAVE_VERSION = 1;
@@ -84,6 +86,7 @@ export class Game {
       seed,
       rng: rng.state,
       difficulty: diff.id,
+      ...(opts.daily ? { daily: opts.daily } : {}),
       day: 0,
       nextId: 1,
       company: {

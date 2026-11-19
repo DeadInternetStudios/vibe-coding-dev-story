@@ -10,8 +10,15 @@ export interface Tabs {
   select(i: number): void;
 }
 
+export interface TabsOpts {
+  /** button height, 13 by default */
+  h?: number;
+  /** keep the content under the title and the buttons, for content that draws over a wide area */
+  below?: boolean;
+}
+
 /** A row of tab buttons along the top of a modal. */
-export function tabs(modal: Modal, x: number, y: number, w: number, names: string[], onSelect: (i: number, content: Phaser.GameObjects.Container) => void, start = 0): Tabs {
+export function tabs(modal: Modal, x: number, y: number, w: number, names: string[], onSelect: (i: number, content: Phaser.GameObjects.Container) => void, start = 0, opts: TabsOpts = {}): Tabs {
   const scene = modal.scene;
   const content = scene.add.container(0, 0);
   const gap = 2;
@@ -27,11 +34,12 @@ export function tabs(modal: Modal, x: number, y: number, w: number, names: strin
     },
   };
   names.forEach((n, i) => {
-    const b = button(scene, x + i * (bw + gap), y, bw, 13, n, () => t.select(i), { kind: i === start ? 'orange' : 'plum', font: F.caps });
+    const b = button(scene, x + i * (bw + gap), y, bw, opts.h ?? 13, n, () => t.select(i), { kind: i === start ? 'orange' : 'plum', font: F.caps });
     modal.add(b);
     buttons.push(b);
   });
-  modal.add(content);
+  if (opts.below) modal.body.addAt(content, 0);
+  else modal.add(content);
   t.select(start);
   return t;
 }

@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
 import { app, current } from '../core/app';
 import { audio } from '../core/audio';
+import { dailyTag, recordDaily, type DailyResult } from '../core/daily';
 import { C, DEPTH, F } from '../core/theme';
 import { clearSave, pushHall, type HallEntry } from '../core/save';
 import { copyText, shareText } from '../core/share';
 import { feature } from '../core/features';
 import { openShare } from '../features/share/modal';
+import { recordTrophies } from '../core/trophies';
 import { dateLabel, shortMoney, shortNumber } from '../sim/format';
 import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
@@ -36,6 +38,7 @@ export class EndingScene extends Phaser.Scene {
   private alive = true;
   private run = 0;
   private recorded: { pos: number; entry: HallEntry } | null = null;
+  private dailyResult: DailyResult | null = null;
 
   create(data?: { replay?: boolean }): void {
     void data;
@@ -78,6 +81,8 @@ export class EndingScene extends Phaser.Scene {
   /** Save the run once and clear the save, a finished game cannot be continued. */
   private record(): void {
     const s = current().s;
+    recordTrophies(s.achievements);
+    this.dailyResult = null;
     const end = s.ending;
     if (!end) return;
     const founder = s.staff.find((m) => m.isFounder)?.name ?? 'Founder';
@@ -93,7 +98,9 @@ export class EndingScene extends Phaser.Scene {
       difficulty: s.difficulty,
       bankrupt: end.bankrupt,
       when: Date.now(),
+      ...(s.daily ? { daily: s.daily } : {}),
     };
+    if (s.daily) this.dailyResult = recordDaily(s.daily, { score: end.score, rank: end.rank });
     const list = pushHall(entry);
     this.recorded = { pos: list.findIndex((e) => e.when === entry.when) + 1, entry };
     clearSave();
@@ -127,13 +134,14 @@ export class EndingScene extends Phaser.Scene {
 
     const wide = !L.portrait && L.W >= 380;
     const w = Math.min(L.W - 6, wide ? 410 : 246);
-    const h = Math.min(L.H - 6, wide ? 222 : 340);
+    // a daily run has one more line under the score, so the wide card grows to fit it
+    const h = Math.min(L.H - 6, wide ? (s.daily ? 234 : 222) : 340);
     const x = Math.floor((L.W - w) / 2);
     const y = Math.floor((L.H - h) / 2);
     const card = this.add.container(x, y).setDepth(DEPTH.panel);
     card.add(panel(this, 0, 0, w, h, 'paper'));
     card.add(panel(this, 0, 0, w, 15, rank === 'F' || rank === 'D' ? 'btnBerry' : 'btnOrange', false));
-    card.add(label(this, w / 2, 3, 'THE END', { font: F.caps, tint: C.white, origin: [0.5, 0] }));
+    card.add(label(this, w / 2, 3, s.daily ? `THE END - ${dailyTag(s.daily)}` : 'THE END', { font: F.caps, tint: C.white, origin: [0.5, 0] }));
     if (!instant) {
       card.setAlpha(0);
       card.y = y + 14;
@@ -230,6 +238,8 @@ export class EndingScene extends Phaser.Scene {
     card.add(scoreT);
     const hallT = label(this, w / 2, sy2 + 15, '', { font: F.body, tint: C.ink3, origin: [0.5, 0] });
     card.add(hallT);
+    const dailyT = label(this, w / 2, sy2 + 26, '', { font: F.body, tint: C.violet1, origin: [0.5, 0], maxWidth: w - 20, align: 'center' });
+    card.add(dailyT);
     const finalScore = end.score;
     const showScore = (v: number) => scoreT.setText(`SCORE ${v.toLocaleString('en-US')}`);
     if (instant || app.settings.reducedMotion) showScore(finalScore);
@@ -256,6 +266,11 @@ export class EndingScene extends Phaser.Scene {
       audio.sfx('achievement');
       hallT.setTint(C.orange1);
     }
+    if (this.dailyResult) {
+      const { best, improved } = this.dailyResult;
+      dailyT.setText(improved ? 'NEW DAILY BEST!' : `Daily best: ${best.score.toLocaleString('en-US')} (${best.rank})`);
+      if (improved) dailyT.setTint(C.orange1);
+    }
     if (!alive()) return;
 
     // buttons
@@ -269,7 +284,7 @@ export class EndingScene extends Phaser.Scene {
       fadeTo(this, 'NewGame');
     }, { kind: 'orange', icon: roomy ? 'plus' : undefined });
     const hall = button(this, at(1), by, bw, 18, 'HALL', () => {
-      openHall(this);
+      openHall(this, { run: s.achievements });
     }, { kind: 'violet', icon: roomy ? 'trophy' : undefined });
     const share: ButtonObj = button(this, at(2), by, bw, 18, 'SHARE', () => {
       if (feature('share')) {

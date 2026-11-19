@@ -328,6 +328,8 @@ export interface Achievement {
   desc: string;
   /** hidden until earned */
   secret?: boolean;
+  /** a short teaser the trophy case shows while this is locked. Without one it shows the first sentence of `desc` */
+  hint?: string;
   /** checked after every launch, month and event with the counters */
   when: (k: { counters: Readonly<Record<string, number>>; company: CompanyView }) => boolean;
 }

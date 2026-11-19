@@ -60,8 +60,12 @@ export class Modal {
     const depth = opts.depth ?? DEPTH.modal;
     this.root = scene.add.container(0, 0).setDepth(depth);
     const dim = rect(scene, 0, 0, L.W, L.H, C.ink0, opts.dim ?? 0.62).setInteractive();
+    // a drag that began on something inside and ends over the dim is not a tap on the dim
+    let pressed = false;
+    dim.on('pointerdown', () => (pressed = true));
     dim.on('pointerup', () => {
-      if (opts.closable) this.close();
+      if (pressed && opts.closable) this.close();
+      pressed = false;
     });
     this.root.add(dim);
     this.box = panel(scene, this.x, this.y, this.w, this.h, opts.style ?? 'paper');

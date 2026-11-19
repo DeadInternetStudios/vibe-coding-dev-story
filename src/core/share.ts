@@ -29,16 +29,18 @@ export function shareText(s: GameState, endingTitle: string | undefined, url: st
   if (gambles > 0) quirks.push(`${plural(gambles, 'Friday deploy', 'Friday deploys')}, ${plural(outages, 'outage')}`);
   if (scares > 0) quirks.push(`${plural(scares, 'bankruptcy scare')}`);
   if (s.counters.perfect_scores) quirks.push(`${plural(s.counters.perfect_scores, 'perfect 10', 'perfect 10s')} from Reddit`);
+  const story = end.bankrupt
+    ? `I vibe coded ${s.company.name} for ${span(end.day)} and the money ran out. Rank ${end.rank} (${RANK_NAME[end.rank] ?? ''}).`
+    : `I vibe coded ${s.company.name} for ${span(end.day)} in Vibe Coding Dev Story. Rank ${end.rank} (${RANK_NAME[end.rank] ?? ''}).`;
   const lines = [
-    end.bankrupt
-      ? `I vibe coded ${s.company.name} for ${span(end.day)} and the money ran out. Rank ${end.rank} (${RANK_NAME[end.rank] ?? ''}).`
-      : `I vibe coded ${s.company.name} for ${span(end.day)} in Vibe Coding Dev Story. Rank ${end.rank} (${RANK_NAME[end.rank] ?? ''}).`,
+    s.daily ? `Daily Challenge ${s.daily}: ${story}` : story,
     endingTitle ? `Ending: "${endingTitle}"` : '',
     '',
     `${plural(s.shipped.length, 'app')} shipped${best ? `, best was ${best.name} at ${best.score}/40 on Reddit` : ''}`,
     `Revenue ${shortMoney(s.company.totalRevenue)}, valuation ${shortMoney(end.valuation)}, karma ${shortNumber(s.company.karma)}, team of ${s.staff.length}`,
     ...quirks,
     `Final score ${end.score.toLocaleString('en-US')}. ${founder} says it was always part of the plan.`,
+    ...(s.daily ? ['Same start for everyone today. Beat my score.'] : []),
     '',
     url,
   ];

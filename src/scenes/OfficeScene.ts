@@ -4,6 +4,7 @@ import { audio } from '../core/audio';
 import { feature } from '../core/features';
 import { writeSave } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
+import { recordTrophies } from '../core/trophies';
 import { Room } from '../game/room';
 import type { Session } from '../game/session';
 import { monthName } from '../sim/format';
@@ -381,6 +382,7 @@ export class OfficeScene extends Phaser.Scene {
         this.ctx.shake(0.003);
         break;
       case 'achievement': {
+        recordTrophies([n.id]);
         const a = app.content.achievements.find((x) => x.id === n.id);
         if (a) {
           this.banner('ACHIEVEMENT!', a.name, 'wow');
