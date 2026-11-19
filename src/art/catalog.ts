@@ -9,6 +9,8 @@ import { BIG_ICON_NAMES, ICON_NAMES, iconPx } from './sprites/icons';
 import { decorPx } from './sprites/decor';
 import { BOX_STYLES, box, type BoxName } from './sprites/ui';
 import { ACCESSORIES, HAIR, buildPerson, roleColorsFor, type Face, type Look, type Pose } from './sprites/people';
+import { PORTRAIT_LOOKS, portraitPx } from './sprites/portraits';
+import type { VoiceId } from '../content/vo';
 
 export interface CatalogItem {
   name: string;
@@ -78,6 +80,7 @@ export const CATALOG: Record<string, CatalogItem[]> = {
   tools: bigGroup('tool_'),
   channels: bigGroup('chan_'),
   cards: bigGroup('card_'),
+  portraits: (Object.keys(PORTRAIT_LOOKS) as VoiceId[]).map((name) => ({ name, make: () => portraitPx(name) })),
   decorDesk: decorGroup(['duck', 'monitor', 'keyboard', 'standing', 'key', 'chair']),
   decorWall: decorGroup(['whiteboard', 'neon', 'trophy']),
   decorFloor: decorGroup(['plant', 'coffee', 'cooler', 'beanbag', 'fridge', 'couch', 'arcade', 'pingpong', 'massage']),
