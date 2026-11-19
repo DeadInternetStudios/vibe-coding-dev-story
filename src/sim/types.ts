@@ -131,6 +131,8 @@ export interface ShippedApp {
   spikeAmp: number;
   tailAmp: number;
   fridayDeploy: boolean;
+  /** a Friday deploy that took production down */
+  incident: boolean;
   thread: ThreadRecord;
   review?: { stars: number; text: string; user: string };
 }

@@ -177,6 +177,12 @@ export const FRIDAY: Record<string, DialogueStep[]> = {
     s('dave', 'I am turning off my phone. I will see you Monday. Or in the ruins.'),
     s('narrator', 'And so it shipped, on a Friday, against all advice. In a distant room, a pager cleared its throat.'),
   ],
+  incident: [
+    s('narrator', 'At 5:42 on Friday evening, the pager cleared its throat. Then it screamed.'),
+    s('dave', 'I said it. Out loud. With my mouth. Nobody can say I did not say it.', 'tired, flat'),
+    s('clod', "You're absolutely right that production is down! Great catch! I have already apologized to the database!"),
+    s('chad', 'This is a growth opportunity. Everyone to the war room. The war room is the kitchen.'),
+  ],
   wait: [
     s('chad', 'Fine. We will deploy on Monday. Like cowards.'),
     s('dave', 'Like adults, Chad. Like people with weekends.'),

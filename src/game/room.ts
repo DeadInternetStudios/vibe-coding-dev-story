@@ -1,16 +1,13 @@
 import Phaser from 'phaser';
-import { app } from '../core/app';
 import { bake, bakeDecor, bakeIcon } from '../core/bake';
-import { C, F } from '../core/theme';
 import { desk as deskPx, laptop } from '../art/sprites/office';
 import { roomBackdrop } from '../art/sprites/rooms';
 import { Px } from '../art/pixel';
-import { SHOP, shopItem } from '../sim/shop';
+import { shopItem } from '../sim/shop';
 import { Rng } from '../sim/rng';
 import type { Session } from './session';
 import { roomSpec, type RoomSpec, type Spot } from './roomSpecs';
 import { StaffSprite } from './staffSprite';
-import { label } from '../ui/kit';
 
 const STICKERS = ['orange1', 'teal2', 'violet1', 'blue1', 'green1', 'berry1', 'orange1'] as const;
 /** a rough box for items that have no drawing yet */
@@ -319,4 +316,3 @@ export class Room {
   }
 }
 
-export { C, F, app, label, SHOP };

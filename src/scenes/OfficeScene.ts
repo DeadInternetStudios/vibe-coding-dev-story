@@ -19,6 +19,8 @@ import { label, panel, pop, rect } from '../ui/kit';
 import { layoutOf, responsive } from '../ui/layout';
 import type { Modal } from '../ui/modal';
 import { Chatter } from '../ui/chatter';
+import { Dash, addLine, hash7, type TermKind, type TermLine } from '../ui/dash';
+import { Ticker } from '../ui/ticker';
 import { Toasts } from '../ui/toasts';
 import type { UiCtx } from '../ui/ctx';
 import { openMenu } from '../ui/menus';
@@ -43,6 +45,14 @@ export class OfficeScene extends Phaser.Scene {
   private introDone = false;
   private launching = false;
   private chatter!: Chatter;
+  private ticker?: Ticker;
+  private dash?: Dash;
+  /** the repo log shown in the terminal, kept here so a resize does not wipe it */
+  private termLog: TermLine[] = [];
+  private repoId = -2;
+  private repoStep = 0;
+  private repoReady = -1;
+  private commitBag: string[] = [];
   /** seconds of play until the office says something */
   private ambientIn = 14;
   /** quiet time after any remark, so nothing talks over the last one */
@@ -90,6 +100,8 @@ export class OfficeScene extends Phaser.Scene {
   private teardown(): void {
     this.session.clearHolds();
     this.chatter?.stop();
+    this.ticker?.destroy();
+    this.dash?.destroy();
     this.hud?.destroy();
     this.room?.destroy();
     this.menuModal = null;
@@ -116,6 +128,7 @@ export class OfficeScene extends Phaser.Scene {
       track: (m: Modal) => m,
       open: (id: string) => this.openMenuById(id as MenuId),
       banner: (text: string, sub?: string, tone: Tone = 'info') => this.banner(text, sub, tone),
+      log: (kind: TermKind, head: string, text: string) => this.logLine(kind, head, text),
       shake: (power = 0.004) => {
         if (app.settings.shake && !app.settings.reducedMotion) this.cameras.main.shake(180, power);
       },
@@ -137,6 +150,7 @@ export class OfficeScene extends Phaser.Scene {
     };
     this.hud.build(L);
     this.toasts = new Toasts(this, L, this.hud.topH + 1);
+    this.ticker = new Ticker(this, L, this.hud.topH + 2, app.content.headlines);
     this.chatter = new Chatter(this, L, L.H - this.hud.bottomH - 2);
     this.room = new Room(this, this.session);
     this.room.root.setDepth(DEPTH.room);
@@ -161,6 +175,8 @@ export class OfficeScene extends Phaser.Scene {
     this.room.root.setPosition(x, y);
     // a plum floor plate under the room so the edge reads
     if (rw <= L.W) rect(this, x - 3, y - 3, rw + 6, rh + 6, C.ink1, 1).setDepth(DEPTH.room - 1);
+    this.dash = new Dash(this, this.session, L, { x, y, w: rw, h: rh }, this.view, this.termLog);
+    this.dash.setProject(this.session.s.project?.name ?? null);
   }
 
   private setupPan(): void {
@@ -278,6 +294,7 @@ export class OfficeScene extends Phaser.Scene {
         // phase 4 is the finish line: the launch popup that follows says it better than a banner
         const name = PHASES[n.phase]?.label.toUpperCase();
         if (name) this.banner(`PHASE ${n.phase + 1}: ${name}`, n.project, 'info');
+        if (name) this.logLine('ok', 'ok', `${name.toLowerCase()} phase done`);
         audio.sfx('phase_done');
         this.room.cheerAll();
         break;
@@ -291,6 +308,7 @@ export class OfficeScene extends Phaser.Scene {
       }
       case 'quit':
         this.toasts.push(`${n.name} quit. "${n.why}"`, 'bad', 'warn');
+        this.logLine('warn', 'exit', `${n.name} left the repo`);
         audio.sfx('fire');
         this.ctx.shake(0.003);
         break;
@@ -299,6 +317,7 @@ export class OfficeScene extends Phaser.Scene {
         if (a) {
           this.banner('ACHIEVEMENT!', a.name, 'wow');
           audio.sfx('achievement');
+          this.logLine('ok', 'ok', `unlocked: ${a.name}`);
         }
         break;
       }
@@ -314,12 +333,17 @@ export class OfficeScene extends Phaser.Scene {
         if (n.on) {
           this.toasts.push('Rate limited. The AI needs a nap.', 'bad', 'token');
           audio.sfx('rate_limit');
+          this.logLine('warn', '429', 'too many requests. the AI needs a nap');
+        } else {
+          this.logLine('ok', 'ok', 'rate limit lifted');
         }
         break;
       case 'sound':
         audio.sfx(n.id as SfxId);
         break;
       case 'launched':
+        this.logLine('cmd', '$', 'git push --force origin main');
+        break;
       case 'prompt':
         break;
     }
@@ -387,6 +411,47 @@ export class OfficeScene extends Phaser.Scene {
     if (!beat(this.ctx, key, () => (this.beatOpen = false))) this.beatOpen = false;
   }
 
+  /* ------------------------------------------------------------ the repo */
+
+  private logLine(kind: TermKind, head: string, text: string): void {
+    addLine(this.termLog, { kind, head, text });
+    this.dash?.push();
+  }
+
+  private nextCommit(): string {
+    if (this.commitBag.length === 0) {
+      const pool = app.content.commitMessages;
+      this.commitBag = new Rng(Math.floor(Math.random() * 1e9)).shuffle(pool.length ? pool.slice() : ['fix']);
+    }
+    return this.commitBag.pop()!;
+  }
+
+  /** The terminal follows the project: a scaffold line, a commit every few percent, a green build at the end. */
+  private repo(): void {
+    const p = this.session.s.project;
+    const id = p?.id ?? -1;
+    if (id !== this.repoId) {
+      this.repoId = id;
+      this.repoStep = 0;
+      this.dash?.setProject(p?.name ?? null);
+      if (p) {
+        const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        this.logLine('cmd', '$', `npx create-vibe-app ${slug}`);
+      }
+    }
+    if (p?.status === 'dev') {
+      const step = Math.floor(p.progress / 8);
+      while (this.repoStep < step) {
+        this.repoStep++;
+        this.logLine('commit', hash7(), this.nextCommit());
+      }
+    }
+    if (p?.status === 'ready' && this.repoReady !== id) {
+      this.repoReady = id;
+      this.logLine('ok', 'ok', 'build passing. tests: 0 (deleted)');
+    }
+  }
+
   /* ------------------------------------------------------------- frame */
 
   update(_time: number, dt: number): void {
@@ -399,6 +464,9 @@ export class OfficeScene extends Phaser.Scene {
     this.room.update(dt);
     this.hud.update(dt);
     this.toasts.update(dt);
+    this.ticker?.update(dt);
+    this.dash?.update(dt);
+    this.repo();
     this.talk(dt / 1000);
 
     // anything the game waits on gets a popup

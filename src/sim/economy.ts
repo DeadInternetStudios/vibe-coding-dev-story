@@ -1,7 +1,7 @@
 /**
  * Payday, valuation, funding rounds and the ending.
  */
-import { BANKRUPT_CASH, OFFICE_TIERS, REVENUE, TOKEN_PLANS } from './config';
+import { BANKRUPT_CASH, DILUTION, OFFICE_TIERS, REVENUE, TOKEN_PLANS } from './config';
 import { addCash, bump, type Ctx } from './ctx';
 import { clamp, monthOf, yearOf } from './format';
 import { totalPayroll } from './staff';
@@ -118,8 +118,8 @@ export function isBankrupt(ctx: Ctx): boolean {
 export function fundingOffers(ctx: Ctx): { id: string; label: string; cash: number; blurb: string }[] {
   const v = valuation(ctx);
   return [
-    { id: 'vc', label: 'Take the VC money', cash: Math.round(v * 0.3), blurb: 'Big check. Bigger expectations. They say "10x" when they greet you.' },
-    { id: 'angel', label: 'Take the angel check', cash: Math.round(v * 0.1), blurb: 'A friendly dentist. He asks for a logo with his name on it.' },
+    { id: 'vc', label: 'Take the VC money', cash: Math.round(v * 0.3), blurb: 'Big check. They own 20% of how this ends. They say "10x" when they greet you.' },
+    { id: 'angel', label: 'Take the angel check', cash: Math.round(v * 0.1), blurb: 'A friendly dentist. He owns 5% and wants his name on the logo.' },
     { id: 'decline', label: 'Stay scrappy', cash: 0, blurb: 'Keep every share. Keep the ramen.' },
   ];
 }
@@ -133,10 +133,11 @@ export function takeFunding(ctx: Ctx, offerId: string): string {
   if (offer.cash > 0) addCash(ctx, offer.cash, `Funding: ${offer.label}`);
   if (offerId === 'vc') {
     s.flags.push(`vc${year}`);
-    for (const m of s.staff) m.mood = clamp(m.mood - 3, 0, 100);
+    for (const m of s.staff) m.mood = clamp(m.mood - 6, 0, 100);
     return `Wire received: $${offer.cash.toLocaleString('en-US')}. The board meeting is on Monday.`;
   }
   if (offerId === 'angel') {
+    s.flags.push(`angel${year}`);
     return `Wire received: $${offer.cash.toLocaleString('en-US')}. The dentist wants a ping pong table.`;
   }
   for (const m of s.staff) m.mood = clamp(m.mood + 8, 0, 100);
@@ -146,9 +147,9 @@ export function takeFunding(ctx: Ctx, offerId: string): string {
 
 export function finalScore(ctx: Ctx): number {
   const { s } = ctx;
-  const vcPenalty = s.flags.filter((f) => f.startsWith('vc')).length * 0.07;
+  const dilution = s.flags.reduce((n, f) => n + (/^vc\d+$/.test(f) ? DILUTION.vc : /^angel\d+$/.test(f) ? DILUTION.angel : 0), 0);
   const raw = valuation(ctx) + s.company.karma * 30 + s.achievements.length * 2500 + s.company.totalRevenue * 0.15;
-  return Math.round(raw * (1 - vcPenalty));
+  return Math.round(raw * Math.max(0.35, 1 - dilution));
 }
 
 export function rankFor(score: number): EndingResult['rank'] {

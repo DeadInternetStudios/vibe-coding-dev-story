@@ -4,6 +4,7 @@ import type { Content } from '../sim/content';
 import type { Tone } from '../sim/types';
 import type { Session } from '../game/session';
 import type { Room } from '../game/room';
+import type { TermKind } from './dash';
 import type { Modal } from './modal';
 
 /**
@@ -29,6 +30,8 @@ export interface UiCtx {
   open(id: string): void;
   /** a big ribbon across the screen */
   banner(text: string, sub?: string, tone?: Tone): void;
+  /** a line in the terminal beside the room */
+  log(kind: TermKind, head: string, text: string): void;
   /** shake the camera a little */
   shake(power?: number): void;
 }

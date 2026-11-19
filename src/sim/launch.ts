@@ -2,7 +2,7 @@
  * Launch day: the Reddit thread, the Reddit Score, karma and the money curve.
  */
 import { STAT_KEYS, type AwardId, type ThreadCtx, type Vignette } from '../content/types';
-import { MARKET_BAR, NOVELTY, REVENUE, SCOPES } from './config';
+import { FRIDAY, MARKET_BAR, NOVELTY, REVENUE, SCOPES } from './config';
 import { addCash, addKarma, addSpaghetti, bump, setFlag, sound, toast, cashScale, type Ctx } from './ctx';
 import { clamp, lerp, yearOf } from './format';
 import { fill } from './names';
@@ -98,7 +98,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   if (cost > 0) addCash(ctx, -cost, `Launch: ${ch.name}`);
   p.hype = clamp(p.hype + ch.hype, 0, 100);
 
-  // a Friday deploy can bite
+  // a Friday deploy rides the weekend crowd, or takes production down
   let incident = false;
   if (p.fridayDeploy) {
     bump(ctx, 'friday_deploys');
@@ -107,8 +107,13 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
       incident = true;
       p.stats.stability = Math.max(0, p.stats.stability - rng.range(14, 24));
       p.stats.security = Math.max(0, p.stats.security - rng.range(3, 9));
+      p.hype = clamp(p.hype - FRIDAY.incidentHype, 0, 100);
       addSpaghetti(ctx, 6);
+      addCash(ctx, -Math.round(FRIDAY.incidentCost * cashScale(s)), 'Incident: weekend overtime and refunds');
+      for (const m of s.staff) m.mood = clamp(m.mood - FRIDAY.incidentMood, 0, 100);
       bump(ctx, 'friday_incidents');
+    } else {
+      p.hype = clamp(p.hype + FRIDAY.hype, 0, 100);
     }
   }
 
@@ -159,6 +164,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
       SCOPES[p.scope].money *
       scoreBonus *
       stabilityPenalty *
+      (incident ? FRIDAY.incidentRevenue : 1) *
       noveltyOf(s, p.kind, p.niche) *
       REVENUE.yearMult[Math.min(2, yearOf(s.day) - 1)]! *
       (1 + s.company.karma / 4000) *
@@ -192,6 +198,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
     spikeAmp,
     tailAmp,
     fridayDeploy: p.fridayDeploy,
+    incident,
     thread: { channel: channelId, title, body, opVotes, vignettes: records, awards },
     review: review ? { stars: review.stars, text: review.text, user: review.user } : undefined,
   };

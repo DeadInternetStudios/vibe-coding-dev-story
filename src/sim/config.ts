@@ -117,6 +117,15 @@ export const TOPUP_PRICE = 140;
 /** Speeds the player can pick, in game days per second. */
 export const SPEEDS = [1, 2, 4, 8] as const;
 
+/**
+ * The Friday deploy gamble. A clean one rides the weekend crowd; an incident costs
+ * hype, money, mood and a slice of the app's lifetime revenue.
+ */
+export const FRIDAY = { hype: 6, incidentHype: 8, incidentCost: 1500, incidentMood: 7, incidentRevenue: 0.85 } as const;
+
+/** Each round of outside money takes this share of the final score. The check is bigger than the bite, early. */
+export const DILUTION = { vc: 0.2, angel: 0.05 } as const;
+
 /** Chance per working day that an event fires. */
 export const EVENT_CHANCE = { dev: 0.07, month: 0.7, launch: 0.4, rare: 0.012 };
 /** Do not repeat an event within this many days. */

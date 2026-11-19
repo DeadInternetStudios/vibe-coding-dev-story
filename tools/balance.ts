@@ -1,6 +1,6 @@
 /**
  * Plays many whole games with bots and prints how they went.
- *   npx tsx tools/balance.ts [seeds=60] [difficulty=normal]
+ *   npx tsx tools/balance.ts [seeds=60] [difficulty=normal] [strategies=smart,casual,yolo,random,idle]
  */
 import { playBot, type Strategy } from '../src/sim/bot';
 import { buildFromSource } from '../src/content/runtime';
@@ -10,7 +10,7 @@ const seeds = Number(process.argv[2] ?? 60);
 const difficulty = (process.argv[3] ?? 'normal') as 'chill' | 'normal' | 'ramen';
 const content = buildFromSource();
 
-const strategies: Strategy[] = ['smart', 'casual', 'yolo', 'random', 'idle'];
+const strategies = (process.argv[4] ?? 'smart,casual,yolo,random,idle').split(',') as Strategy[];
 
 function pct(n: number, d: number): string {
   return `${Math.round((n / d) * 100)}%`.padStart(4);

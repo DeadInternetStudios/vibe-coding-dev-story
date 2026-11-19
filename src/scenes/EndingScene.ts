@@ -3,8 +3,9 @@ import { app, current } from '../core/app';
 import { audio } from '../core/audio';
 import { C, DEPTH, F } from '../core/theme';
 import { clearSave, pushHall, type HallEntry } from '../core/save';
+import { copyText, shareText } from '../core/share';
 import { dateLabel, shortMoney, shortNumber } from '../sim/format';
-import { button, label, panel, rect } from '../ui/kit';
+import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { openHall } from '../ui/modals/hall';
 import { Speech } from '../ui/speech';
@@ -255,21 +256,33 @@ export class EndingScene extends Phaser.Scene {
 
     // buttons
     const by = h - 24;
-    const bw = Math.floor((w - 24) / 3);
-    const again = button(this, 8, by, bw, 18, 'NEW RUN', () => {
+    const count = 4;
+    const bw = Math.floor((w - 12 - (count - 1) * 4) / count);
+    const roomy = bw >= 66;
+    const at = (i: number) => 6 + i * (bw + 4);
+    const again = button(this, at(0), by, bw, 18, 'NEW RUN', () => {
       audio.music(null, { fadeMs: 300 });
       fadeTo(this, 'NewGame');
-    }, { kind: 'orange', icon: 'plus' });
-    const hall = button(this, 8 + bw + 4, by, bw, 18, 'HALL', () => {
+    }, { kind: 'orange', icon: roomy ? 'plus' : undefined });
+    const hall = button(this, at(1), by, bw, 18, 'HALL', () => {
       openHall(this);
-    }, { kind: 'violet', icon: 'trophy' });
-    const home = button(this, 8 + (bw + 4) * 2, by, bw, 18, 'TITLE', () => {
+    }, { kind: 'violet', icon: roomy ? 'trophy' : undefined });
+    const share: ButtonObj = button(this, at(2), by, bw, 18, 'SHARE', () => {
+      const text = shareText(s, ending?.title, `${location.origin}${location.pathname}`);
+      void copyText(text).then((ok) => {
+        audio.sfx(ok ? 'coin' : 'deny');
+        if (!share.active) return;
+        share.setText(ok ? 'COPIED' : 'NO LUCK');
+        this.time.delayedCall(1700, () => share.active && share.setText('SHARE'));
+      });
+    }, { kind: 'teal', icon: roomy ? 'ship' : undefined });
+    const home = button(this, at(3), by, bw, 18, 'TITLE', () => {
       audio.music(null, { fadeMs: 300 });
       fadeTo(this, 'Title');
     }, { kind: 'plum' });
-    card.add([again, hall, home]);
+    card.add([again, hall, share, home]);
     if (!instant) {
-      [again, hall, home].forEach((b, i) => {
+      [again, hall, share, home].forEach((b, i) => {
         b.setAlpha(0);
         this.tweens.add({ targets: b, alpha: 1, duration: 200, delay: i * 90 });
       });

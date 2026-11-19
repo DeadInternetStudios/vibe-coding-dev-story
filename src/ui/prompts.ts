@@ -1,19 +1,21 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
 import { audio } from '../core/audio';
-import { bakePortrait } from '../core/bake';
+import { bakeBox as bakeBoxKey, bakePortrait } from '../core/bake';
 import { C, F } from '../core/theme';
 import { STAT_KEYS, type StatKey } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { PHASES, SCOPES } from '../sim/config';
 import { cardById, type Card } from '../sim/cards';
+import { cashScale } from '../sim/ctx';
 import { unlocked } from '../sim/game';
 import { money, shortMoney, signedMoney } from '../sim/format';
-import { qualityOf, projectView } from '../sim/views';
+import { projectView } from '../sim/views';
 import { Rng } from '../sim/rng';
 import type { EventOutcome, Prompt } from '../sim/types';
 import { bar, button, chip, choiceButton, iconImg, label, rect, type ButtonObj } from './kit';
 import { layoutOf } from './layout';
+import { hash7 } from './dash';
 import { Modal } from './modal';
 import { Speech } from './speech';
 import { beat, scene as playScene } from './story';
@@ -224,6 +226,7 @@ function cardPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'card' }>, done: Done): 
     if (t) {
       ctx.toast(t.quip, 'info', t.icon);
       ctx.sfx('select');
+      ctx.log('commit', hash7(), t.name);
     }
     m.close();
     ctx.refresh();
@@ -263,7 +266,6 @@ function cardPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'card' }>, done: Done): 
   ctx.room.say(ctx.session.s.staff[1]?.id ?? '', 'What should we focus on?');
 }
 
-import { bakeBox as bakeBoxKey } from '../core/bake';
 
 /* -------------------------------------------------------------------- ready */
 
@@ -318,7 +320,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   let selected = c.channels.find((ch) => unlocked(game, ch.unlock))?.id ?? c.channels[0]!.id;
   const rows: { id: string; btn: ButtonObj; ok: boolean }[] = [];
   const launchBtnRef: { b?: ButtonObj } = {};
-  const costOf = (id: string) => Math.round(c.channel(id).cost * (game.ctx.s.company.cash >= 0 ? cashFactor(ctx) : 1));
+  const costOf = (id: string) => Math.round(c.channel(id).cost * cashScale(game.ctx.s));
   const refreshLaunch = () => {
     const ch = c.channel(selected);
     launchBtnRef.b?.setText(`LAUNCH ON ${ch.where.toUpperCase()}`.slice(0, 26));
@@ -352,7 +354,6 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   launchBtnRef.b = launch;
   m.add(launch);
   refreshLaunch();
-  void qualityOf;
 
   const doLaunch = () => {
     const r = game.launch(selected);
@@ -365,7 +366,8 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     if (r.t === 'launched') {
       m.close();
       ctx.sfx('deploy_go');
-      deployBeats(ctx, () => done({ t: 'thread', appId: r.app.id }));
+      const toThread = () => done({ t: 'thread', appId: r.app.id });
+      deployBeats(ctx, () => (r.incident ? incidentBeat(ctx, toThread) : toThread()));
       return;
     }
     m.close();
@@ -373,9 +375,16 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   };
 }
 
-function cashFactor(ctx: UiCtx): number {
-  const d = ctx.session.s.day;
-  return [1, 1.9, 3.6][Math.min(2, Math.floor(d / 336))] ?? 1;
+/** A Friday deploy took production down. Short, loud, and Dave was right. */
+function incidentBeat(ctx: UiCtx, onDone: () => void): void {
+  ctx.sfx('alert');
+  ctx.shake(0.012);
+  ctx.banner('PROD IS DOWN', 'It was a Friday.', 'bad');
+  ctx.log('warn', 'ERROR', 'prod is down. it was a friday.');
+  playScene(ctx, ctx.content.story.friday.incident, () => {
+    ctx.refresh();
+    onDone();
+  });
 }
 
 /** Two random deploy gags, then the countdown. */

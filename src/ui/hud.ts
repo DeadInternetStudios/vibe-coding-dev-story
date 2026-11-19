@@ -52,6 +52,7 @@ export class Hud {
   private statVals = new Map<StatKey, Phaser.GameObjects.BitmapText>();
   private progressBar: BarObj | null = null;
   private hypeBar: BarObj | null = null;
+  private hypeVal: Phaser.GameObjects.BitmapText | null = null;
   private phasePips: Phaser.GameObjects.Image[] = [];
   private phaseLabel: Phaser.GameObjects.BitmapText | null = null;
   private qualityText: Phaser.GameObjects.BitmapText | null = null;
@@ -182,6 +183,7 @@ export class Hud {
     this.phasePips = [];
     this.progressBar = null;
     this.hypeBar = null;
+    this.hypeVal = null;
     this.crunchBtn = null;
     this.phaseLabel = null;
     this.qualityText = null;
@@ -210,9 +212,9 @@ export class Hud {
     this.projectKey = `p${p.id}:${p.status}`;
     const kind = c.kind(p.kind);
     const niche = c.niche(p.niche);
-    this.project.add(label(s, x + 6, y + 4, p.name.length > 24 ? `${p.name.slice(0, 23)}~` : p.name, { font: F.caps, tint: C.yellow }));
+    this.project.add(label(s, x + 6, y + 3, p.name.length > 24 ? `${p.name.slice(0, 23)}~` : p.name, { font: F.caps, tint: C.yellow }));
     const sub = `${kind.name} / ${niche.plural}`;
-    this.project.add(label(s, x + 6, y + 14, sub.length > 40 ? `${sub.slice(0, 39)}~` : sub, { font: F.body, tint: C.ink4 }));
+    this.project.add(label(s, x + 6, y + 12, sub.length > 40 ? `${sub.slice(0, 39)}~` : sub, { font: F.body, tint: C.ink4 }));
     if (p.status !== 'dev') {
       const b = button(s, x + 6, y + h - 22, Math.min(150, w - 12), 18, p.status === 'ready' ? 'LAUNCH IT' : 'WAITING FOR MONDAY', () => this.onMenu('launch'), { kind: p.status === 'ready' ? 'orange' : 'plum', icon: 'ship', disabled: p.status !== 'ready' });
       this.project.add(b);
@@ -220,44 +222,43 @@ export class Hud {
     }
     // phase pips
     const pipX = x + 6;
-    const pipY = y + 24;
-    PHASES.forEach((ph, i) => {
+    const pipY = y + 22;
+    PHASES.forEach((_, i) => {
       const pip = rect(s, pipX + i * 22, pipY, 20, 4, C.ink2, 1);
       this.project.add(pip);
       this.phasePips.push(pip as unknown as Phaser.GameObjects.Image);
-      void ph;
     });
-    this.phaseLabel = label(s, pipX + 4 * 22 + 2, pipY - 2, '', { font: F.caps, tint: C.orange2 });
+    this.phaseLabel = label(s, pipX + PHASES.length * 22 + 2, pipY - 2, '', { font: F.caps, tint: C.orange2 });
     this.project.add(this.phaseLabel);
     this.progressBar = bar(s, x + 6, pipY + 7, Math.min(w - 12, 140), 5, C.orange2, p.progress / 100);
     this.project.add(this.progressBar);
-    // stats
-    const colW = Math.floor((w - 12) / (portrait ? 2 : 3));
-    const sy0 = pipY + 15;
+    // quality and the crunch switch sit on the right, clear of the stat grid
+    const rx = x + w - 6;
+    this.qualityText = label(s, rx, y + 3, 'Q 0', { font: F.head, tint: C.mint, origin: [1, 0] });
+    this.project.add(this.qualityText);
+    this.crunchBtn = button(s, rx - 44, pipY - 1, 44, 13, 'CRUNCH', () => this.onCrunch(), { kind: this.session.s.company.crunch ? 'berry' : 'plum', font: F.body });
+    this.project.add(this.crunchBtn);
+    // five stats and hype in a grid of three columns, the same in every layout
+    const cols = 3;
+    const colW = Math.floor((w - 12) / cols);
+    const sy0 = pipY + 13;
+    const cell = (i: number) => ({ cx: x + 6 + (i % cols) * colW, cy: sy0 + Math.floor(i / cols) * 9 });
     STAT_KEYS.forEach((k, i) => {
-      const col = i % (portrait ? 2 : 3);
-      const row = Math.floor(i / (portrait ? 2 : 3));
-      const sx = x + 6 + col * colW;
-      const sy = sy0 + row * 9;
-      this.project.add(iconImg(s, k, sx, sy - 1));
-      const bb = bar(s, sx + 10, sy, colW - 36, 5, STAT_COLORS[k], 0);
+      const { cx, cy } = cell(i);
+      this.project.add(iconImg(s, k, cx, cy - 1));
+      const bb = bar(s, cx + 10, cy, colW - 36, 5, STAT_COLORS[k], 0);
       this.project.add(bb);
       this.statBars.set(k, bb);
-      const v = label(s, sx + colW - 24, sy - 1, '0', { font: F.body, tint: C.cream });
+      const v = label(s, cx + colW - 24, cy - 1, '0', { font: F.body, tint: C.cream });
       this.project.add(v);
       this.statVals.set(k, v);
     });
-    // hype + quality at the right of the card
-    const rx = x + w - 6;
-    this.qualityText = label(s, rx, y + 4, 'Q 0', { font: F.head, tint: C.mint, origin: [1, 0] });
-    this.project.add(this.qualityText);
-    const hx = portrait ? x + 6 : x + Math.min(w - 12, 140) + 12;
-    void hx;
-    this.crunchBtn = button(s, rx - 44, y + h - 17, 44, 14, 'CRUNCH', () => this.onCrunch(), { kind: this.session.s.company.crunch ? 'berry' : 'plum', font: F.body });
-    this.project.add(this.crunchBtn);
-    this.hypeBar = bar(s, rx - 44, y + h - 26, 44, 4, C.pink, 0);
+    const hype = cell(STAT_KEYS.length);
+    this.project.add(label(s, hype.cx, hype.cy - 1, 'HYPE', { font: F.body, tint: C.pink }));
+    this.hypeBar = bar(s, hype.cx + 22, hype.cy, colW - 48, 5, C.pink, 0);
     this.project.add(this.hypeBar);
-    this.project.add(label(s, rx - 46, y + h - 28, 'HYPE', { font: F.body, tint: C.ink4, origin: [1, 0] }));
+    this.hypeVal = label(s, hype.cx + colW - 24, hype.cy - 1, '0', { font: F.body, tint: C.cream });
+    this.project.add(this.hypeVal);
   }
 
   private setText(key: string, obj: Phaser.GameObjects.BitmapText, text: string): void {
@@ -333,6 +334,7 @@ export class Hud {
     }
     if (this.qualityText) this.setText('q', this.qualityText, `Q ${view.quality}`);
     this.hypeBar?.set(Math.min(1, p.hype / 100), true);
+    if (this.hypeVal) this.setText('hype', this.hypeVal, `${Math.round(p.hype)}`);
     const crunch = this.session.s.company.crunch;
     if (this.crunchBtn && this.last.crunch !== (crunch ? 1 : 0)) {
       this.last.crunch = crunch ? 1 : 0;
