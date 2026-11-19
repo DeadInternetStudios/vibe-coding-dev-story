@@ -6,7 +6,7 @@ import { SKILL_KEYS, type SkillKey } from '../../content/types';
 import { money, shortMoney } from '../../sim/format';
 import type { Staff } from '../../sim/types';
 import { bar, button, iconImg, label, panel, rect, type ButtonKind } from '../kit';
-import { layoutOf } from '../layout';
+import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
@@ -25,7 +25,7 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
   const game = ctx.session.game;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const h = Math.min(L.H - 4, wide ? 246 : 350);
+  const h = popupH(L, wide ? 246 : 350);
   const m = new Modal(scene, { w, h, title: 'THE TEAM', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'team');
   let sel = Math.max(0, s.staff.findIndex((x) => x.id === focus));

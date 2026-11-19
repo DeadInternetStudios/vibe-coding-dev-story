@@ -174,7 +174,7 @@ export class TitleScene extends Phaser.Scene {
           { user: 'u/clod', text: 'You are absolutely right!' },
           { user: 'u/karen', text: 'I want to speak to your AI' },
         ];
-    const w = 96;
+    const w = 104;
     const gap = 8;
     const lanes: { x0: number; x1: number; y0: number; y1: number }[] = [];
     const leftMax = L.cx - at.half - gap - w;
@@ -188,12 +188,19 @@ export class TitleScene extends Phaser.Scene {
     }
     if (lanes[0]!.y1 - lanes[0]!.y0 < 40) return;
     const count = lanes.length === 1 ? Math.min(3, Math.max(1, Math.floor((lanes[0]!.y1 - lanes[0]!.y0) / 60))) : 4;
-    const picks = rng.shuffle(pool).slice(0, count);
+    // each commenter once, and only lines that fit a bubble whole: a cut line reads as a bug on the first screen
+    const picks: typeof pool = [];
+    const seen = new Set<string>();
+    for (const p of rng.shuffle(pool)) {
+      if (picks.length >= count) break;
+      if (seen.has(p.user) || p.text.length > 80) continue;
+      seen.add(p.user);
+      picks.push(p);
+    }
     picks.forEach((p, i) => {
       const lane = lanes[i % lanes.length]!;
       const c = this.add.container(0, 0).setDepth(6);
-      const text = p.text.length > 56 ? `${p.text.slice(0, 54)}..` : p.text;
-      const t = label(this, 5, 12, text, { font: F.body, tint: C.cream, maxWidth: w - 10 });
+      const t = label(this, 5, 12, p.text, { font: F.body, tint: C.cream, maxWidth: w - 10 });
       const h = Math.max(24, 16 + t.height);
       c.add([panel(this, 0, 0, w, h, 'night', false), t, label(this, 5, 3, p.user, { font: F.caps, tint: C.orange2 })]);
       const x = lane.x1 > lane.x0 ? Math.round(rng.range(lane.x0, lane.x1)) : lane.x0;
@@ -212,7 +219,8 @@ export class TitleScene extends Phaser.Scene {
       d.y -= (dt / 1000) * d.speed;
       if (d.y + d.h < d.y0) d.y = d.y1;
       d.c.y = Math.round(d.y);
-      const fade = Math.min(1, Math.max(0, (d.y + d.h - d.y0) / 14), Math.max(0, (d.y1 - d.y) / 14));
+      // a bubble fades in only once all of it is above the news strip, and out as it leaves the top
+      const fade = Math.min(1, Math.max(0, (d.y + d.h - d.y0) / 14), Math.max(0, (d.y1 - (d.y + d.h)) / 14));
       d.c.setAlpha(0.9 * fade);
     }
     if (this.ticker) {

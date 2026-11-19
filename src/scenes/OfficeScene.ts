@@ -48,6 +48,8 @@ export class OfficeScene extends Phaser.Scene {
   private view = { x: 0, y: 0, w: 0, h: 0 };
   private dragging = false;
   private dragX = 0;
+  /** moves the track and arrows that show a room wider than the screen can be dragged */
+  private panTick: (() => void) | null = null;
   private bannerObj: Phaser.GameObjects.Container | null = null;
   private introDone = false;
   private introOpen = false;
@@ -193,6 +195,7 @@ export class OfficeScene extends Phaser.Scene {
     this.room.onItem = (id) => this.itemQuip(id);
     this.room.onBulb = () => this.tapIdea();
     this.bootLog();
+    this.panTick = null;
     this.placeRoom();
     this.setupPan();
     const s = this.session.s;
@@ -244,13 +247,19 @@ export class OfficeScene extends Phaser.Scene {
     if (rw <= L.W) return;
     // the room is wider than the screen: say so once, then it can be dragged
     const seen = this.session.s.tutorial;
+    const minX = L.W - rw;
     if (!seen.includes('pan')) {
       seen.push('pan');
       this.time.delayedCall(2200, () => this.toasts?.push('The office is bigger than your screen. Drag it to look around.', 'info', 'star'));
+      // once, the room slides to one end and back by itself, so nobody mistakes the cut off desks for a broken layout
+      const startX = this.room.root.x;
+      const go = (x: number, ms: number, next?: () => void) =>
+        this.tweens.add({ targets: this.room.root, x, duration: ms, ease: 'Sine.easeInOut', onComplete: () => next?.() });
+      if (!app.settings.reducedMotion) this.time.delayedCall(900, () => go(minX, 1300, () => go(0, 2400, () => go(startX, 1300))));
     }
-    const minX = L.W - rw;
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (p.y > this.view.y && p.y < this.view.y + this.view.h && !this.menuModal && !this.promptOpen) {
+        this.tweens.killTweensOf(this.room.root);
         this.dragging = true;
         this.dragX = p.x - this.room.root.x;
       }
@@ -259,7 +268,37 @@ export class OfficeScene extends Phaser.Scene {
       if (this.dragging) this.room.root.x = Math.round(Phaser.Math.Clamp(p.x - this.dragX, minX, 0));
     });
     this.input.on('pointerup', () => (this.dragging = false));
+    this.panHint(L, minX);
   }
+
+  /** A room wider than the screen gets a small track under it and arrows at its edges, so it reads as something to drag. */
+  private panHint(L: ReturnType<typeof layoutOf>, minX: number): void {
+    const root = this.room.root;
+    const ty = Math.min(this.view.y + this.view.h - 5, root.y + this.room.h + 4);
+    const trackW = 52;
+    const tx = Math.floor((L.W - trackW) / 2);
+    rect(this, tx - 1, ty - 1, trackW + 2, 5, C.ink0, 1).setDepth(DEPTH.fx);
+    rect(this, tx, ty, trackW, 3, C.ink2, 1).setDepth(DEPTH.fx);
+    const thumbW = Math.max(10, Math.round(trackW * (L.W / this.room.w)));
+    const thumb = rect(this, tx, ty, thumbW, 3, C.orange2, 1).setDepth(DEPTH.fx + 1);
+    const chevron = (x: number, dir: 1 | -1) => {
+      const c = this.add.container(x, root.y + Math.floor(this.room.h / 2) - 3).setDepth(DEPTH.fx + 1);
+      c.add(rect(this, 0, -1, 5, 9, C.ink0, 0.6));
+      [[0, 0], [1, 1], [2, 2], [1, 3], [0, 4]].forEach(([dx, dy]) => c.add(rect(this, 1 + (dir === 1 ? dx! : 2 - dx!), 1 + dy!, 1, 1, C.cream, 1)));
+      return c;
+    };
+    const left = chevron(2, -1);
+    const right = chevron(L.W - 7, 1);
+    this.panTick = () => {
+      const span = this.room.w - L.W;
+      const at = Phaser.Math.Clamp(-root.x / span, 0, 1);
+      thumb.x = tx + Math.round((trackW - thumbW) * at);
+      const pulse = app.settings.reducedMotion ? 0.9 : 0.55 + 0.4 * Math.sin(this.time.now / 260);
+      left.setAlpha(root.x < -1 ? pulse : 0);
+      right.setAlpha(root.x > minX + 1 ? pulse : 0);
+    };
+  }
+
 
   /* ------------------------------------------------------------ actions */
 
@@ -573,6 +612,7 @@ export class OfficeScene extends Phaser.Scene {
     this.toasts.update(dt);
     this.ticker?.update(dt);
     this.dash?.update(dt);
+    this.panTick?.();
     this.repo();
     this.talk(dt / 1000);
 

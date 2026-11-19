@@ -23,7 +23,9 @@ export interface Viewport {
 
 /** Shortest logical side we aim for, by orientation and the player's size preference. */
 const TARGET_LANDSCAPE_H = 232;
-const TARGET_PORTRAIT_W = 252;
+const TARGET_PORTRAIT_W = 234;
+/** The narrowest portrait canvas the layouts were drawn for. A bigger UI choice stops before it goes narrower. */
+const MIN_PORTRAIT_W = 224;
 const PREF_STEP = 40;
 /**
  * The office needs this much room to show everything. Landscape: the room plus a log and a chart of 72 or more on each side.
@@ -31,7 +33,7 @@ const PREF_STEP = 40;
  * squarish window gets a smaller scale (more art pixels) so those panels fit, unless the player asked for a bigger UI.
  */
 const NEED_LANDSCAPE_W = 380;
-const NEED_PORTRAIT_H = 440;
+const NEED_PORTRAIT_H = 420;
 
 export function computeViewport(cssW: number, cssH: number, dprRaw: number, pref: UiSizePref = 0): Viewport {
   const dpr = Math.min(4, Math.max(1, dprRaw || 1));
@@ -41,12 +43,16 @@ export function computeViewport(cssW: number, cssH: number, dprRaw: number, pref
   // pref -1 is a smaller UI (more logical pixels), +1 a bigger one
   const shift = -pref * PREF_STEP;
   const roomy = pref <= 0;
-  const scale = Math.max(
-    1,
-    portrait
-      ? Math.min(Math.floor(devW / (TARGET_PORTRAIT_W + shift * 0.9)), roomy ? Math.floor(devH / NEED_PORTRAIT_H) : Infinity)
-      : Math.min(Math.floor(devH / (TARGET_LANDSCAPE_H + shift)), roomy ? Math.floor(devW / NEED_LANDSCAPE_W) : Infinity),
-  );
+  let scale: number;
+  if (portrait) {
+    scale = Math.floor(devW / (TARGET_PORTRAIT_W + shift * 0.9));
+    if (roomy) scale = Math.min(scale, Math.floor(devH / NEED_PORTRAIT_H));
+    while (scale > 1 && devW / scale < MIN_PORTRAIT_W) scale -= 1;
+  } else {
+    scale = Math.floor(devH / (TARGET_LANDSCAPE_H + shift));
+    if (roomy) scale = Math.min(scale, Math.floor(devW / NEED_LANDSCAPE_W));
+  }
+  scale = Math.max(1, scale);
   const w = Math.ceil(devW / scale);
   const h = Math.ceil(devH / scale);
   return { w, h, scale, dpr, cssPerPx: scale / dpr, portrait };

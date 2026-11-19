@@ -9,7 +9,7 @@ import { productName } from '../../sim/names';
 import { Rng } from '../../sim/rng';
 import { qualityOf } from '../../sim/views';
 import { bar, button, iconImg, label, panel, rect } from '../kit';
-import { layoutOf } from '../layout';
+import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
@@ -31,7 +31,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const s = ctx.session.s;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const h = Math.min(L.H - 4, wide ? 246 : 372);
+  const h = popupH(L, wide ? 246 : 372);
   const m = new Modal(scene, { w, h, title: 'NEW PROJECT', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'idea');
 

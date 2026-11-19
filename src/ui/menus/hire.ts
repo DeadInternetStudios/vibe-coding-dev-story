@@ -5,7 +5,7 @@ import { C, F } from '../../core/theme';
 import { SKILL_KEYS } from '../../content/types';
 import { money, shortMoney } from '../../sim/format';
 import { button, iconImg, label, panel, rect } from '../kit';
-import { layoutOf } from '../layout';
+import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
@@ -20,7 +20,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
   const w = Math.min(L.W - 4, wide ? 410 : 246);
   const rowH = wide ? 29 : 42;
   const rows = Math.max(1, s.candidates.length);
-  const h = Math.min(L.H - 4, 44 + rows * (rowH + 2) + 32);
+  const h = popupH(L, 44 + rows * (rowH + 2) + 32);
   const m = new Modal(scene, { w, h, title: 'JOB BOARD', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'hire');
 

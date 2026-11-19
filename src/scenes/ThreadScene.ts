@@ -5,6 +5,7 @@ import { feature } from '../core/features';
 import { bakeIcon, bakePortrait } from '../core/bake';
 import { C, DEPTH, F } from '../core/theme';
 import type { AwardId, StatKey, ThreadComment } from '../content/types';
+import { VOICE_NAMES } from '../content/voiceNames';
 import { shortMoney, shortNumber } from '../sim/format';
 import type { ShippedApp } from '../sim/types';
 import { confettiBurst } from '../ui/fx';
@@ -55,6 +56,25 @@ const JUDGE_SHORT: Record<StatKey | 'overall' | 'hype', string> = {
   security: 'SECU',
   overall: 'ALL',
   hype: 'HYPE',
+};
+
+/** The 2nd, 3rd and 4th "overall" rating get their own names, so the tiles never read as one copied tile. */
+const OVERALL_AGAIN = ['GUT', 'SELL', 'WOW'];
+
+function judgeShort(judges: StatKey | 'overall' | 'hype', nth: number): string {
+  if (nth === 0) return JUDGE_SHORT[judges];
+  if (judges === 'overall') return OVERALL_AGAIN[nth - 1] ?? 'ALL';
+  return `${JUDGE_SHORT[judges].slice(0, 3)}${nth + 1}`;
+}
+
+/** What the address bar says for each place the app can be posted. Every thread is drawn as Reddit, the URL keeps the joke honest. */
+const ADDRESS: Record<string, string> = {
+  quiet: 'my-garage-blog.dev/launch',
+  hn: 'news.ycombinator.com/item',
+  ph: 'producthunt.com/posts/new',
+  linkedin: 'linkedin.com/feed/update',
+  influencer: 'tiktok.example/@shoutout',
+  ad: 'billboards.example/campaign',
 };
 
 const AVATAR_BG = [C.sky, C.mint, C.yellow, C.pink, C.violet2, C.orange3, C.blue2, C.green2];
@@ -111,6 +131,24 @@ export class ThreadScene extends Phaser.Scene {
   private skipBtn!: Phaser.GameObjects.Container;
   private resultsOpen = false;
   private ratingsSum = 0;
+  /** portrait only: the speaker, big, under the feed */
+  private stageH = 0;
+  private stage: Phaser.GameObjects.Container | null = null;
+  private stageFace!: Phaser.GameObjects.Image;
+  private stageBg!: Phaser.GameObjects.Image;
+  private stageName!: Phaser.GameObjects.BitmapText;
+  private stageUser!: Phaser.GameObjects.BitmapText;
+  private stageFlair!: Phaser.GameObjects.BitmapText;
+  private stageBars: Phaser.GameObjects.Image[] = [];
+  /** faded placeholder replies under the feed while the real ones load */
+  private ghosts: Phaser.GameObjects.Container | null = null;
+  private karmaT!: Phaser.GameObjects.BitmapText;
+  private karmaIcon!: Phaser.GameObjects.Image;
+  /** the karma the pill shows now */
+  private karmaShown = 0;
+  /** upvotes that have landed so far, and all that will land */
+  private votesIn = 0;
+  private votesAll = 1;
 
   init(data: { appId?: number; replay?: boolean; instant?: boolean }): void {
     const s = current().s;
@@ -127,6 +165,12 @@ export class ThreadScene extends Phaser.Scene {
     this.slots = [];
     this.resultsOpen = false;
     this.ratingsSum = 0;
+    this.stage = null;
+    this.stageBars = [];
+    this.ghosts = null;
+    this.karmaShown = 0;
+    this.votesIn = 0;
+    this.votesAll = Math.max(1, this.rec.thread.opVotes + this.items().flat().reduce((n, it) => n + Math.max(0, it.votes), 0));
     this.cur = null;
     this.nudge = null;
   }
@@ -142,9 +186,11 @@ export class ThreadScene extends Phaser.Scene {
     // faint rows behind the column so wide screens do not look empty
     for (let y = 18; y < L.H; y += 12) rect(this, 0, y, L.W, 1, C.ink1, 0.5).setDepth(1);
     this.viewTop = 18;
-    this.viewH = L.H - this.viewTop;
+    this.stageH = L.portrait ? 66 : 0;
+    this.viewH = L.H - this.viewTop - this.stageH;
     this.feed = this.add.container(0, this.viewTop).setDepth(5);
     this.buildChrome(L.W);
+    if (this.stageH) this.buildStage(L);
     audio.music('thread', { fadeMs: 500 });
     (window as unknown as { __vcds?: Record<string, unknown> }).__vcds = { ...((window as unknown as { __vcds?: Record<string, unknown> }).__vcds ?? {}), thread: this, scene: this };
 
@@ -193,14 +239,20 @@ export class ThreadScene extends Phaser.Scene {
     const dots = [C.pink, C.yellow, C.green2];
     dots.forEach((c, i) => rect(this, 4 + i * 5, 7, 3, 3, c, 1).setDepth(DEPTH.panel + 1));
     const ch = app.content.channels.find((x) => x.id === this.rec.channel);
-    const where = ch?.where ?? 'r/SideProject';
+    const address = ch ? (ADDRESS[ch.id] ?? `reddit.com/${ch.where}`) : 'reddit.com/r/SideProject';
     const urlX = 24;
     const n = Math.max(1, this.rec.thread.vignettes.length);
     const slotW = 12;
     const slotsW = n * (slotW + 1);
-    const urlW = Math.min(this.cw - (this.portrait ? 0 : 0), W - urlX - slotsW - 8);
+    const pillW = 46;
+    const urlW = Math.min(this.cw, W - urlX - slotsW - pillW - 11);
     panel(this, urlX, 3, urlW, 11, 'well', false).setDepth(DEPTH.panel + 1);
-    label(this, urlX + 4, 5, `reddit.com/${where}`, { font: F.body, tint: C.ink4, depth: DEPTH.panel + 2, maxWidth: urlW - 8 });
+    label(this, urlX + 4, 5, address, { font: F.body, tint: C.ink4, depth: DEPTH.panel + 2, maxWidth: urlW - 8 });
+    // karma pill: rolls up as the comments land and ends on the number the results card shows
+    const kx = urlX + urlW + 3;
+    panel(this, kx, 3, pillW, 11, 'well', false).setDepth(DEPTH.panel + 1);
+    this.karmaIcon = iconImg(this, 'karma', kx + 3, 4).setOrigin(0.5, 0.5).setPosition(kx + 7, 9).setDepth(DEPTH.panel + 2);
+    this.karmaT = label(this, kx + 14, 5, '+0', { font: F.caps, tint: C.orange2, depth: DEPTH.panel + 2 });
     // rating slots, they fill in as the root comments land
     this.slots = [];
     for (let i = 0; i < n; i++) {
@@ -297,9 +349,11 @@ export class ThreadScene extends Phaser.Scene {
         await this.wait(this.portrait ? 380 : 320);
       }
       if (card) this.cursor = card.y + card.box.boxH + 5;
+      this.moveGhosts(this.cursor);
       await this.wait(260);
     }
     if (!this.alive) return;
+    this.dropGhosts();
     await this.wait(500);
     this.showResults();
   }
@@ -344,6 +398,7 @@ export class ThreadScene extends Phaser.Scene {
     this.follow(this.cursor);
     if (this.instant) {
       votes.setText(shortNumber(rec.thread.opVotes));
+      this.bumpKarma(rec.thread.opVotes);
       return;
     }
     audio.sfx('thread_open');
@@ -352,7 +407,153 @@ export class ThreadScene extends Phaser.Scene {
     this.tweens.add({ targets: [card, badge, head, meta, title, body, up, votes, down, foot], alpha: 1, duration: 260 });
     await this.wait(500);
     this.tickNumber(votes, rec.thread.opVotes, 1100, true);
+    this.bumpKarma(rec.thread.opVotes);
+    this.buildGhosts();
     await this.wait(700);
+  }
+
+  /* -------------------------------------------------------------- stage */
+
+  /**
+   * Portrait only. The speaker, big, under the feed: a tall phone screen would otherwise be a thin
+   * column of text over a dark void. It also puts a face and a name to every voice.
+   */
+  private buildStage(L: ReturnType<typeof layoutOf>): void {
+    const root = this.add.container(0, L.H - this.stageH).setDepth(DEPTH.hud);
+    root.add(rect(this, 0, 0, L.W, this.stageH, C.ink1, 1));
+    root.add(rect(this, 0, 0, L.W, 1, C.orange2, 1));
+    root.add(rect(this, 6, 5, 58, 58, C.ink0, 1));
+    this.stageBg = rect(this, 7, 6, 56, 56, C.sky, 1);
+    this.stageFace = this.add.image(35, 62, bakePortrait(this, 'narrator')).setOrigin(0.5, 1).setScale(3);
+    root.add([this.stageBg, this.stageFace]);
+    // until the first reply is spoken the stage says what is going on
+    this.stageBg.setTint(C.ink2);
+    this.stageName = label(this, 72, 8, 'LOADING REPLIES', { font: F.caps, tint: C.orange2, maxWidth: L.W - 80 });
+    this.stageUser = label(this, 72, 20, 'the internet has opinions', { font: F.body, tint: C.blue2, maxWidth: L.W - 80 });
+    this.stageFlair = label(this, 72, 30, '', { font: F.body, tint: C.violet2, maxWidth: L.W - 80 });
+    root.add([this.stageName, this.stageUser, this.stageFlair]);
+    const barsX = 72;
+    const barsEnd = L.W - 58;
+    const n = Math.max(6, Math.floor((barsEnd - barsX) / 4));
+    this.stageBars = Array.from({ length: n }, (_, i) => rect(this, barsX + i * 4, 60, 3, 1, C.orange2, 1).setOrigin(0, 1));
+    root.add(this.stageBars);
+    this.stage = root;
+    this.time.addEvent({ delay: 70, loop: true, callback: () => this.tickStage() });
+  }
+
+  /** Put this commenter on the stage. */
+  private showSpeaker(c: ThreadComment, instant: boolean): void {
+    const stage = this.stage;
+    if (!stage) return;
+    const voice = c.line.voice;
+    this.stageFace.setTexture(bakePortrait(this, voice));
+    this.stageBg.setTint(AVATAR_BG[Math.abs(hash(c.user)) % AVATAR_BG.length]!);
+    this.stageName.setText((VOICE_NAMES[voice] ?? voice).toUpperCase());
+    this.stageUser.setText(c.user);
+    this.stageFlair.setText(c.flair ?? '');
+    stage.setVisible(true);
+    if (instant || app.settings.reducedMotion) return;
+    this.stageFace.y = 66;
+    this.tweens.add({ targets: this.stageFace, y: 62, duration: 160, ease: 'Back.easeOut' });
+    this.stageName.setAlpha(0);
+    this.tweens.add({ targets: this.stageName, alpha: 1, duration: 140 });
+  }
+
+  /** The stage's meter follows the voice, and the face hops on the loud syllables. */
+  private tickStage(): void {
+    if (!this.stage?.visible || app.settings.reducedMotion) return;
+    const lv = this.cur?.level ?? 0;
+    const t = this.time.now;
+    this.stageBars.forEach((b, i) => {
+      const shape = 0.35 + 0.65 * Math.abs(Math.sin(t / 110 + i * 0.9) * Math.cos(t / 170 + i * 0.4));
+      b.setDisplaySize(3, 1 + Math.round(18 * lv * shape));
+    });
+    if (lv > 0.55) this.stageFace.y = 61;
+    else if (this.stageFace.y === 61) this.stageFace.y = 62;
+  }
+
+  /** Faded placeholder replies under the last comment, the way a page looks while its replies load. */
+  private buildGhosts(): void {
+    const g = this.add.container(0, 0);
+    this.feed.add(g);
+    const w = this.cw;
+    for (let i = 0; i < 4; i++) {
+      const y = i * 46;
+      g.add(panel(this, this.x0, y, w, 40, 'plum', false));
+      g.add(rect(this, this.x0 + 5, y + 5, 20, 21, C.ink2, 0.8));
+      g.add(rect(this, this.x0 + 30, y + 6, 36 + ((i * 17) % 34), 4, C.ink3, 0.7));
+      g.add(rect(this, this.x0 + 30, y + 15, w - 42 - ((i * 23) % 44), 5, C.ink2, 0.9));
+      g.add(rect(this, this.x0 + 30, y + 24, w - 74 - ((i * 31) % 52), 5, C.ink2, 0.9));
+    }
+    this.ghosts = g;
+    this.moveGhosts(this.cursor);
+    if (!app.settings.reducedMotion) {
+      g.setAlpha(0.5);
+      this.tweens.add({ targets: g, alpha: 0.95, duration: 760, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+  }
+
+  private moveGhosts(y: number): void {
+    if (this.ghosts) this.ghosts.y = y;
+  }
+
+  private dropGhosts(): void {
+    const g = this.ghosts;
+    this.ghosts = null;
+    if (!g) return;
+    this.tweens.killTweensOf(g);
+    this.tweens.add({ targets: g, alpha: 0, duration: 200, onComplete: () => g.destroy() });
+  }
+
+  /**
+   * While a line is spoken the portrait bobs with the voice, a three bar meter rides its corner and an
+   * orange rule marks who is talking. Returns the function that ends it.
+   */
+  private speakingFx(sp: Speech, block: Phaser.GameObjects.Container, face: Phaser.GameObjects.Image, ax: number, by: number, av: number, blockH: number): () => void {
+    const rule = rect(this, this.x0 + 2, by - 1, 2, blockH, C.orange2, 1);
+    const parts: Phaser.GameObjects.Image[] = [rule];
+    block.add(rule);
+    let tick: Phaser.Time.TimerEvent | null = null;
+    const baseY = face.y;
+    if (!app.settings.reducedMotion) {
+      const backing = rect(this, ax + av - 11, by + av - 8, 10, 8, C.ink0, 0.9);
+      const bars = [0, 1, 2].map((i) => rect(this, ax + av - 9 + i * 3, by + av - 1, 2, 1, C.orange2, 1).setOrigin(0, 1));
+      parts.push(backing, ...bars);
+      block.add([backing, ...bars]);
+      tick = this.time.addEvent({
+        delay: 70,
+        loop: true,
+        callback: () => {
+          const lv = sp.level;
+          bars.forEach((b, i) => b.setDisplaySize(2, 1 + Math.round(6 * Math.min(1, lv * (0.55 + 0.45 * Math.abs(Math.sin(this.time.now / 90 + i * 2.1)))))));
+          face.y = baseY - (lv > 0.55 ? 1 : 0);
+        },
+      });
+    }
+    return () => {
+      tick?.remove();
+      face.y = baseY;
+      block.remove(parts, true);
+    };
+  }
+
+  /** The pill moves with the upvotes that have landed, scaled so it ends on the karma the run earned. */
+  private bumpKarma(votes: number): void {
+    this.votesIn += Math.max(0, votes);
+    const to = Math.round(this.rec.karma * Math.min(1, this.votesIn / this.votesAll));
+    const from = this.karmaShown;
+    this.karmaShown = to;
+    if (to === from) return;
+    const show = (v: number) => this.karmaT.setText(`+${shortNumber(v)}`);
+    if (this.instant || this.fast || app.settings.reducedMotion) {
+      show(to);
+      return;
+    }
+    this.tweens.addCounter({ from, to, duration: 650, ease: 'Cubic.easeOut', onUpdate: (tw) => show(Math.round(tw.getValue()!)), onComplete: () => show(to) });
+    this.karmaT.setTint(C.white);
+    this.time.delayedCall(140, () => this.karmaT.setTint(C.orange2));
+    this.karmaIcon.setScale(1.5);
+    this.tweens.add({ targets: this.karmaIcon, scale: 1, duration: 240, ease: 'Back.easeOut' });
   }
 
   private tickNumber(t: Phaser.GameObjects.BitmapText, to: number, ms: number, sound = false): void {
@@ -409,6 +610,7 @@ export class ThreadScene extends Phaser.Scene {
     card.inner += blockH + 3;
     card.box.setBoxSize(cardW, pad + card.inner + pad - 3);
     const bottom = card.y + card.box.boxH;
+    this.moveGhosts(bottom + 5);
 
     const block = this.add.container(0, 0);
     this.feed.add(block);
@@ -417,7 +619,8 @@ export class ThreadScene extends Phaser.Scene {
     if (c.depth > 0) block.add(rect(this, ax - 3, by, 1, blockH - 1, C.ink3, 1));
     block.add(rect(this, ax, by, AV, AV + 1, C.ink0, 1));
     block.add(rect(this, ax + 1, by + 1, AV - 2, AV - 1, bg, 1));
-    block.add(this.add.image(ax + AV / 2, by + AV - 0, bakePortrait(this, voice)).setOrigin(0.5, 1));
+    const face = this.add.image(ax + AV / 2, by + AV - 0, bakePortrait(this, voice)).setOrigin(0.5, 1);
+    block.add(face);
     const isMod = /mod/i.test(c.flair ?? '') || voice === 'automod';
     const user = label(this, tx, by, c.user, { font: F.body, tint: isMod ? C.green2 : C.blue2 });
     block.add(user);
@@ -445,6 +648,7 @@ export class ThreadScene extends Phaser.Scene {
     this.follow(bottom);
 
     if (quick) {
+      this.showSpeaker(c, true);
       body.setText(this.wrapped(body, c.line.text));
       this.finishVotes(item, votes, upI, downI, awardsBox, true);
       if (item.rating !== undefined) this.landRating(item, tx + 0, by, block, true);
@@ -452,6 +656,7 @@ export class ThreadScene extends Phaser.Scene {
     }
 
     audio.sfx('comment_in');
+    this.showSpeaker(c, false);
     this.tweens.add({ targets: block, alpha: 1, duration: 160 });
     if (!app.settings.reducedMotion && !this.fast) {
       block.x = 6;
@@ -462,7 +667,9 @@ export class ThreadScene extends Phaser.Scene {
     this.cur = sp;
     void sp.say(c.line.text, c.line);
     this.startVotes(item, votes, upI, downI);
+    const stopFx = this.speakingFx(sp, block, face, ax, by, AV, blockH);
     await sp.done;
+    stopFx();
     if (!this.alive) return card;
     if (this.cur === sp) this.cur = null;
     await this.wait(120);
@@ -503,6 +710,7 @@ export class ThreadScene extends Phaser.Scene {
 
   private finishVotes(item: Item, votes: Phaser.GameObjects.BitmapText, upI: Phaser.GameObjects.Image, downI: Phaser.GameObjects.Image, awardsBox: Phaser.GameObjects.Container, instant: boolean): void {
     const neg = item.votes < 0;
+    this.bumpKarma(item.votes);
     votes.setText(shortNumber(item.votes));
     votes.setTint(neg ? C.violet2 : item.votes > 0 ? C.orange2 : C.ink4);
     upI.setTexture(bakeIcon(this, neg ? 'arrowUpOff' : 'arrowUp'));
@@ -565,6 +773,9 @@ export class ThreadScene extends Phaser.Scene {
   private showResults(): void {
     this.resultsOpen = true;
     this.skipBtn.setVisible(false);
+    this.karmaT.setText(`+${shortNumber(this.rec.karma)}`);
+    this.stage?.setVisible(false);
+    this.dropGhosts();
     const L = layoutOf(this);
     const rec = this.rec;
     const s = current().s;
@@ -598,14 +809,17 @@ export class ThreadScene extends Phaser.Scene {
     card.add(verdictT);
     // the ratings
     const rec2 = this.rec.thread.vignettes;
+    const seen = new Map<string, number>();
     rec2.forEach((v, i) => {
+      const nth = seen.get(v.judges) ?? 0;
+      seen.set(v.judges, nth + 1);
       const bx = lx + i * 24;
       const by = wide ? 98 : 90;
       const rc = v.rating >= 7 ? C.green2 : v.rating >= 4 ? C.yellow : C.pink;
       card.add(rect(this, bx, by, 22, 18, C.ink0, 1));
       card.add(rect(this, bx + 1, by + 1, 20, 16, rc, 1));
       card.add(label(this, bx + 11, by + 2, `${v.rating}`, { font: F.head, tint: C.ink0, origin: [0.5, 0] }));
-      card.add(label(this, bx + 11, by + 19, JUDGE_SHORT[v.judges as StatKey | 'overall' | 'hype'], { font: F.body, tint: C.ink3, origin: [0.5, 0] }));
+      card.add(label(this, bx + 11, by + 19, judgeShort(v.judges as StatKey | 'overall' | 'hype', nth), { font: F.body, tint: C.ink3, origin: [0.5, 0] }));
     });
 
     // right side: karma, money, the app store

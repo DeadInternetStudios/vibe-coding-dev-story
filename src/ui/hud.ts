@@ -299,12 +299,11 @@ export class Hud {
       b.setKind(on ? 'orange' : 'plum');
     });
     if (this.hireBtn) {
-      const free = this.session.game.freeDesks();
-      const txt = free > 0 ? 'HIRE' : 'FULL';
-      if (this.last.hire !== txt) {
-        this.last.hire = txt;
-        this.hireBtn.setText(txt);
-        this.hireBtn.setKind(free > 0 ? 'orange' : 'plum');
+      // the button always says what it does; it is the main button only while there is a desk to fill
+      const key = this.session.game.freeDesks() > 0 ? 'open' : 'full';
+      if (this.last.hire !== key) {
+        this.last.hire = key;
+        this.hireBtn.setKind(key === 'open' ? 'orange' : 'plum');
       }
     }
 
