@@ -366,17 +366,19 @@ export function printer(): Px {
 
 /** A motivational poster. The mountain is doing its best. */
 export function poster(): Px {
-  const c = new Px(14, 17);
-  c.rect(0, 0, 14, 17, 'cream');
-  c.frame(0, 0, 14, 17, 'wood1');
-  c.rect(2, 2, 10, 8, 'sky');
-  c.rect(2, 7, 10, 3, 'blue2');
-  c.rect(4, 4, 6, 6, 'steel2');
-  c.rect(6, 3, 2, 2, 'steel3');
-  c.set(6, 3, 'white').set(7, 3, 'white');
-  c.rect(9, 3, 2, 2, 'orange2');
-  glyphs(c, 'GO', 3, 11, 'ink1');
-  c.hline(3, 16, 8, 'wood3');
+  const c = new Px(15, 17);
+  c.rect(0, 0, 15, 17, 'cream');
+  c.frame(0, 0, 15, 17, 'wood1');
+  c.rect(2, 2, 11, 8, 'sky');
+  c.rect(2, 7, 11, 3, 'blue2');
+  c.rect(4, 4, 7, 6, 'steel2');
+  c.rect(6, 3, 3, 2, 'steel3');
+  c.hline(6, 3, 3, 'white');
+  c.rect(11, 3, 2, 2, 'orange2');
+  // the mountain is straining: eyes shut, a sweat drop
+  c.set(5, 6, 'ink0').set(9, 6, 'ink0').hline(6, 8, 3, 'ink0').set(10, 6, 'sky');
+  glyphs(c, 'TRY', 2, 11, 'ink1');
+  c.hline(3, 16, 9, 'wood3');
   return c;
 }
 

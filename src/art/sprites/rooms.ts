@@ -239,7 +239,7 @@ function drawWall(c: Px, look: RoomLook, W: number): void {
     c.blit(doorGlass(), DOOR.x, WALL_H - DOOR.h);
     c.blit(extinguisher(), DOOR.x + DOOR.w + 3, 34);
     const px0 = W - PRINTER.w - 3;
-    c.blit(poster(), px0 + 4, 8);
+    c.blit(poster(), px0 + 4, 5);
     c.blit(printer(), px0, 22);
     c.blit(stickyNote(), px0 - 6, 28);
   } else if (wall === 'brick') {
@@ -252,13 +252,13 @@ function drawWall(c: Px, look: RoomLook, W: number): void {
     c.blit(graffiti(), W - 38, 15);
   } else {
     elevatorBay(c);
-    c.blit(elevatorIndicator(), DOOR.x + 1, 3);
+    c.blit(elevatorIndicator(), DOOR.x + 1, 1);
     c.blit(doorElevator(), DOOR.x, WALL_H - DOOR.h);
   }
 }
 
 /** Light on the floor, mats and stains. Drawn after the floor tiles, before anything stands on them. */
-function drawFloor(c: Px, look: RoomLook, W: number, H: number): void {
+function drawFloor(c: Px, look: RoomLook, W: number): void {
   const ramp = FLOOR_RAMP[look.floor];
   const y0 = WALL_H;
   if (look.wall === 'plank') {
@@ -283,7 +283,6 @@ function drawFloor(c: Px, look: RoomLook, W: number, H: number): void {
     for (let i = 0; i < W / 5; i++) c.set(rng.int(32, W - 6), y0 + rng.int(1, 5), rng.chance(0.3) ? 'mint' : 'yellow');
     for (let px = 40; px < W - 40; px += 64) lightPool(c, { x: px, y: y0 + 7, w: 26, h: 34, skew: 0.6, ramp, cross: true });
   }
-  void H;
 }
 
 /** The whole room back to front: wall, floor, light, windows, doors and the architecture. */
@@ -311,7 +310,7 @@ export function roomBackdrop(look: RoomLook): Px {
       c.blit(t, x * TILE, WALL_H + y * TILE);
     }
   }
-  drawFloor(c, look, W, H);
+  drawFloor(c, look, W);
   drawWall(c, look, W);
   return c;
 }
