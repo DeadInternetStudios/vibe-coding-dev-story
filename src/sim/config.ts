@@ -17,9 +17,9 @@ export const YEAR_MULT = [1, 1.9, 3.6] as const;
 export type Scope = 'hack' | 'mvp' | 'full';
 
 export const SCOPES: Record<Scope, { label: string; blurb: string; weeks: number; money: number; hype: number; unlock: Unlock }> = {
-  hack: { label: 'Weekend Hack', blurb: 'Half the work, half the glory.', weeks: 0.5, money: 0.5, hype: 0, unlock: {} },
+  hack: { label: 'Weekend Hack', blurb: 'Half the work, half the glory.', weeks: 0.5, money: 0.42, hype: 0, unlock: {} },
   mvp: { label: 'MVP', blurb: 'Minimum viable. Maximum vibes.', weeks: 1, money: 1, hype: 4, unlock: {} },
-  full: { label: 'The Full Thing', blurb: 'Auth, billing, dark mode, the works.', weeks: 1.8, money: 1.4, hype: 9, unlock: { karma: 120 } },
+  full: { label: 'The Full Thing', blurb: 'Auth, billing, dark mode, the works.', weeks: 1.8, money: 2.5, hype: 9, unlock: { karma: 120 } },
 };
 
 /**
@@ -121,7 +121,7 @@ export const SPEEDS = [1, 2, 4, 8] as const;
  * The Friday deploy gamble. A clean one rides the weekend crowd; an incident costs
  * hype, money, mood and a slice of the app's lifetime revenue.
  */
-export const FRIDAY = { hype: 6, incidentHype: 8, incidentCost: 1500, incidentMood: 7, incidentRevenue: 0.85 } as const;
+export const FRIDAY = { hype: 6, incidentHype: 8, incidentCost: 4000, incidentMood: 7, incidentRevenue: 0.6 } as const;
 
 /** Each round of outside money takes this share of the final score. The check is bigger than the bite, early. */
 export const DILUTION = { vc: 0.2, angel: 0.05 } as const;
@@ -197,7 +197,7 @@ export const NOVELTY = { sameKind: 0.78, sameNiche: 0.86, memoryDays: 130, floor
 /** Revenue model: a spike that fades fast, plus a long tail. */
 export const REVENUE = {
   /** dollars of lifetime revenue for quality 50, kind money 5, fit 1, hype 30, scope mvp */
-  base: 12000,
+  base: 13800,
   /** how hard money leans on quality */
   qualityExp: 1.25,
   /** how hard money leans on the kind's money rating */

@@ -156,7 +156,8 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   const fit = nicheFit(ctx, p.kind, p.niche);
   const quality = qualityOf(c, p.kind, p.stats);
   const scoreBonus = 0.7 + (score / 40) * 0.6;
-  const stabilityPenalty = p.stats.stability < 30 ? 0.8 : 1;
+  // shaky products earn less, smoothly: full marks from stability 70 and security 60, a floor of 0.6 x 0.8 below that
+  const stabilityPenalty = (0.6 + 0.4 * Math.min(1, p.stats.stability / 70)) * (0.8 + 0.2 * Math.min(1, p.stats.security / 60));
   const lifetime = Math.round(
     REVENUE.base *
       Math.pow(kind.money / 5, REVENUE.moneyExp) *

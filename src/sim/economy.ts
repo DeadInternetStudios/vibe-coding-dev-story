@@ -153,15 +153,15 @@ export function finalScore(ctx: Ctx): number {
 }
 
 /**
- * Cut points set from bot runs: a careful bot lands near 28M, a sloppy one near 26M, a
- * reckless one near 34M with luck, a button masher under 1M. S needs a better run than any bot's median.
+ * Cut points set from bot runs (24 seeds, normal): the careful bot lands near 43M, a casual one and a
+ * reckless one near 36M, a button masher under 1M. S needs a better run than any bot's median.
  */
 export const RANK_CUTS: readonly { rank: EndingResult['rank']; min: number }[] = [
-  { rank: 'S', min: 36_000_000 },
-  { rank: 'A', min: 26_000_000 },
-  { rank: 'B', min: 14_000_000 },
-  { rank: 'C', min: 4_000_000 },
-  { rank: 'D', min: 800_000 },
+  { rank: 'S', min: 46_000_000 },
+  { rank: 'A', min: 30_000_000 },
+  { rank: 'B', min: 16_000_000 },
+  { rank: 'C', min: 5_000_000 },
+  { rank: 'D', min: 1_000_000 },
   { rank: 'F', min: 0 },
 ];
 
