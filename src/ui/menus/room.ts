@@ -20,7 +20,7 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
   const w = Math.min(L.W - 4, wide ? 410 : 246);
   const h = popupH(L, wide ? 246 : 330);
   const m = new Modal(scene, { w, h, title: 'THE OFFICE', style: 'paper', closable: true, hold: ctx.hold, onClose });
-  const cash = label(scene, w - 8, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
+  const cash = label(scene, w - 20, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
   m.add(cash);
   let tabIndex = startTab;
 

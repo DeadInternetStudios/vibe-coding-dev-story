@@ -159,8 +159,9 @@ class RevenuePanel {
     y += 12;
     for (const a of apps) {
       if (y + 9 > h - 3 - strip) break;
-      this.body.add(label(this.scene, 5, y, fit(a.name, Math.floor((w - 44) / 5)), { font: F.body, tint: C.cream }));
-      this.body.add(label(this.scene, w - 5, y, shortMoney(a.earned), { font: F.body, tint: C.green2, origin: [1, 0] }));
+      // the name gets whatever the money leaves it, so a narrow column still shows most of the name
+      const earned = label(this.scene, w - 5, y, shortMoney(a.earned), { font: F.body, tint: C.green2, origin: [1, 0] });
+      this.body.add([label(this.scene, 5, y, fit(a.name, Math.max(4, Math.floor((w - 14 - earned.width) / 5))), { font: F.body, tint: C.cream }), earned]);
       y += 9;
     }
   }
@@ -189,12 +190,99 @@ class RevenuePanel {
 }
 
 /**
+ * Money for an office too wide for the side panels: one slim strip under the room with the same
+ * numbers, chart, burn, best apps and rank. A rich player should never lose sight of the money.
+ */
+class RevenueStrip {
+  private readonly scene: Phaser.Scene;
+  private readonly session: Session;
+  private readonly box: Box;
+  private readonly root: Phaser.GameObjects.Container;
+  private readonly body: Phaser.GameObjects.Container;
+  private seen = '';
+
+  constructor(scene: Phaser.Scene, box: Box, session: Session, depth: number) {
+    this.scene = scene;
+    this.session = session;
+    this.box = box;
+    this.root = scene.add.container(Math.round(box.x), Math.round(box.y)).setDepth(depth);
+    this.root.add(panel(scene, 0, 0, box.w, box.h, 'night', true));
+    this.body = scene.add.container(0, 0);
+    this.root.add(this.body);
+    this.refresh();
+  }
+
+  refresh(): void {
+    const s = this.session.s;
+    const { w, h } = this.box;
+    const burn = Math.round(this.session.game.monthlyBurn());
+    const months = s.company.monthlyRevenue.slice(-11);
+    const now = Math.round(s.tally.revenue);
+    const apps = s.shipped.slice(-2).reverse();
+    const score = this.session.game.scoreNow();
+    const sig = [burn, now, months.map(Math.round).join(','), apps.map((a) => shortMoney(a.earned)).join(','), rankFor(score)].join('|');
+    if (sig === this.seen) return;
+    this.seen = sig;
+    this.body.removeAll(true);
+
+    // chart, the same bars as the side panel: green over the burn line, pink under it, the live month faint
+    const series = [...months, now];
+    const base = h - 5;
+    const chartH = h - 11;
+    const scale = Math.max(burn * 1.25, Math.max(...series) * 1.05, 1);
+    series.forEach((v, i) => {
+      const bh = v > 0 ? Math.max(2, Math.round((v / scale) * chartH)) : 1;
+      const tint = v <= 0 ? C.ink3 : v >= burn ? C.green2 : C.pink;
+      this.body.add(rect(this.scene, 5 + i * 9, base - bh, 6, bh, tint, i === series.length - 1 ? 0.55 : 1));
+    });
+    const by = base - Math.min(chartH, Math.round((burn / scale) * chartH));
+    const chartW = series.length * 9;
+    for (let x = 4; x < chartW + 6; x += 6) this.body.add(rect(this.scene, x, by, 3, 1, C.yellow, 0.9));
+    this.body.add(rect(this.scene, 3, base, chartW + 4, 1, C.ink2, 1));
+
+    // the numbers
+    let x = chartW + 14;
+    this.body.add(rect(this.scene, x - 5, 4, 1, h - 8, C.ink2, 1));
+    this.body.add(label(this.scene, x, 4, 'REVENUE / MONTH', { font: F.body, tint: C.ink4 }));
+    this.body.add(label(this.scene, x, 13, `Burn ${shortMoney(burn)}/mo`, { font: F.body, tint: C.yellow }));
+    this.body.add(label(this.scene, x, 22, `This month ${shortMoney(now)}`, { font: F.body, tint: now >= burn ? C.green2 : C.cream }));
+    x += 96;
+
+    // the two latest apps
+    if (apps.length && x + 90 < w) {
+      this.body.add(rect(this.scene, x - 5, 4, 1, h - 8, C.ink2, 1));
+      this.body.add(label(this.scene, x, 4, 'YOUR APPS', { font: F.body, tint: C.ink4 }));
+      apps.forEach((a, i) => {
+        const earned = label(this.scene, x + 90, 13 + i * 9, shortMoney(a.earned), { font: F.body, tint: C.green2, origin: [1, 0] });
+        this.body.add([label(this.scene, x, 13 + i * 9, fit(a.name, Math.max(4, Math.floor((90 - 4 - earned.width) / 5))), { font: F.body, tint: C.cream }), earned]);
+      });
+      x += 100;
+    }
+
+    // what the run would be worth if it ended today
+    if (x + 80 < w) {
+      const rank = rankFor(score);
+      this.body.add(rect(this.scene, x - 5, 4, 1, h - 8, C.ink2, 1));
+      this.body.add(label(this.scene, x, 4, 'IF YOU QUIT NOW', { font: F.body, tint: C.ink4 }));
+      this.body.add(rect(this.scene, x, 14, 12, 12, C.ink0, 1));
+      this.body.add(rect(this.scene, x + 1, 15, 10, 10, RANK_COLOR[rank] ?? C.cream, 1));
+      this.body.add(label(this.scene, x + 6, 17, rank, { font: F.capsBold, tint: C.ink0, origin: [0.5, 0] }));
+      this.body.add(label(this.scene, x + 16, 17, shortMoney(score), { font: F.body, tint: C.cream }));
+    }
+  }
+
+  destroy(): void {
+    this.root.destroy();
+  }
+}
+
+/**
  * The two panels around the room: the repo log and the revenue chart. They live in
  * the space the room leaves free and appear only when there is room for them.
  */
 export class Dash {
   private terminal: Terminal | null = null;
-  private revenue: RevenuePanel | null = null;
+  private revenue: RevenuePanel | RevenueStrip | null = null;
   private since = 0;
 
   constructor(scene: Phaser.Scene, session: Session, L: Layout, room: Box, view: Box, log: TermLine[]) {
@@ -208,6 +296,14 @@ export class Dash {
       const h = view.y + view.h - top - 2;
       if (lw >= 72) this.terminal = new Terminal(scene, { x: gap, y: top, w: lw, h }, log, depth);
       if (rw >= 72) this.revenue = new RevenuePanel(scene, { x: rx, y: top, w: rw, h }, session, depth);
+      if (!this.terminal && !this.revenue) {
+        // a room that fills the screen: the money goes in a slim strip under it (below the drag track when the room is wider than the screen)
+        const sy = room.y + room.h + (room.w > L.W ? 11 : 3);
+        const sh = Math.min(34, view.y + view.h - sy - 2);
+        const sx = Math.max(gap, room.x);
+        const sw = Math.min(L.W - gap, room.x + room.w) - sx;
+        if (sh >= 28 && sw >= 300) this.revenue = new RevenueStrip(scene, { x: sx, y: sy, w: sw, h: sh }, session, depth);
+      }
     } else {
       const h = room.y - 3 - gap - top;
       if (h >= 50) {

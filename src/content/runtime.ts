@@ -46,6 +46,8 @@ export function rawFromSource(): RawContent {
     events: pick(C.EVENTS, f.events),
     vignettes: pick(C.VIGNETTES, f.vignettes),
     opBodies: pick(C.OP_BODIES, f.opBodies),
+    opEdits: { viral: pick(C.OP_EDITS.viral, f.opEdits.viral), solid: pick(C.OP_EDITS.solid, f.opEdits.solid), flop: pick(C.OP_EDITS.flop, f.opEdits.flop) },
+    modNotices: pick(C.MOD_NOTICES, f.modNotices),
     paydayItems: pick(C.PAYDAY_ITEMS, f.paydayItems),
     appReviews: pick(C.APP_REVIEWS, f.appReviews),
     achievements: pick(C.ACHIEVEMENTS, f.achievements),

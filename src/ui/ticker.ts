@@ -11,6 +11,9 @@ const HEADS_PER_RUN = 5;
 const BADGE_W = 27;
 const HEIGHT = 9;
 const SEPARATOR = '      +++      ';
+/** how much of the band each 3 pixel step at its two ends covers, outermost last */
+const FADE = [0.15, 0.35, 0.55, 0.75, 0.92, 1];
+const FADE_STEP = 3;
 
 /**
  * A news strip under the top bar. The world comments on your startup in the
@@ -37,8 +40,16 @@ export class Ticker {
     const edge = rect(scene, L.x0, y + HEIGHT, L.cw, 1, C.ink2, 0.6).setDepth(depth);
     this.parts.push(band, edge);
     this.show(y, depth);
-    const badge = rect(scene, L.x0, y, BADGE_W, HEIGHT + 1, C.berry1, 1).setDepth(depth + 2);
-    const live = label(scene, L.x0 + 3, y + 1, 'LIVE', { font: F.caps, tint: C.white, depth: depth + 3 });
+    // the headline fades in at the right edge and out under the badge, so a word is never sliced by the screen
+    FADE.forEach((a, i) => {
+      const step = FADE_STEP;
+      this.parts.push(
+        rect(scene, L.x0 + L.cw - (FADE.length - i) * step, y, step, HEIGHT, C.ink0, a).setDepth(depth + 2),
+        rect(scene, L.x0 + BADGE_W + (FADE.length - 1 - i) * step, y, step, HEIGHT, C.ink0, a).setDepth(depth + 2),
+      );
+    });
+    const badge = rect(scene, L.x0, y, BADGE_W, HEIGHT + 1, C.berry1, 1).setDepth(depth + 3);
+    const live = label(scene, L.x0 + 3, y + 1, 'LIVE', { font: F.caps, tint: C.white, depth: depth + 4 });
     this.parts.push(badge, live);
   }
 
@@ -46,7 +57,7 @@ export class Ticker {
     const text = label(this.scene, 0, y + 1, this.nextRun(), { font: F.body, tint: C.cream, depth: depth + 1 });
     this.text = text;
     this.parts.push(text);
-    this.x = app.settings.reducedMotion ? this.L.x0 + BADGE_W + 5 : this.L.x0 + this.L.cw;
+    this.x = app.settings.reducedMotion ? this.L.x0 + BADGE_W + FADE.length * FADE_STEP : this.L.x0 + this.L.cw;
     text.x = Math.round(this.x);
   }
 

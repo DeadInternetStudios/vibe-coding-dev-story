@@ -154,6 +154,8 @@ export const FIXTURE: Content = buildContent({
     v('security2', 'security', 'praise', 'security', (c) => c.project.stats.security > 55, 'Rate limiting, input validation, no secrets in the repo. Who hurt you?', 'dave'),
   ],
   opBodies: ['Built this over the weekend with an AI. I am not a dev. Feedback welcome, but gentle.', 'It started as a joke. Now it has users. Both of them are my mom.'],
+  opEdits: { viral: [], solid: [], flop: [] },
+  modNotices: [],
   paydayItems: [
     { label: 'Coffee', cost: [300, 700], note: 'The intern drinks nine a day.' },
     { label: 'Energy drinks', cost: [200, 500], note: 'Not a food group.' },

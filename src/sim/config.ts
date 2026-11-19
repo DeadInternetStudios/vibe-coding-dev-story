@@ -208,3 +208,9 @@ export const REVENUE = {
   spikeTau: 16,
   tailTau: 150,
 };
+
+/** A Reddit score under this and the mods take the post down. The score card calls it REMOVED BY MODS. */
+export const REMOVED_BELOW = 10;
+/** The founder's closing Edit is picked by score: at least this is viral, at least SOLID_FROM is solid, anything under is a flop. */
+export const VIRAL_FROM = 28;
+export const SOLID_FROM = 16;

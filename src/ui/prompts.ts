@@ -367,7 +367,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     const ch = c.channel(selected);
     launchBtnRef.b?.setText(`LAUNCH ON ${ch.where.toUpperCase()}`.slice(0, 26));
   };
-  const rowH = Math.min(19, Math.floor((h - cy - 34) / Math.max(1, c.channels.length)));
+  const rowH = Math.min(wide ? 21 : 24, Math.floor((h - cy - 34) / Math.max(1, c.channels.length)));
   for (const ch of c.channels) {
     const ok = unlocked(game, ch.unlock);
     const cost = costOf(ch.id);
@@ -387,13 +387,16 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     const art = hasIcon(`chan_${ch.id}`) && rowH >= 15;
     if (art) m.add(iconImg(scene, `chan_${ch.id}`, cx + 3, cy + Math.floor((rowH - 1 - 12) / 2)).setAlpha(ok ? 1 : 0.4));
     const tx = cx + (art ? 18 : 4);
-    const t1 = label(scene, tx, cy + 2, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : C.ink4 });
+    // the two lines (name, then what it does) sit in the middle of the row with air under them
+    const ty = cy + Math.max(1, Math.floor((rowH - 1 - 17) / 2));
+    const t1 = label(scene, tx, ty, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : C.ink4 });
     const sub = ok ? `hype +${ch.hype}${ch.roast > 0.5 ? '  spicy' : ''}` : ch.unlock.karma ? `needs ${ch.unlock.karma} karma` : `year ${ch.unlock.year ?? 2}`;
-    const t2 = label(scene, tx, cy + 10, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
-    const price = label(scene, cx + cw - 4, cy + 3, cost > 0 ? shortMoney(cost) : 'FREE', { font: F.caps, tint: ok ? (dark ? C.green1 : C.mint) : C.ink3, origin: [1, 0] });
+    const t2 = label(scene, tx, ty + 9, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
     m.add(t1);
     m.add(t2);
-    m.add(price);
+    // a locked channel shows a padlock, not a price: nobody can pay it yet
+    if (ok) m.add(label(scene, cx + cw - 4, ty, cost > 0 ? shortMoney(cost) : 'FREE', { font: F.caps, tint: dark ? C.green1 : C.mint, origin: [1, 0] }));
+    else m.add(iconImg(scene, 'lock', cx + cw - 15, cy + Math.floor((rowH - 1 - 10) / 2)));
     cy += rowH;
   }
   rows.forEach((r) => r.btn.setKind(r.id === selected ? 'teal' : r.ok ? 'cream' : 'plum'));

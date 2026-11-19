@@ -35,7 +35,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   root.add([faceFrame, faceBg, face]);
   const name = label(scene, x + 50, y + 6, '', { font: F.caps, tint: C.orange1 });
   const text = label(scene, x + 50, y + 17, '', { font: F.read, tint: C.ink1, maxWidth: w - 58 });
-  const hint = label(scene, x + w - 8, y + h - 9, 'tap', { font: F.body, tint: C.ink3, origin: [1, 0] });
+  const hint = label(scene, x + w - 10, y + h - 14, 'tap', { font: F.body, tint: C.ink3, origin: [1, 0] });
   root.add([name, text, hint]);
   scene.tweens.add({ targets: hint, alpha: { from: 1, to: 0.2 }, duration: 500, yoyo: true, repeat: -1 });
   let skip: ReturnType<typeof label> | null = null;

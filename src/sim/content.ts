@@ -31,6 +31,10 @@ export interface RawContent {
   events: GameEvent[];
   vignettes: Vignette[];
   opBodies: string[];
+  /** the last Edit the founder adds under the thread, by how the launch went */
+  opEdits: Record<'viral' | 'solid' | 'flop', VoiceLine[]>;
+  /** what AutoModerator says when a flop gets taken down */
+  modNotices: VoiceLine[];
   paydayItems: PaydayItem[];
   appReviews: { stars: 1 | 2 | 3 | 4 | 5; text: string; user: string }[];
   achievements: Achievement[];

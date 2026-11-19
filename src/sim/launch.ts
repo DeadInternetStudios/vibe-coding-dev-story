@@ -2,7 +2,7 @@
  * Launch day: the Reddit thread, the Reddit Score, karma and the money curve.
  */
 import { STAT_KEYS, type AwardId, type ThreadCtx, type Vignette } from '../content/types';
-import { FRIDAY, MARKET_BAR, NOVELTY, REVENUE, SCOPES } from './config';
+import { FRIDAY, MARKET_BAR, NOVELTY, REMOVED_BELOW, REVENUE, SCOPES, SOLID_FROM, VIRAL_FROM } from './config';
 import { addCash, addKarma, addSpaghetti, bump, setFlag, sound, toast, cashScale, type Ctx } from './ctx';
 import { clamp, lerp, yearOf } from './format';
 import { fill } from './names';
@@ -145,7 +145,9 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
 
   const opVotes = Math.round((300 + pv.quality * 25 + pv.hype * 15) * (0.7 + rng.next() * 0.6) * ch.karmaMult);
   const title = fill(rng.pick(ch.titles), { name: p.name, tagline: p.tagline });
-  const body = c.opBodies.length ? fill(rng.pick(c.opBodies), { name: p.name, tagline: p.tagline, kind: kind.name }) : p.tagline;
+  // the body never says the tagline a second time when the title already did
+  const said = title.includes(p.tagline);
+  const body = c.opBodies.length ? fill(rng.pick(c.opBodies), { name: p.name, tagline: said ? '' : p.tagline, kind: kind.name }).replace(/\s{2,}/g, ' ').trim() : said ? '' : p.tagline;
 
   const karma = Math.round((rootVotes * 0.025 + opVotes * 0.01) * itemBonus(s, 'karma'));
   addKarma(ctx, karma);
@@ -178,6 +180,12 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   const matching = c.appReviews.filter((r) => r.stars === stars);
   const review = matching.length ? rng.pick(matching) : c.appReviews.length ? rng.pick(c.appReviews) : undefined;
 
+  // the thread ends with the mods (on a flop) and then the founder's Edit
+  const edits = c.opEdits[score >= VIRAL_FROM ? 'viral' : score >= SOLID_FROM ? 'solid' : 'flop'];
+  const closing: Pick<ThreadRecord, 'mod' | 'edit'> = {};
+  if (score < REMOVED_BELOW && c.modNotices.length) closing.mod = rng.pick(c.modNotices);
+  if (edits.length) closing.edit = rng.pick(edits);
+
   const app: ShippedApp = {
     id: p.id,
     name: p.name,
@@ -199,7 +207,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
     tailAmp,
     fridayDeploy: p.fridayDeploy,
     incident,
-    thread: { channel: channelId, title, body, opVotes, vignettes: records, awards },
+    thread: { channel: channelId, title, body, opVotes, vignettes: records, awards, ...closing },
     review: review ? { stars: review.stars, text: review.text, user: review.user } : undefined,
   };
   s.shipped.push(app);

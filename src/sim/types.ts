@@ -105,6 +105,10 @@ export interface ThreadRecord {
   /** vignette ids in the order shown, each with the rating its root comment gave */
   vignettes: { id: string; rating: number; judges: string; votes: number[] }[];
   awards: { vignette: string; index: number; award: AwardId }[];
+  /** AutoModerator's notice, when the post was taken down */
+  mod?: VoiceLine;
+  /** the founder's last Edit, after the final reply */
+  edit?: VoiceLine;
 }
 
 export interface ShippedApp {

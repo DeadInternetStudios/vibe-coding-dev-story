@@ -246,8 +246,8 @@ export class TitleScene extends Phaser.Scene {
       d.y -= (dt / 1000) * d.speed;
       if (d.y + d.h < d.y0) d.y = d.y1;
       d.c.y = Math.round(d.y);
-      // a bubble fades in only once all of it is above the news strip, and out as it leaves the top
-      const fade = Math.min(1, Math.max(0, (d.y + d.h - d.y0) / 14), Math.max(0, (d.y1 - (d.y + d.h)) / 14));
+      // a bubble is only seen whole: it fades in once all of it is above the news strip and is gone before its top reaches the buttons
+      const fade = Math.min(1, Math.max(0, Math.min(d.y - d.y0, d.y1 - (d.y + d.h)) / 12));
       d.c.setAlpha(0.9 * fade);
     }
     if (this.ticker) {

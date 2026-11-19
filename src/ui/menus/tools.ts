@@ -30,7 +30,7 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
   const h = popupH(L, wide ? 246 : 404);
   const m = new Modal(scene, { w, h, title: 'AI TOOLS', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'tool');
-  const cash = label(scene, w - 8, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
+  const cash = label(scene, w - 20, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
   m.add(cash);
   let tabIndex = 0;
 

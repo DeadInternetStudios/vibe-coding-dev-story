@@ -16,18 +16,22 @@ export interface Demo {
 
 type Pick = (g: Game) => boolean;
 
-const MOMENTS: Record<string, { scene: string; pick: Pick; data?: (s: GameState) => object; patch?: (s: GameState) => void }> = {
+const MOMENTS: Record<string, { scene: string; pick: Pick; data?: (s: GameState) => object; patch?: (s: GameState, c: Content) => void }> = {
   thread: { scene: 'Thread', pick: (g) => g.s.shipped.length === 2 && !g.pending, data: (s) => ({ appId: s.shipped[s.shipped.length - 1]!.id }) },
   /** the first launch, made a flop: low ratings, a score under the line where the mods take the post down */
   flop: {
     scene: 'Thread',
     pick: (g) => g.s.shipped.length === 1 && !g.pending,
     data: (s) => ({ appId: s.shipped[0]!.id }),
-    patch: (s) => {
+    patch: (s, c) => {
       const a = s.shipped[0]!;
       a.score = 6;
       a.ratings = a.ratings.map(() => 2);
       a.thread.vignettes.forEach((v) => (v.rating = 2));
+      const mod = c.modNotices[0];
+      const edit = c.opEdits.flop[0];
+      if (mod) a.thread.mod = mod;
+      if (edit) a.thread.edit = edit;
     },
   },
   thread1: { scene: 'Thread', pick: (g) => g.s.shipped.length === 1 && !g.pending, data: (s) => ({ appId: s.shipped[0]!.id }) },
@@ -54,6 +58,6 @@ export function buildDemo(content: Content, name: string, seed = 11): Demo | nul
   });
   if (!m) return { scene: 'Ending', state: JSON.parse(JSON.stringify(result.game.snapshot())) as GameState };
   if (!snap) return null;
-  m.patch?.(snap);
+  m.patch?.(snap, content);
   return { scene: m.scene, state: snap, ...(m.data ? { data: m.data(snap) } : {}) };
 }

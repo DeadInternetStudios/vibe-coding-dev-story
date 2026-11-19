@@ -27,6 +27,9 @@ export interface ModalOpts {
   dim?: number;
 }
 
+/** Every popup that is up right now, oldest first. A popup that opens over another one hides it until it is gone. */
+const up: Modal[] = [];
+
 /**
  * A panel in the middle of the screen with a dim behind it. Children are placed
  * in the panel's own coordinates, 0,0 is its top left corner.
@@ -45,6 +48,10 @@ export class Modal {
   private closed = false;
   private keyOffs: (() => void)[] = [];
   private opts: ModalOpts;
+  private readonly centered: boolean;
+  /** the popups this one opened over: they come back when this one goes */
+  private covered: Modal[] = [];
+  private coveredBy: Modal | null = null;
   titleObj: Phaser.GameObjects.BitmapText | null = null;
 
   constructor(scene: Phaser.Scene, opts: ModalOpts) {
@@ -54,6 +61,7 @@ export class Modal {
     this.w = Math.min(opts.w, L.W - 4);
     this.h = Math.min(opts.h, L.H - 4);
     const anchor = opts.anchor ?? 'center';
+    this.centered = anchor === 'center';
     this.x = Math.floor((L.W - this.w) / 2);
     this.y = anchor === 'center' ? Math.floor((L.H - this.h) / 2) : anchor === 'bottom' ? L.H - this.h - 4 : 4;
     this.release = opts.hold ? opts.hold(opts.title ?? 'modal') : null;
@@ -89,8 +97,18 @@ export class Modal {
       scene.tweens.add({ targets: this.root, alpha: 1, duration: 120 });
       scene.tweens.add({ targets: [this.body, this.box], y: `-=${sy}`, duration: 160, ease: 'Back.easeOut' });
     }
-    // escape closes it, unless a story box is open on top: that one takes the key to skip itself
-    if (opts.closable) this.key('ESC', () => !scene.children.getByName('dialogue') && this.close());
+    // two centered popups are never printed over each other: the new one hides the old one until it is gone
+    if (this.centered) {
+      for (const other of up) {
+        if (other.scene !== scene || !other.centered || !other.root.visible) continue;
+        other.root.setVisible(false);
+        other.coveredBy = this;
+        this.covered.push(other);
+      }
+    }
+    up.push(this);
+    // escape closes it, unless a story box is open on top (that one takes the key to skip itself) or another popup is on top of it
+    if (opts.closable) this.key('ESC', () => !scene.children.getByName('dialogue') && !this.coveredBy?.open && this.close());
     // a window resize rebuilds the scene and destroys the popup without closing it: let go of its keys and its pause
     this.root.once(Phaser.GameObjects.Events.DESTROY, () => this.letGo());
     uiEvents.emit('open');
@@ -98,6 +116,16 @@ export class Modal {
 
   private letGo(): void {
     this.closed = true;
+    const at = up.indexOf(this);
+    if (at >= 0) up.splice(at, 1);
+    // what this popup covered comes back, unless it was closed in the meantime
+    for (const other of this.covered) {
+      if (other.closed || other.coveredBy !== this || !other.root.scene) continue;
+      other.coveredBy = null;
+      other.root.setVisible(true);
+    }
+    this.covered = [];
+    if (this.coveredBy?.open === false) this.coveredBy = null;
     this.keyOffs.forEach((off) => off());
     this.keyOffs = [];
     this.release?.();

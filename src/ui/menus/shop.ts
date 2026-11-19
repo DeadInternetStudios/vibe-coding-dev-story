@@ -1,4 +1,4 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import { bakeDecor, bakeIcon } from '../../core/bake';
 import { C, F } from '../../core/theme';
 import { OFFICE_TIERS } from '../../sim/config';
@@ -23,6 +23,9 @@ function effectsOf(it: ShopItem): { icon: string; text: string; good: boolean }[
   return out;
 }
 
+/** What a thing you cannot buy yet looks like: still readable, clearly not yours. */
+const LOCKED_TINT = 0x8a84a0;
+
 /** Things for the office. Every one is a bad idea with a small real bonus. */
 export function openShop(ctx: UiCtx, onClose: () => void): Modal {
   const scene = ctx.scene;
@@ -40,7 +43,7 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
   const gy = 21;
   const gridH = Math.ceil(SHOP.length / cols) * (tile + 2);
   let sel = 0;
-  const cash = label(scene, w - 8, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
+  const cash = label(scene, w - 20, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
   m.add(cash);
 
   const tileObjs: { ring: Phaser.GameObjects.Image; badge: Phaser.GameObjects.Container; price: Phaser.GameObjects.BitmapText }[] = [];
@@ -62,7 +65,7 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
     const sc = Math.max(1, Math.floor(Math.min((tile - 8) / img.width, (tile - 14) / img.height)));
     img.setScale(sc);
     const st = state(it);
-    if (st === 'locked' || st === 'tier') img.setTint(0x555566);
+    if (st === 'locked' || st === 'tier') img.setTint(LOCKED_TINT);
     m.add(img);
     const price = label(scene, x + tile / 2, y + tile - 9, st === 'owned' ? 'OWNED' : shortPrice(it.price), { font: F.body, tint: st === 'owned' ? C.green1 : st === 'ok' ? C.ink1 : C.ink3, origin: [0.5, 0] });
     m.add(price);
@@ -115,7 +118,20 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
       y += 10;
     }
     y += 2;
-    detail.add(label(scene, px, y, `"${it.quip}"`, { font: F.read, tint: C.ink2, maxWidth: dw - 10 }));
+    const quip = label(scene, px, y, `"${it.quip}"`, { font: F.read, tint: C.ink2, maxWidth: dw - 10 });
+    detail.add(quip);
+    // the space between the words and the buy button shows the thing itself, big, on a little floor
+    const top = y + quip.height + 6;
+    const room = dy + dh - (st === 'locked' ? 42 : 30) - top;
+    if (room >= 40) {
+      const cw = Math.min(dw - 10, 150);
+      const cx0 = px + Math.floor((dw - 10 - cw) / 2);
+      detail.add([rect(scene, cx0, top, cw, room, C.ink0, 1), rect(scene, cx0 + 1, top + 1, cw - 2, room - 2, C.ink1, 1), rect(scene, cx0 + 1, top + room - 9, cw - 2, 8, C.ink2, 1)]);
+      const big = scene.add.image(cx0 + Math.floor(cw / 2), top + room - 6, key).setOrigin(0.5, 1);
+      big.setScale(Phaser.Math.Clamp(Math.floor(Math.min((cw - 14) / big.width, (room - 14) / big.height)), 1, 6));
+      if (st === 'locked' || st === 'tier') big.setTint(LOCKED_TINT);
+      detail.add(big);
+    }
     const label2 = st === 'owned' ? 'OWNED' : st === 'locked' ? 'LOCKED' : st === 'tier' ? `NEEDS ${OFFICE_TIERS[it.tier]!.name.toUpperCase()}` : `BUY ${money(it.price)}`;
     const buy = button(scene, px, dy + dh - 24, dw - 10, 18, label2, () => {
       const err = game.buyItem(it.id);

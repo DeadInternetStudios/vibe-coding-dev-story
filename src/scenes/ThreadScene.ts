@@ -13,6 +13,7 @@ import { BUZZ, buzz } from '../core/haptics';
 import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
+import { REMOVED_BELOW, SOLID_FROM, VIRAL_FROM } from '../sim/config';
 import { Speech } from '../ui/speech';
 import { beat } from '../ui/story';
 import type { StageCtx } from '../ui/ctx';
@@ -77,9 +78,6 @@ const ADDRESS: Record<string, string> = {
   influencer: 'tiktok.example/@shoutout',
   ad: 'billboards.example/campaign',
 };
-
-/** A Reddit score under this and the mods take the post down. The score card calls it REMOVED BY MODS. */
-const REMOVED_BELOW = 10;
 
 const AVATAR_BG = [C.sky, C.mint, C.yellow, C.pink, C.violet2, C.orange3, C.blue2, C.green2];
 
@@ -346,7 +344,7 @@ export class ThreadScene extends Phaser.Scene {
         if (!beat(sctx, 'thread', res)) res();
       });
     }
-    await this.wait(700);
+    await this.wait(400);
     const groups = this.items();
     for (const group of groups) {
       let card: Card | null = null;
@@ -356,6 +354,13 @@ export class ThreadScene extends Phaser.Scene {
         await this.wait(this.portrait ? 380 : 320);
       }
       if (card) this.cursor = card.y + card.box.boxH + 5;
+      this.moveGhosts(this.cursor);
+      await this.wait(260);
+    }
+    for (const item of this.closing()) {
+      if (!this.alive) return;
+      const card = await this.addComment(item, null);
+      this.cursor = card.y + card.box.boxH + 5;
       this.moveGhosts(this.cursor);
       await this.wait(260);
     }
@@ -393,11 +398,32 @@ export class ThreadScene extends Phaser.Scene {
 
   /* --------------------------------------------------------------- OP */
 
+  /** The founder's name on the post, the same on the OP card and on the closing Edit. */
+  private author(): string {
+    const founder = current().s.staff.find((m) => m.isFounder);
+    return `u/${(founder?.name ?? 'founder').replace(/[^A-Za-z0-9]+/g, '')}_${(this.rec.id * 37) % 90 + 10}`;
+  }
+
+  /** After the last reply: AutoModerator takes a flop down, then the founder adds an Edit. Both are voiced like any commenter. */
+  private closing(): Item[] {
+    const t = this.rec.thread;
+    const at = t.vignettes.length;
+    const out: Item[] = [];
+    if (t.mod) out.push({ vi: at, ci: 0, c: { user: 'u/AutoModerator', flair: 'Mod', line: t.mod, depth: 0, votes: [1, 1] }, votes: 1, awards: [] });
+    if (t.edit) {
+      const score = this.rec.score;
+      const id = this.rec.id;
+      // the Edit gets what the thread got: gold-adjacent when it blew up, a few downvotes when it did not
+      const votes = score >= VIRAL_FROM ? 300 + ((id * 131) % 900) : score >= SOLID_FROM ? 12 + ((id * 17) % 80) : -(3 + ((id * 7) % 19));
+      out.push({ vi: at + 1, ci: 0, c: { user: this.author(), flair: 'OP', line: t.edit, depth: 0, votes: [votes, votes] }, votes, awards: [] });
+    }
+    return out;
+  }
+
   private async addOp(): Promise<void> {
     const rec = this.rec;
     const ch = app.content.channels.find((x) => x.id === rec.channel);
-    const founder = current().s.staff.find((m) => m.isFounder);
-    const author = `u/${(founder?.name ?? 'founder').replace(/[^A-Za-z0-9]+/g, '')}_${(rec.id * 37) % 90 + 10}`;
+    const author = this.author();
     const x = this.x0;
     const w = this.cw;
     const pad = 6;
@@ -443,7 +469,7 @@ export class ThreadScene extends Phaser.Scene {
     this.tickNumber(votes, rec.thread.opVotes, 1100, true);
     this.bumpKarma(rec.thread.opVotes);
     this.buildGhosts();
-    await this.wait(700);
+    await this.wait(350);
   }
 
   /* -------------------------------------------------------------- stage */
@@ -820,11 +846,30 @@ export class ThreadScene extends Phaser.Scene {
     const rec = this.rec;
     const s = current().s;
     const root = this.add.container(0, 0).setDepth(DEPTH.modal);
-    const dim = rect(this, 0, 0, L.W, L.H, C.ink0, 0.6).setInteractive();
+    // the thread behind is dimmed hard: scraps of it around the card read as rendering leftovers
+    const dim = rect(this, 0, 0, L.W, L.H, C.ink0, 0.88).setInteractive();
     root.add(dim);
     const wide = !L.portrait && L.W >= 380;
     const w = Math.min(L.W - 6, wide ? 396 : 244);
-    const h = Math.min(L.H - 6, wide ? 220 : 330);
+    // the best comment of the day sizes the card: a one line quote does not get a tall empty slab
+    const best = this.items().flat().sort((a, b) => b.votes - a.votes)[0];
+    const quote = best ? (best.c.line.text.length > 150 ? `${best.c.line.text.slice(0, 147)}...` : best.c.line.text) : '';
+    const measure = (text: string, maxWidth: number): number => {
+      const probe = label(this, 0, 0, text, { font: F.read, tint: C.ink5, maxWidth });
+      const height = probe.height;
+      probe.destroy();
+      return height;
+    };
+    const quoteH = measure(`"${quote}"`, w - 28);
+    // the app store review is the same: the box grows to its text
+    const rx = wide ? 150 : 8;
+    const ry = wide ? 20 : 130;
+    const rw = w - rx - 8;
+    const reviewText = rec.review ? `"${rec.review.text}"` : 'No reviews yet.';
+    const chipH = Math.max(wide ? 56 : 62, 14 + measure(reviewText, rw - 8) + (rec.review ? 12 : 4));
+    const ry2 = ry + 3 * 17 + 2;
+    const qy = wide ? Math.max(133, ry2 + chipH + 4) : ry2 + chipH + 4;
+    const h = Math.min(L.H - 6, Math.max(wide ? 176 : 330, qy + 14 + quoteH + 6 + 28));
     const x = Math.floor((L.W - w) / 2);
     const y = Math.floor((L.H - h) / 2);
     const card = this.add.container(x, y);
@@ -863,9 +908,6 @@ export class ThreadScene extends Phaser.Scene {
     });
 
     // right side: karma, money, the app store
-    const rx = wide ? 150 : 8;
-    const ry = wide ? 20 : 130;
-    const rw = w - rx - 8;
     const rows: { icon: string; name: string; value: string; tint: number }[] = [
       { icon: 'karma', name: 'KARMA', value: `+${shortNumber(rec.karma)}`, tint: C.orange1 },
       { icon: 'cash', name: 'EXPECTED REVENUE', value: shortMoney(rec.lifetime), tint: C.green1 },
@@ -879,8 +921,7 @@ export class ThreadScene extends Phaser.Scene {
       card.add(label(this, rx + rw - 4, yy + 3, r.value, { font: F.caps, tint: r.tint, origin: [1, 0] }));
     });
     // review
-    const ry2 = ry + rows.length * 17 + 2;
-    card.add(panel(this, rx, ry2, rw, wide ? 56 : 62, 'chipLight', false));
+    card.add(panel(this, rx, ry2, rw, chipH, 'chipLight', false));
     card.add(label(this, rx + 4, ry2 + 3, 'APP STORE REVIEW', { font: F.body, tint: C.ink3 }));
     const stars = rec.review?.stars ?? Math.max(1, Math.round(score / 8));
     for (let i = 0; i < 5; i++) {
@@ -888,18 +929,15 @@ export class ThreadScene extends Phaser.Scene {
       if (i >= stars) st.setTint(C.ink4);
       card.add(st);
     }
-    card.add(label(this, rx + 4, ry2 + 14, rec.review ? `"${rec.review.text}"` : 'No reviews yet.', { font: F.read, tint: C.ink1, maxWidth: rw - 8 }));
-    if (rec.review) card.add(label(this, rx + rw - 4, ry2 + (wide ? 46 : 52), `- ${rec.review.user}`, { font: F.body, tint: C.ink3, origin: [1, 0] }));
+    card.add(label(this, rx + 4, ry2 + 14, reviewText, { font: F.read, tint: C.ink1, maxWidth: rw - 8 }));
+    if (rec.review) card.add(label(this, rx + rw - 4, ry2 + chipH - 10, `- ${rec.review.user}`, { font: F.body, tint: C.ink3, origin: [1, 0] }));
 
     // the best comment of the day
-    const best = this.items().flat().sort((a, b) => b.votes - a.votes)[0];
     if (best) {
-      const qy = wide ? 133 : ry2 + 66;
       const qh = h - 28 - qy;
       card.add(panel(this, 8, qy, w - 16, qh, 'plum', false));
       card.add(label(this, 14, qy + 4, 'TOP COMMENT', { font: F.body, tint: C.ink4 }));
       card.add(label(this, w - 14, qy + 4, `${best.c.user}   +${shortNumber(best.votes)}`, { font: F.body, tint: C.orange2, origin: [1, 0] }));
-      const quote = best.c.line.text.length > 150 ? `${best.c.line.text.slice(0, 147)}...` : best.c.line.text;
       card.add(label(this, 14, qy + 14, `"${quote}"`, { font: F.read, tint: C.ink5, maxWidth: w - 28 }));
     }
     const cont = button(this, Math.floor(w / 2) - 60, h - 24, 120, 18, this.replay ? 'BACK' : 'KEEP SHIPPING', () => this.leave(), { kind: 'orange', icon: 'ship' });
