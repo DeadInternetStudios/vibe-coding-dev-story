@@ -40,14 +40,14 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-edit-grandma', topic: 'edit', tone: 'praise', judges: 'overall', weight: 2, when: quality(45),
     comments: [
       { user: 'u/GrandmaDoesCode', depth: 0, votes: [600, 3400], awards: ['wholesome', 'gold'],
-        line: vo('grandma', 'Edit: thank you for the gold, dear stranger. Edit: who is he? Edit: my grandson says not to talk to him. Edit: too late, he is lovely.') },
+        line: vo('grandma', 'Edit: thank you for the gold, dear stranger. Edit: my grandson says I should not talk to you. Edit: too late. You are lovely.') },
       { user: 'u/GameMakerKid10', depth: 1, votes: [200, 1900],
         line: vo('kid', 'Never take gold from strangers! That is rule one of the internet! Also rule two!') },
     ] },
   { id: 'rd-mod-sticky', topic: 'mod-sticky', tone: 'neutral', judges: 'overall', weight: 2, when: hype(40),
     comments: [
       { user: 'u/AutoModerator', flair: 'Mod', depth: 0, votes: [1, 90],
-        line: vo('automod', 'Stickied by the moderators. Rule one: be nice. Rule two: see rule one. Rule three: the mods are asleep, so you are on your own.', 'flat, reading a notice') },
+        line: vo('automod', 'Stickied by the moderators. Rule one: be nice. Rule two: see rule one. Rule three: the mods are asleep.', 'flat, reading a notice') },
       { user: 'u/LetMeSpeakToManager', depth: 1, votes: [100, 1400],
         line: vo('karen', 'I want to report rule three! Who moderates the moderators? Get me that person!') },
       { user: 'u/AutoModerator', flair: 'Mod', depth: 2, votes: [200, 1800],
@@ -58,7 +58,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
       { user: 'u/DoomScrollDev', depth: 0, votes: [300, 2400],
         line: vo('doomer', 'RemindMe! One year. I want to be disappointed on schedule.', 'flat') },
       { user: 'u/RemindMeBot', flair: 'Bot', depth: 1, votes: [100, 1800],
-        line: vo('automod', 'I will be messaging you in one year. Nine hundred other people clicked the link. It is going to be a crowded disappointment.') },
+        line: vo('automod', 'I will be messaging you in one year. Nine hundred others clicked the link. It will be a crowded disappointment.') },
       { user: 'u/ClodFan99', depth: 2, votes: [90, 1300],
         line: vo('clod', 'I will remind you in one year! Wait. Who are you? What was I reminding you about? Hi! I am Clod!', 'fresh, blank, happy') },
     ] },
@@ -373,7 +373,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-sp-weekly', topic: 'channel', tone: 'roast', judges: 'overall', weight: 4, when: channel('sideproject'),
     comments: [
       { user: 'u/AutoModerator', flair: 'Mod', depth: 0, votes: [1, 70],
-        line: vo('automod', 'Your post was removed. Self promotion is only allowed in the weekly thread. This is the weekly thread. Please post in the weekly thread.') },
+        line: vo('automod', 'Your post was removed. Self promotion is only allowed in the weekly thread. This is the weekly thread.') },
       { user: 'u/InternOnDay1', flair: 'Intern', depth: 1, votes: [40, 500],
         line: vo('jenny', 'But I am in the weekly thread! I posted here! Why was I removed from the thing I am in?') },
       { user: 'u/AutoModerator', flair: 'Mod', depth: 2, votes: [1, 50],
@@ -402,7 +402,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-hn-retitled', topic: 'channel', tone: 'neutral', judges: 'overall', weight: 4, when: channel('hn'),
     comments: [
       { user: 'u/HN_Moderator', flair: 'Mod', depth: 0, votes: [20, 300],
-        line: vo('automod', 'The moderators have changed the title to something accurate. Please do not use the word revolutionary. It does not mean what you think.') },
+        line: vo('automod', 'The moderators have changed the title to something accurate. Please do not use the word revolutionary.') },
       { user: 'u/ShipItChad', flair: 'Founder', depth: 1, votes: [100, 1100],
         line: vo('chad', 'I love the new title. Is it still revolutionary?') },
       { user: 'u/HN_Moderator', flair: 'Mod', depth: 2, votes: [300, 2400], awards: ['gold'],
@@ -422,7 +422,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-ph-maker-story', topic: 'channel', tone: 'praise', judges: 'hype', weight: 4, when: channel('ph'),
     comments: [
       { user: 'u/ShipItChad', flair: 'Maker', depth: 0, votes: [200, 1800], awards: ['wholesome'],
-        line: vo('chad', 'Hey Product Hunt! Three months ago my dog got sick, so I quit my job. The dog is fine. The job is gone. Here is the app.', 'breathless, sincere') },
+        line: vo('chad', 'Three months ago my dog got sick, so I quit my job. The dog is fine. The job is gone. Here is the app.', 'breathless, sincere') },
       { user: 'u/OneStarKaren', depth: 1, votes: [100, 1100],
         line: vo('karen', 'Where is the dog? I came here for the dog! I demand pictures of the dog!') },
       { user: 'u/WholesomeWendy', depth: 2, votes: [200, 1600], awards: ['wholesome'],
@@ -469,7 +469,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
       { user: 'u/TenXBro', flair: '10x', depth: 0, votes: [500, 3500],
         line: vo('bro', 'Nobody. Absolutely nobody. The founder at three in the morning: what if the button was a slightly different blue.') },
       { user: 'u/InTheWildDevs', flair: 'Narrator', depth: 1, votes: [700, 4200], awards: ['gold'],
-        line: vo('narrator', 'The button became a slightly different blue. It was tested for eleven days. Nobody could tell. The founder could, and that is the problem.') },
+        line: vo('narrator', 'The button became a slightly different blue. It was tested for eleven days. Nobody could tell. The founder could.') },
     ] },
 
   /* ================================================== LinkedIn */
@@ -548,9 +548,9 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-ad-retarget', topic: 'channel', tone: 'roast', judges: 'hype', weight: 4, when: channel('ad'),
     comments: [
       { user: 'u/SeenItEverywhere', depth: 0, votes: [150, 1500],
-        line: vo('karen', 'I bought one garden gnome in March. I am still being sold gnomes. Now it is a gnome app! It has a gnome in the logo!') },
+        line: vo('karen', 'I bought one garden gnome in March. I am still being sold gnomes. Now your app has a gnome in the logo!') },
       { user: 'u/InTheWildDevs', flair: 'Narrator', depth: 1, votes: [300, 2400],
-        line: vo('narrator', 'The gnome, once bought, follows the buyer forever. Marketers call this personalization. The gnome calls it a garden.') },
+        line: vo('narrator', 'Once purchased, the gnome follows its buyer across the internet. Marketers call this personalization. Biologists call it migration.') },
     ] },
   { id: 'rd-ad-or-parody', topic: 'channel', tone: 'neutral', judges: 'overall', weight: 4, when: channel('ad'),
     comments: [

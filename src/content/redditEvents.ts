@@ -65,7 +65,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     title: 'Source Code Please',
     body: 'A commenter asked for the source code. Fourteen people upvoted the ask. Chad cannot remember where it is. The only copy is a document called final final.',
     speaker: 'pedant',
-    line: vo('pedant', 'Well, actually, a screenshot of code is not source code. I am still waiting. I will wait with a link to the license.'),
+    line: vo('pedant', 'Well, actually, a screenshot of code is not source code. I will wait here, with a link to the license.'),
     choices: [
       { label: 'Open source it',
         result: 'The repo goes public. Three strangers send pull requests. One finds an API key. One finds your commit messages. The commit messages hurt more.',
@@ -119,7 +119,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     title: 'The 4,000 Word Review',
     body: 'A user posted a four thousand word review of your last app. The title is Unacceptable. It is mostly right. Chad has drafted a reply. It is five thousand words.',
     speaker: 'karen',
-    line: vo('karen', 'I would like to begin with the font. I would like to end with the font. In between, I have notes. There are nine hundred notes.'),
+    line: vo('karen', 'I would like to begin with the font. I would like to end with the font. In between: nine hundred notes.'),
     choices: [
       { label: 'Fix what it says', hint: '4 days',
         result: 'The review has eleven real bugs and three feelings. The team fixes the bugs and sends the feelings a card.',
@@ -139,7 +139,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     title: "It's Your Cake Day",
     body: "Reddit says it is the company account's cake day. A tiny cake icon sits next to the name. Chad is overcome. He wants to post. He has been writing since breakfast.",
     speaker: 'wholesome',
-    line: vo('wholesome', 'It is your cake day! There is a tiny cake next to your name! It is made of pixels! It is the best cake I have ever seen!'),
+    line: vo('wholesome', 'It is your cake day! There is a tiny cake next to your name! It is made of pixels! It is perfect!'),
     choices: [
       { label: 'Order a real cake', hint: '-$600',
         result: 'The cake says Happy Cake Day in blue icing. It is the first thing the office has agreed on all year. It is gone in nine minutes. The icing stays on the walls.',
@@ -157,7 +157,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     title: 'Edit: Thanks For The Gold',
     body: "A stranger gave Chad's comment gold. Chad edited it to say thanks. Then he edited it to say wow. The comment is now eighty percent edits.",
     speaker: 'grandma',
-    line: vo('grandma', 'Somebody gave your boy a gold, dear. Is it a medal? Why is he editing the post? He has been editing since lunch.'),
+    line: vo('grandma', 'Somebody gave your boy a gold, dear. Is it a medal? He has been editing the post since lunch.'),
     choices: [
       { label: 'Pay the gold forward', hint: '-$300',
         result: 'Chad gives gold to nine strangers. Eight are bots. One is a grandmother, who writes back: who are you? She is the best investment of the quarter.',
@@ -249,7 +249,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     title: 'The Hug Of Death',
     body: 'A stranger posted your link early. A hundred thousand people are about to hug your server. The server is a laptop on a shelf. It knows.',
     speaker: 'narrator',
-    line: vo('narrator', 'The crowd approaches the server. The server has a premonition. It is a laptop on a shelf. It has never known fear until now.'),
+    line: vo('narrator', 'The crowd approaches the server. It is a laptop on a shelf. It has never known fear until now.'),
     choices: [
       { label: 'Buy the big cloud', hint: '-$2,500',
         result: 'The big cloud arrives in four minutes and costs a month of rent. The site stays up. The invoice has a typo that is also a threat.',
