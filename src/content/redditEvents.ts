@@ -68,7 +68,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     line: vo('pedant', 'Well, actually, a screenshot of code is not source code. I will wait here, with a link to the license.'),
     choices: [
       { label: 'Open source it',
-        result: 'The repo goes public. Three strangers send pull requests. One finds an API key. One finds your commit messages. The commit messages hurt more.',
+        result: 'The repo goes public. Three strangers send pull requests. One goes hunting for an API key. One reads your commit messages. The commit messages hurt more.',
         effects: [karma(300), hype(10), mood(-10), counter('open_sourced'), chance(0.35, [cash(-1200), counter('keys_leaked')])] },
       { label: 'Say it is on the roadmap',
         result: 'The roadmap is a link. The link is also on the roadmap. Fourteen people unsubscribe from hope. The team exhales.',
@@ -421,5 +421,5 @@ export const REDDIT_ACHIEVEMENTS: Achievement[] = [
   { id: 'rd-rule-three', name: 'Rule Three', desc: 'Get warned by the mods twice. Rule three is still one line. You are still arguing about it.', hint: 'The mods have asked twice.', when: atLeast('mod_warnings', 2) },
   { id: 'rd-do-not-share', name: 'Please Do Not Share This', desc: 'Ask the internet not to look at your worst bug. It looked. It brought snacks.', hint: 'Ask nicely. Be ignored.', when: atLeast('shared_anyway', 1) },
   { id: 'rd-brigaded', name: 'Brigaded', desc: 'Survive a brigade. Eight hundred strangers downvoted the weather report. You were the weather.', hint: 'A rival forum finds your thread.', when: atLeast('brigades', 1) },
-  { id: 'rd-comments-first', name: 'Read The Comments First', desc: 'See sixty events. Never open the link. The comments told you everything.', hint: 'Skip the link. Read everything else.', when: atLeast('events_seen', 60) },
+  { id: 'rd-comments-first', name: 'Read The Comments First', desc: 'See ninety events. Never open the link. The comments told you everything.', hint: 'Skip the link. Read everything else.', when: atLeast('events_seen', 90) },
 ];
