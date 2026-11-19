@@ -165,6 +165,7 @@ def apply_identity(a, line: dict, decoded) -> None:
     if sc is None:
         return
     a.metrics["ident_z"], a.metrics["ident_margin"] = round(sc["z"], 2), round(sc["margin"], 3)
+    a.metrics["ident_zcost"] = round(ident.z_cost(sc), 3)
     bad, note = ident.penalty(sc)
     a.badness += bad
     if note:
@@ -256,10 +257,12 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
             tmp.unlink(missing_ok=True)
             continue
         a = att.assessment
+        # being atypical for the voice only picks between takes; it is not a reason to sample more
+        close_enough = a.badness - a.metrics.get("ident_zcost", 0.0) < qa.EXCELLENT
         log.info("%s take %d/%d seed=%d dur=%.2fs wer=%.2f f0=%.0f wps=%.2f rtf=%.2f bad=%.2f%s %s",
                  line["id"], k + 1, args.attempts, seed, a.dur, a.wer, a.metrics["f0_med"], a.metrics["wps"], take.rtf, a.badness,
                  " idz=%+.1f idm=%+.2f" % (a.metrics["ident_z"], a.metrics["ident_margin"]) if "ident_z" in a.metrics else "",
-                 "ACCEPT" if a.excellent else ("ok, sampling for a closer take" if a.ok else "RETRY: " + "; ".join(a.problems)))
+                 "ACCEPT" if close_enough else ("ok, sampling for a closer take" if a.ok else "RETRY: " + "; ".join(a.problems)))
         keep_raw = best is None or a.badness < best.assessment.badness
         if keep_raw:
             if best is not None:
@@ -274,7 +277,7 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
                 log.warning("%s: could not store the raw take", line["id"])
         else:
             tmp.unlink(missing_ok=True)
-        if a.excellent:
+        if close_enough:
             break
     return best, used
 

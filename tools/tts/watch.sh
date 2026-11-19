@@ -17,7 +17,13 @@
 # --batch N  render at most N new lines per run (default 50). When a run added lines, the next run starts at
 #            once, so a long queue is worked off in batches that are each committed; the sleep only happens
 #            when the queue is empty.
-# --polish   also give weak or off-band takes a second chance (generate.py --polish).
+# --polish   once the queue is empty, give weak or off-band takes a second chance (generate.py --polish).
+#            Polishing waits for the queue so that every line has audio first.
+# --refresh-identity
+#            when the queue is empty and lines were added since the last time, rebuild ident.json from the
+#            manifest and annotate render-state.json (castcheck.py --save --annotate-state), so that --polish
+#            can retake the lines that sound like another voice. Nothing writes the state file in between, which
+#            is why this lives here and not in a separate cron job.
 #
 # generate.py does nothing and loads no model when there is no work, and refuses to start while another run
 # holds the manifest lock, so this is safe next to manual runs. Stop it with Ctrl-C or by killing the process;
@@ -28,11 +34,15 @@ INTERVAL=600
 COMMIT=0
 REF=""
 BATCH=50
-GEN_FLAGS=()
+POLISH=0
+REFRESH=0
+IDENT_COUNT=-1
+DRAINED=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --commit) COMMIT=1 ;;
-    --polish) GEN_FLAGS+=(--polish) ;;
+    --polish) POLISH=1 ;;
+    --refresh-identity) REFRESH=1 ;;
     --ref) REF="${2:?--ref needs a git ref}"; shift ;;
     --batch) BATCH="${2:?--batch needs a number}"; shift ;;
     -*) echo "unknown flag $1" >&2; exit 2 ;;
@@ -40,7 +50,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -n "$GAME" ] || { echo "usage: watch.sh /path/to/game/checkout [interval_seconds] [--ref REF] [--batch N] [--commit] [--polish]" >&2; exit 2; }
+[ -n "$GAME" ] || { echo "usage: watch.sh /path/to/game/checkout [interval_seconds] [--ref REF] [--batch N] [--commit] [--polish] [--refresh-identity]" >&2; exit 2; }
 
 cd "$(dirname "$0")"
 HERE="$PWD"
@@ -67,17 +77,30 @@ count_lines() {
 trap 'echo "watch.sh stopped"; exit 0' INT TERM
 while true; do
   before="$(count_lines)"
+  flags=(--limit "$BATCH")
+  [ "$POLISH" = 1 ] && [ "$DRAINED" = 1 ] && flags+=(--polish)
   if LINES="$(export_lines)"; then
-    .venv/bin/python generate.py --lines "$LINES" lines.seed.json lines.extra.json --limit "$BATCH" ${GEN_FLAGS[@]+"${GEN_FLAGS[@]}"}
+    .venv/bin/python generate.py --lines "$LINES" lines.seed.json lines.extra.json "${flags[@]}"
   else
     echo "$(date +%H:%M:%S) could not read the game's lines, will retry" >&2
   fi
   after="$(count_lines)"
-  if [ "$COMMIT" = 1 ] && [ -n "$(git -C "$REPO" status --porcelain -- public/audio/vo tools/tts/render-state.json)" ]; then
-    git -C "$REPO" add public/audio/vo tools/tts/render-state.json
+  if [ "$COMMIT" = 1 ] && [ -n "$(git -C "$REPO" status --porcelain -- public/audio/vo tools/tts/render-state.json tools/tts/ident.json)" ]; then
+    git -C "$REPO" add public/audio/vo tools/tts/render-state.json tools/tts/ident.json
     git -C "$REPO" commit -q -m "Render voice lines: $after in the manifest"
   fi
-  [ "$after" != "$before" ] && continue
+  if [ "$after" != "$before" ]; then
+    DRAINED=0
+    continue
+  fi
+  DRAINED=1
+  if [ "$REFRESH" = 1 ] && [ "$after" != "$IDENT_COUNT" ]; then
+    echo "$(date +%H:%M:%S) queue empty at $after lines: rebuilding ident.json and annotating the state"
+    if .venv/bin/python castcheck.py --save ident.json --annotate-state render-state.json; then
+      IDENT_COUNT="$after"
+      continue
+    fi
+  fi
   sleep "$INTERVAL" &
   wait $!
 done

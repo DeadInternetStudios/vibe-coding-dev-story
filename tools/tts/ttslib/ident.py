@@ -5,8 +5,9 @@ the drift: a take can sit inside its band and still sound like another character
 writes ident.json from the rendered cast: the cast-wide mean embedding and, per voice, its centroid plus the
 mean and spread of its lines' cosine to that centroid. generate.py then scores every take against it:
 
-* how typical the take is for its own voice (a z-score of its cosine to the centroid), and
-* whether another voice's centroid is nearer than its own ("sounds like someone else").
+* how typical the take is for its own voice (a z-score of its cosine to the centroid): this only helps to pick
+  between takes, and
+* whether another voice's centroid is nearer than its own ("sounds like someone else"): this asks for a retake.
 
 Embeddings are centred on the cast mean before comparing, because raw cosines between speakers are all high
 and say little.
@@ -48,20 +49,31 @@ def build(embeddings: np.ndarray, owners: list) -> dict:
         idx = [i for i, o in enumerate(owners) if o == v]
         if len(idx) < MIN_LINES:
             continue
-        c = centred[idx].mean(axis=0)
-        c /= np.linalg.norm(c) + 1e-9
-        own = centred[idx] @ c
-        voices[v] = {"n": len(idx), "own_mean": round(float(own.mean()), 4),
-                     "own_sd": round(float(max(own.std(), MIN_SD)), 4),
-                     "centroid": [round(float(x), 4) for x in c]}
+        x = centred[idx]
+        total = x.sum(axis=0)
+        c = total / (np.linalg.norm(total) + 1e-9)
+        # cosine of each line to the centroid of the OTHER lines: what a fresh take will score. Against the full
+        # centroid the lines would look too typical, because each of them helped to make it.
+        loo = []
+        for row in x:
+            rest = total - row
+            loo.append(float(row @ (rest / (np.linalg.norm(rest) + 1e-9))))
+        voices[v] = {"n": len(idx), "own_mean": round(float(np.mean(loo)), 4),
+                     "own_sd": round(float(max(np.std(loo), MIN_SD)), 4),
+                     "centroid": [round(float(t), 4) for t in c]}
     return {"version": 1, "mean": [round(float(x), 4) for x in mean], "voices": voices}
+
+
+def z_cost(s: dict) -> float:
+    """Badness for a take that is atypical for its voice. Picks between takes; does not ask for more of them."""
+    return Z_PENALTY * max(0.0, -s["z"] - SLACK_Z)
 
 
 def penalty(s: dict | None) -> tuple:
     """(badness to add, problem text or None) for one take's identity score."""
     if s is None:
         return 0.0, None
-    bad = Z_PENALTY * max(0.0, -s["z"] - SLACK_Z)
+    bad = z_cost(s)
     note = None
     if s["other"] - s["own"] > MISFIT_MARGIN:
         bad += MISFIT_PENALTY

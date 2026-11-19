@@ -67,6 +67,43 @@ for the voice. A child or cartoon voice tracked with a 400 Hz ceiling reported 2
 the loud frames sit 450 to 590 Hz apart, so the real pitch was about 490 Hz. `ttslib/audio.py` tracks with a
 wide range first, then narrows it around the voice's own quartiles.
 
+### Bands come from the voice's own lines
+
+The first bands came from five neutral probe sentences per voice. They were too low for the animated voices,
+because hype lines sit higher than calm ones (median pitch on probe sentences against the voice's own lines, Hz):
+bro 111 against 210, karen 331 against 417, jenny 335 against 418, clod 174 against 208, chad 139 against 162.
+`calibrate.py --log generate.log` therefore builds the bands from the **first take of every real line** (later
+takes exist only because an earlier one missed, so they would bias the numbers) and centres each band on the
+**densest cluster** of pitches, not the median. A voice with two registers has its median in the empty gap: the
+announcer's first takes were 74 to 96 Hz (deep) and 119 to 196 Hz (shouting), median 116 Hz, densest cluster
+83 Hz. The cast seed says "huge, bombastic, deep", so the deep register is his, and lines that come out shouting
+are retaken until one comes out deep.
+
+### Two things the pitch number hides
+
+- **Adult women came out at about 400 Hz.** Jenny and Karen measured 417 and 417 Hz. Harmonic spacing in the
+  loud frames agrees (355 to 430 Hz apart), so it is not a tracker octave error: "mezzo-soprano" and "medium-high
+  pitch" make the model sing. A natural adult woman speaks around 200 to 250 Hz. Karen's description now says
+  "normal adult pitch, a low mezzo alto, not high-pitched", which gave 300 Hz and is separated from Jenny by
+  almost six semitones. Jenny is left at about 400 Hz (an anxious intern squeaking is the joke); lowering her
+  to 350 Hz with `alto` and `normal young-woman pitch` is possible but did not change her character enough to
+  matter.
+- **Pitch does not make a voice recognisable.** On 157 lines, 87% were nearest to their own voice's centroid in
+  speaker-embedding space, and the closest pairs were jenny and karen (centroid cosine 0.91), dave and narrator
+  (0.85), linkedin and grandma (0.82), announcer and dave (0.73), bro and chad (0.74). Eight male voices sit
+  between 78 and 115 Hz, so they differ by texture, pace and delivery. `castcheck.py` measures this and
+  `ttslib/ident.py` uses it inside the gate (below).
+
+### The identity gate
+
+`castcheck.py --save ident.json` embeds every rendered line with the Base 1.7B speaker encoder, subtracts the
+cast-wide mean (raw cosines between speakers are all high and say little), and stores each voice's centroid and
+how tightly its lines sit around it. `generate.py` then adds to a take's badness: 0.25 per spread below the
+voice's typical cosine beyond half a spread, and 1.0 when another voice's centroid is nearer than its own by
+more than 0.05 ("sounds like someone else"). Example from the first test, three Dave takes in a row scored
+"sounds more like doomer / vc / announcer" and the fourth, at z +2.7, was kept. The cost is more takes for voices
+that drift (Dave, Chad, announcer).
+
 ## Wording that matters
 
 The description is taken literally, so some adjectives backfire:
