@@ -5,7 +5,7 @@ import { feature } from '../core/features';
 import { C, DEPTH, F } from '../core/theme';
 import type { DialogueStep } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
-import { label, panel, rect } from './kit';
+import { hoverFrame, label, panel, rect } from './kit';
 import { layoutOf } from './layout';
 import { tuckPopups } from './modal';
 import { Speech } from './speech';
@@ -14,8 +14,9 @@ import type { StageCtx } from './ctx';
 /**
  * Talking heads. A box at the bottom with a face, a name, and words that
  * arrive as they are spoken. Tap to show it all, tap again for the next line.
+ * `onDone` is told whether the player skipped the rest of the scene.
  */
-export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => void, opts: { title?: string; skippable?: boolean; /** the last step is a countdown: three beeps under it */ countdown?: boolean } = {}): void {
+export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: (skipped: boolean) => void, opts: { title?: string; skippable?: boolean; /** the last step is a countdown: three beeps under it */ countdown?: boolean } = {}): void {
   const scene = ctx.scene;
   const L = layoutOf(scene);
   const release = ctx.hold('dialogue');
@@ -50,17 +51,25 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   const hint = label(scene, x + w - 10, y + h - 14, 'tap', { font: F.body, tint: C.ink3, origin: [1, 0] });
   root.add([name, text, hint]);
   scene.tweens.add({ targets: hint, alpha: { from: 1, to: 0.2 }, duration: 500, yoyo: true, repeat: -1 });
-  let skip: ReturnType<typeof label> | null = null;
+  let skip = false;
+  const skipScene = () => close(true);
   if (opts.skippable !== false && steps.length > 1) {
-    skip = label(scene, x + w - 8, y + 5, 'skip >>', { font: F.body, tint: C.ink3, origin: [1, 0] });
-    root.add(skip);
+    skip = true;
+    // a button the eye finds, on a tap target bigger than its face: the whole corner above the first line of words
+    const word = label(scene, 0, 0, 'SKIP >>', { font: F.caps, tint: C.ink1 });
+    const bw = Math.ceil(word.width) + 10;
+    const chip = panel(scene, x + w - bw - 5, y + 4, bw, 12, 'paperDim', false);
+    word.setPosition(x + w - bw - 5 + 5, y + 6);
+    const grab = scene.add.zone(x + w - 78, y, 78, 18).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    grab.on('pointerup', skipScene);
+    root.add([chip, word, grab, hoverFrame(scene, grab, x + w - bw - 5, y + 4, bw, 12)]);
   }
   let i = -1;
   let speech: Speech | null = null;
   let closed = false;
   let keyOff = () => undefined as void;
   let mouthTimer: Phaser.Time.TimerEvent | null = null;
-  const close = () => {
+  const close = (skipped = false) => {
     if (closed) return;
     closed = true;
     keyOff();
@@ -70,7 +79,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     release();
     root.destroy();
     bringBack();
-    onDone();
+    onDone(skipped);
   };
   const next = () => {
     i += 1;
@@ -78,7 +87,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     mouthTimer?.remove();
     const step = steps[i];
     if (!step) {
-      close();
+      close(false);
       return;
     }
     face.setTexture(bakePortrait(scene, step.speaker));
@@ -101,17 +110,11 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     if (speech && !speech.finished) speech.skip();
     else next();
   };
-  dim.on('pointerup', (p: Phaser.Input.Pointer) => {
-    if (skip && p.x > x + w - 50 && p.y < y + 14 && p.y > y) {
-      close();
-      return;
-    }
-    advance();
-  });
+  dim.on('pointerup', advance);
   // desktop: space and enter turn the page, escape skips the whole scene when that is allowed
   const kb = feature('keys') ? scene.input.keyboard : null;
   const onAdvance = () => !closed && advance();
-  const onSkip = () => !closed && skip && close();
+  const onSkip = () => !closed && skip && close(true);
   kb?.on('keydown-SPACE', onAdvance);
   kb?.on('keydown-ENTER', onAdvance);
   kb?.on('keydown-ESC', onSkip);

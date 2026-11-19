@@ -3,9 +3,17 @@ import type { DialogueStep } from '../content/types';
 import { dialogue } from './dialogue';
 import type { StageCtx } from './ctx';
 
-/** The opening scene. Plays the intro, then the welcome tip, then hands control back. */
+/** The first-run hints that wait between the opening scene and the first project. */
+const FIRST_MINUTE = ['welcome', 'idea'];
+
+/**
+ * The opening scene. Plays the intro, then the welcome tip, then hands control back.
+ * Whoever skips the intro wants to play, so the first-run hints that would come before the project wizard are not forced on them.
+ */
 export function showIntro(ctx: StageCtx, onDone: () => void): void {
-  dialogue(ctx, app.content.story.intro, () => {
+  dialogue(ctx, app.content.story.intro, (skipped) => {
+    const seen = ctx.session.s.tutorial;
+    if (skipped) for (const key of FIRST_MINUTE) if (!seen.includes(key)) seen.push(key);
     if (!beat(ctx, 'welcome', onDone)) onDone();
   });
 }
