@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
+import { audio } from '../core/audio';
 import { Session } from './session';
 
 /**
@@ -239,6 +240,7 @@ export function installDriver(game: Phaser.Game): void {
     scene: () => active()?.scene.key ?? null,
     /** the running game's state, for probes that need real data */
     state: () => app.session?.s ?? null,
+    audio: () => audio.status(),
     errors,
     stats,
     autoplay(ms = 60000, every = 120): void {

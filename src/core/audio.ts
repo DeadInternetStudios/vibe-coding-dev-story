@@ -66,6 +66,7 @@ class AudioHub {
       this.voiceGain.connect(this.ctx.destination);
       this.base = import.meta.env.BASE_URL ?? '/';
       this.applySettings();
+      document.addEventListener('visibilitychange', () => this.followTab());
     } catch {
       this.ctx = null;
       this.engine = null;
@@ -81,6 +82,17 @@ class AudioHub {
       if (this.wantMusic) this.engine?.music(this.wantMusic);
     });
     void this.ctx?.resume();
+  }
+
+  /** For the test driver: what the sound system is doing right now. */
+  status(): { ctx: string; unlocked: boolean; music: MusicId | null } {
+    return { ctx: this.ctx?.state ?? 'none', unlocked: this.unlocked, music: this.engine?.currentMusic() ?? null };
+  }
+
+  /** A hidden tab goes quiet and picks up where it left off: the music is not left looping behind another page. */
+  private followTab(): void {
+    if (!this.ctx || !this.unlocked) return;
+    void (document.hidden ? this.ctx.suspend() : this.ctx.resume());
   }
 
   applySettings(): void {
