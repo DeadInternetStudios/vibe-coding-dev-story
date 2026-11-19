@@ -462,7 +462,7 @@ function paydayPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'payday' }>, done: Don
   const rowH = 10;
   const warnH = r.warnings.length * 10;
   const h = popupH(L, 56 + (lines.length + 3) * rowH + warnH + 26);
-  const m = new Modal(scene, { w, h, title: 'PAYDAY', style: 'paper' });
+  const m = new Modal(scene, { w, h, title: 'PAYDAY', style: 'paper', dim: 0.8 });
   ctx.sfx('payday');
   m.add(label(scene, w / 2, 20, r.headline, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 16, align: 'center' }));
   let y = 36 + (textHeight(ctx, r.headline, F.body, w - 16) > 9 ? 8 : 0);

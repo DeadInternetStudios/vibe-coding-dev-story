@@ -59,6 +59,7 @@ export class Hud {
   private qualityText: Phaser.GameObjects.BitmapText | null = null;
   private crunchBtn: ButtonObj | null = null;
   private hireBtn: ButtonObj | null = null;
+  private toolsBtn: ButtonObj | null = null;
   private L!: Layout;
   cashPos = { x: 0, y: 0 };
 
@@ -171,6 +172,7 @@ export class Hud {
       b.setDepth(DEPTH.hud + 2);
       this.add(b);
       if (id === 'hire') this.hireBtn = b;
+      if (id === 'tools') this.toolsBtn = b;
     });
   }
 
@@ -298,13 +300,12 @@ export class Hud {
       const on = i === 0 ? this.session.paused : !this.session.paused && this.session.speedIdx === i - 1;
       b.setKind(on ? 'orange' : 'plum');
     });
-    if (this.hireBtn) {
-      // the button always says what it does; it is the main button only while there is a desk to fill
-      const key = this.session.game.freeDesks() > 0 ? 'open' : 'full';
-      if (this.last.hire !== key) {
-        this.last.hire = key;
-        this.hireBtn.setKind(key === 'open' ? 'orange' : 'plum');
-      }
+    // one button at a time is the main one: the thing the company needs right now
+    const main = this.mainAction();
+    if (this.last.main !== main) {
+      this.last.main = main;
+      this.hireBtn?.setKind(main === 'hire' ? 'orange' : 'plum');
+      this.toolsBtn?.setKind(main === 'tools' ? 'orange' : 'teal');
     }
 
     // project card
@@ -312,6 +313,12 @@ export class Hud {
     const key = p ? `p${p.id}:${p.status}` : 'none';
     if (key !== this.projectKey) this.buildProject();
     if (p && p.status === 'dev') this.updateProject(p);
+  }
+
+  /** Out of tokens, nothing gets built, so TOOLS comes first. Otherwise an open desk is the thing to fill. */
+  private mainAction(): 'tools' | 'hire' | 'none' {
+    if (this.session.s.company.tokens < this.tokenCap() * 0.12) return 'tools';
+    return this.session.game.freeDesks() > 0 ? 'hire' : 'none';
   }
 
   private tokenCap(): number {

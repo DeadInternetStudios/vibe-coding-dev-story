@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
 import { bakePortrait } from '../core/bake';
-import { C, DEPTH, F } from '../core/theme';
+import { C, DEPTH, F, T } from '../core/theme';
 import type { VoiceLine } from '../content/vo';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { label, panel, rect } from './kit';
@@ -19,11 +19,37 @@ export class Chatter {
   private root: Phaser.GameObjects.Container | null = null;
   private speech: Speech | null = null;
   private bye: Phaser.Time.TimerEvent | null = null;
+  /** the quiet state of the lane on a tall screen: a slim bar with a typing line, so the gap under the room has a reason */
+  private idle: Phaser.GameObjects.Container | null = null;
 
   constructor(scene: Phaser.Scene, L: Layout, bottom: number) {
     this.scene = scene;
     this.L = L;
     this.bottom = bottom;
+    if (L.portrait) this.buildIdle();
+  }
+
+  private buildIdle(): void {
+    const scene = this.scene;
+    const w = Math.min(this.L.W - 8, 300);
+    const x = Math.floor((this.L.W - w) / 2);
+    const root = scene.add.container(x, Math.round(this.bottom - 25)).setDepth(DEPTH.hud - 1);
+    root.add(panel(scene, 0, 0, w, 14, 'night', false));
+    root.add(label(scene, 5, 3, '#OFFICE-CHAT', { font: F.caps, tint: C.yellow }));
+    const typing = label(scene, w - 5, 3, 'someone is typing', { font: F.body, tint: T.onDarkDim, origin: [1, 0] });
+    root.add(typing);
+    this.idle = root;
+    if (app.settings.reducedMotion) return;
+    let dots = 0;
+    scene.time.addEvent({
+      delay: 480,
+      loop: true,
+      callback: () => {
+        if (!typing.active) return;
+        dots = (dots + 1) % 4;
+        typing.setText(`someone is typing${'.'.repeat(dots)}`);
+      },
+    });
   }
 
   get busy(): boolean {
@@ -33,6 +59,7 @@ export class Chatter {
   say(voice: VoiceLine['voice'], text: string, line?: VoiceLine): void {
     if (this.root) return;
     const scene = this.scene;
+    this.idle?.setVisible(false);
     const w = Math.min(this.L.W - 8, 300);
     const textX = 27;
     const probe = label(scene, -999, -999, text, { font: F.body, maxWidth: w - textX - 6 });
@@ -75,9 +102,19 @@ export class Chatter {
     this.speech = null;
     if (instant || app.settings.reducedMotion) {
       root.destroy();
+      this.idle?.setVisible(true);
       return;
     }
-    this.scene.tweens.add({ targets: root, alpha: 0, y: root.y + 4, duration: 220, onComplete: () => root.destroy() });
+    this.scene.tweens.add({
+      targets: root,
+      alpha: 0,
+      y: root.y + 4,
+      duration: 220,
+      onComplete: () => {
+        root.destroy();
+        if (!this.root) this.idle?.setVisible(true);
+      },
+    });
   }
 
   /** Cut it off now, for anything that wants the screen. */

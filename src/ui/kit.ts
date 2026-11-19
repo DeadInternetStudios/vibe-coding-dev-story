@@ -395,9 +395,6 @@ export function rect(scene: Scene, x: number, y: number, w: number, h: number, t
   return scene.add.image(Math.round(x), Math.round(y), bakePixel(scene)).setOrigin(0, 0).setDisplaySize(w, h).setTint(tint).setAlpha(alpha);
 }
 
-/** The shortest string that fits, with an ellipsis. Used for names in tight rows. */
-export function fit(text: string, max: number): string {
-  return text.length <= max ? text : `${text.slice(0, Math.max(1, max - 2)).replace(/[\s,;:.\-]+$/, '')}..`;
-}
+export { fit } from './text';
 
 export { BOX_SRC };
