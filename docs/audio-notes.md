@@ -121,6 +121,23 @@ A layer plays while the intensity is inside its window; `a-b` means from `a` to 
 | `menu` | Menu (calm) | 84 BPM, Ab major, 24 bars, loops | `base`, `pad`, `bass` 0.2-1, `lead` 0.35-1, `perc` 0.5-1, `extra` 0.65-1 |
 <!-- AUTO:END ids -->
 
+Where each song is meant to go, and what intensity does to it. `music(id)` with no intensity uses
+the default below. At intensity 0 only the quiet floor plays; each higher layer joins inside its
+window (the table above) at the next bar line.
+
+| Song | Use it for | Default intensity | Quiet floor (intensity 0) | Length |
+|---|---|---|---|---|
+| `title` | title screen | 1 | `base`, `perc` | 32 s loop |
+| `office` | the studio day to day; raise intensity as pressure builds | 0.5 | `base`, `bass`, `perc`, `pad` | 73.8 s loop |
+| `crunch` | deadline weeks; run the intensity up as the deadline nears | 0.7 | `base`, `bass` | 51.9 s loop |
+| `thread` | the fake Reddit thread; plays under the voice, so `duck()` it only a little | 0.4 | `base`, `bass`, `perc` | 60 s loop |
+| `launch` | launch day hype | 0.7 | `base`, `bass` | 58.2 s loop |
+| `awards` | the awards show | 0.6 | `base`, `bass` | 35.6 s loop |
+| `shop` | the shopping screen | 0.55 | `base`, `bass`, `perc` | 51.4 s loop |
+| `win` | you win; plays once, then `currentMusic()` is `null` | 1 | whole piece | 14.5 s |
+| `lose` | sad trombone; plays once | 1 | whole piece | 3.6 s |
+| `menu` | settings and other calm screens | 0.55 | `base`, `pad` | 68.6 s loop |
+
 ## 4. How loud things are
 
 Targets, measured on Chromium's `OfflineAudioContext` (the stack the game ships on):
@@ -377,15 +394,17 @@ renders of the same job differ by float noise only (largest 2.4e-7, about -150 d
 
 ## 7. How to check things
 
-Setup, once: `python3 -m venv tools/audio/.venv && tools/audio/.venv/bin/pip install -r tools/audio/requirements.txt`.
+Setup, once: `npm install` (adds `node-web-audio-api`, which only the tools and tests use), then
+`python3 -m venv tools/audio/.venv && tools/audio/.venv/bin/pip install -r tools/audio/requirements.txt`.
 `ffmpeg` must be on the path (loudness). The Chromium backend reads Playwright and its browser
-from `~/.100x` (override with `PLAYWRIGHT_HOME`); it is launched muted.
+from `~/.100x` (override with `PLAYWRIGHT_HOME`); it is not a dependency of the repo, and it is
+launched muted.
 
 Nothing here can reach a speaker: renders use `OfflineAudioContext` only, in node or in a headless
 Chromium started with `--mute-audio`.
 
 ```
-npx vitest run src/audio                       unit tests (301)
+npx vitest run src/audio                       unit tests (303)
 npx tsc --noEmit                               types
 
 npx tsx tools/audio/render.ts sfx click coin   render sounds (or `sfx all`) to tools/audio/out/wav

@@ -107,6 +107,31 @@ describe('SoundEngine on a live clock', () => {
     l.engine.dispose();
   });
 
+  it('a song that plays once ends by itself: currentMusic() is the song while it plays and null after', () => {
+    const l = live();
+    l.engine.music('lose'); // 3.6 s long
+    tick(l, 20); // 0.5 s in
+    expect(l.engine.currentMusic()).toBe('lose');
+    tick(l, 160); // 4.5 s in: the written music is over
+    const lastNote = Math.max(...l.at);
+    expect(lastNote).toBeLessThan(l.clock.now - 0.5);
+    tick(l, 400); // 10 s more, long past any tail
+    expect(l.engine.currentMusic()).toBeNull();
+    const settled = l.at.length;
+    tick(l, 80);
+    expect(l.at.length).toBe(settled);
+    l.engine.dispose();
+  });
+
+  it('a looping song never ends by itself', () => {
+    const l = live();
+    l.engine.music('title'); // 32 s loop
+    tick(l, 40 * 90); // 90 s: nearly three loops
+    expect(l.engine.currentMusic()).toBe('title');
+    expect(l.at.filter((t) => t > 80).length).toBeGreaterThan(20);
+    l.engine.dispose();
+  });
+
   it('remembers music asked for before the context runs, and starts it when resume() finds it running', async () => {
     const l = live('suspended');
     l.engine.music('title');
