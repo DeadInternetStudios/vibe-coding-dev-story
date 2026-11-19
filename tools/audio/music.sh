@@ -42,7 +42,8 @@ calibrate() {
   npx tsx tools/audio/calibrate.ts --music --write --analysis "$analysis"
 }
 
-flagged() { grep -E 'LUFS|TEMPO|KEY|SEAM|LOOP|GAP|PEAK|CLIP|DC|NaN' || echo "no song has a flag"; }
+# a song line is "name peak P LUFS-I L" and analyze.py adds its flags after that, so a flagged line has more than five words
+flagged() { awk 'NF > 5 { print; n++ } END { if (!n) print "no song has a flag" }'; }
 
 case "${1:?usage: music.sh measure|calibrate|settle}" in
   measure) measure ;;
