@@ -92,9 +92,12 @@ function layout(scene: Phaser.Scene, f: CardFacts): Phaser.GameObjects.Container
 /**
  * Draw the card into a new render texture `scale` times as big as the card pixels. The texture is a game
  * object: put it in a modal, or snapshot it to a picture. Destroy it when done.
+ * `smooth` is for a copy that will be shown smaller than it is drawn: it is shrunk with blending, not by dropping pixels.
  */
-export function drawCard(scene: Phaser.Scene, f: CardFacts, scale: number): Phaser.GameObjects.RenderTexture {
+export function drawCard(scene: Phaser.Scene, f: CardFacts, scale: number, smooth = false): Phaser.GameObjects.RenderTexture {
   const rt = scene.add.renderTexture(-9000, -9000, CARD_W * scale, CARD_H * scale);
+  // the filter is set before anything is drawn: changing it afterwards wipes the texture
+  if (smooth) rt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
   const card = layout(scene, f);
   card.setScale(scale);
   rt.draw(card);

@@ -32,17 +32,23 @@ export function openShare(scene: Phaser.Scene, s: GameState, endingTitle: string
   const L = layoutOf(scene);
   const w = Math.min(L.W - 6, CARD_W + 16);
   const canShareFiles = typeof navigator.canShare === 'function' && typeof navigator.share === 'function';
-  const h = Math.min(L.H - 6, 22 + CARD_H + 8 + 22 + (canShareFiles ? 22 : 0) + 8);
+  // the preview shows the whole card on any screen: smaller than the card when the popup is narrower or shorter than it
+  const below = 8 + 22 + (canShareFiles ? 22 : 0) + 8;
+  const fit = Math.min(1, (w - 8) / CARD_W, (L.H - 6 - 22 - below) / CARD_H);
+  const pw = Math.floor(CARD_W * fit);
+  const ph = Math.floor(CARD_H * fit);
+  const h = Math.min(L.H - 6, 22 + ph + below);
   const m = new Modal(scene, { w, h, title: 'SHARE YOUR RUN', closable: true, hold });
-  const cx = Math.floor((w - CARD_W) / 2);
-  const preview = drawCard(scene, facts, 1).setOrigin(0, 0).setPosition(cx, 21);
+  // full size is drawn in card pixels, crisp; a smaller one is drawn twice as big and shrunk smoothly, so the words stay readable
+  const preview = drawCard(scene, facts, fit < 1 ? 2 : 1, fit < 1).setOrigin(0, 0).setPosition(Math.floor((w - pw) / 2), 21);
+  if (fit < 1) preview.setScale(fit / 2);
   m.add(preview);
 
   // the big copy is made once, in the background, so a share sheet opens at the tap
   const file: Promise<File> = cardPng(scene, facts).then((blob) => new File([blob], FILE, { type: 'image/png' }));
   file.catch(() => undefined);
 
-  const by = 21 + CARD_H + 8;
+  const by = 21 + ph + 8;
   const bw = Math.floor((w - 16 - 4) / 2);
   const copy: ButtonObj = button(scene, 8, by, bw, 18, 'COPY POST', () => {
     void copyText(shareText(s, endingTitle, `${location.origin}${location.pathname}`)).then((ok) => {
