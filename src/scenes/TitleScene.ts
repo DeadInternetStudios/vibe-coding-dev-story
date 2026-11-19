@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { app } from '../core/app';
 import { audio } from '../core/audio';
 import { bake, bakePortrait } from '../core/bake';
-import { hasOutdatedSave, loadHall, loadSave, saveSettings } from '../core/save';
+import { loadHall, loadSave, saveProblem, saveSettings, takeCrashNote } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
 import { landmarkSign, nightCity } from '../art/sprites/scenery';
 import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
@@ -43,6 +43,8 @@ export class TitleScene extends Phaser.Scene {
   private clock = 0;
   private woke = false;
   private greeted = false;
+  /** whether the last run crashed the game while opening: read once per visit, because a resize rebuilds the title */
+  private crashNote: boolean | undefined;
   /** while a greeting is spoken, how loud it is: the logo bounces with it */
   private greeting: Speech | null = null;
 
@@ -51,6 +53,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.crashNote = undefined;
     wipeIn(this);
     audio.music('title', { fadeMs: 400 });
     this.cameras.main.setBackgroundColor(C.ink0);
@@ -70,7 +73,7 @@ export class TitleScene extends Phaser.Scene {
     this.shootingStars(W, H);
 
     // logo, buttons: measure first so nothing collides
-    const save = loadSave();
+    const save = loadSave(app.content);
     const stripH = STRIP_H;
     const { scale, logoH, logoY } = titleBlock({ W, H, cx: L.cx, save: !!save, logo: { w: LOGO_W, h: LOGO_H }, sign: landmarkSign(W, H) });
     this.buildLogo(L.cx, logoY, scale);
@@ -102,9 +105,18 @@ export class TitleScene extends Phaser.Scene {
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
     const menuBottom = y;
     const menuTop = subY + 16;
-    // a run saved by another version of the game cannot be opened: say so for a few seconds instead of quietly starting over
-    if (!save && hasOutdatedSave()) {
-      const note = label(this, L.cx, H - stripH - 4, 'An older save could not be opened. Your hall of fame is safe.', { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 1], depth: DEPTH.hud, maxWidth: W - 12, align: 'center' });
+    // a run the game cannot open (another version, damaged, or one that crashed the game on the way in): say so for a few seconds instead of quietly starting over
+    this.crashNote ??= takeCrashNote();
+    const problem = save ? null : saveProblem(app.content);
+    const why = this.crashNote
+      ? 'Your last run crashed the game while opening, so it was put aside. A new game is ready.'
+      : problem === 'older'
+        ? 'An older save could not be opened. Your hall of fame is safe.'
+        : problem === 'damaged'
+          ? 'That save was damaged and could not be opened. Your hall of fame is safe.'
+          : null;
+    if (why) {
+      const note = label(this, L.cx, H - stripH - 4, why, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 1], depth: DEPTH.hud, maxWidth: W - 12, align: 'center' });
       this.tweens.add({ targets: note, alpha: 0, delay: 9000, duration: 600 });
     }
     this.buildDrifters(L, { half: bw / 2, top: subY + 14, menuBottom, stripH });
@@ -165,9 +177,11 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private continueGame(): void {
-    const s = loadSave();
+    const s = loadSave(app.content);
     if (!s) return;
     app.session = Session.resume(app.content, s, app.settings.speed);
+    // until the Office is built, an error means this run cannot be opened: main.ts puts it aside and reloads
+    app.resuming = true;
     fadeTo(this, 'Office');
   }
 

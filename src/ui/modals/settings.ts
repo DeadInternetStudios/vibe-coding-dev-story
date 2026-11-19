@@ -93,7 +93,7 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
 
 /** The running game when there is one (the saved copy can be a week old), else what the browser has stored. */
 async function copySave(scene: Phaser.Scene): Promise<string> {
-  const state = (scene.scene.key === 'Office' ? app.session?.s : undefined) ?? loadSave();
+  const state = (scene.scene.key === 'Office' ? app.session?.s : undefined) ?? loadSave(app.content);
   if (!state) return 'No save yet. Play a bit first.';
   const code = encodeSave(state);
   try {
@@ -113,11 +113,11 @@ async function loadSaveCode(): Promise<string> {
   } catch {
     code = null;
   }
-  if (!code || !decodeSave(code)) code = window.prompt('Paste your save code here:', '');
+  if (!code || !decodeSave(code, app.content)) code = window.prompt('Paste your save code here:', '');
   if (!code) return 'Nothing loaded.';
-  const state = decodeSave(code);
+  const state = decodeSave(code, app.content);
   if (!state) return 'That is not a save code from this game.';
-  if (loadSave() && !window.confirm('Replace the save on this device with that one?')) return 'Kept your current save.';
+  if (loadSave(app.content) && !window.confirm('Replace the save on this device with that one?')) return 'Kept your current save.';
   if (!writeSave(state)) return 'The browser would not store it.';
   window.setTimeout(() => window.location.reload(), 900);
   return 'Save loaded. Restarting...';

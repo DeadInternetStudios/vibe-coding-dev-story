@@ -15,6 +15,7 @@ import { OfficeScene } from './scenes/OfficeScene';
 import { ThreadScene } from './scenes/ThreadScene';
 import { EndingScene } from './scenes/EndingScene';
 import { app } from './core/app';
+import { setSaveAside } from './core/save';
 import { audio } from './core/audio';
 import { uiEvents } from './ui/kit';
 import { installDriver } from './game/driver';
@@ -54,6 +55,15 @@ game.step = (time: number, delta: number) => {
   try {
     phaserStep(time, delta);
   } catch (e) {
+    if (app.resuming) {
+      // the saved run broke the game while it was opening: put it aside and start again from the title, so nobody is stuck behind it
+      app.resuming = false;
+      app.session = null;
+      setSaveAside();
+      queueMicrotask(() => { throw e; });
+      window.location.reload();
+      return;
+    }
     const key = e instanceof Error ? e.message : String(e);
     const n = (stepsFailed.get(key) ?? 0) + 1;
     stepsFailed.set(key, n);

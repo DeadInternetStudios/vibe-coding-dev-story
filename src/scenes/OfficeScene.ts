@@ -122,6 +122,7 @@ export class OfficeScene extends Phaser.Scene {
       session.save();
     });
     this.startIntroSoon();
+    app.resuming = false;
   }
 
   /** The opening scene plays once the office is on screen. A window resize destroys the story box mid-sentence, so the scene starts over in the new layout. */
