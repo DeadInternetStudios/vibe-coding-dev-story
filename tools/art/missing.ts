@@ -4,7 +4,9 @@
  *   npx tsx tools/art/missing.ts
  *
  * Icons: every icon name the code uses, plus one per kind, niche, tool and channel.
- * Decor: every shop item art id. Nothing here draws or plays anything.
+ * Decor: every shop item art id. Portraits: one per voice. Effects, logo, rooms and
+ * the night city: whatever docs/art-brief.md asks for that is not there or breaks a rule.
+ * Nothing here draws or plays anything.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
@@ -13,6 +15,9 @@ import { buildFromSource } from '../../src/content/runtime';
 import { hasIcon } from '../../src/art/sprites/icons';
 import { decorPx } from '../../src/art/sprites/decor';
 import { SHOP } from '../../src/sim/shop';
+import { PORTRAIT_LOOKS } from '../../src/art/sprites/portraits';
+import { VOICES } from '../../src/content/vo';
+import { checkBackdrop, checkFx, checkLogo, checkPortraits, checkRooms } from './checks';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -53,3 +58,16 @@ for (const n of missing) console.log(`  ${n.padEnd(22)} ${[...used.get(n)!].slic
 const decor = SHOP.filter((i) => !decorPx(i.art));
 console.log(`\nDECOR MISSING (${decor.length} of ${SHOP.length}). id, spot, name`);
 for (const i of decor) console.log(`  ${i.art.padEnd(12)} ${i.spot.padEnd(7)} ${i.name}`);
+
+const noPortrait = VOICES.filter((v) => !(v in PORTRAIT_LOOKS));
+const sections: [string, string[]][] = [
+  ['PORTRAITS', [...noPortrait.map((v) => `${v}: no portrait`), ...checkPortraits().filter((f) => f.level === 'error').map((f) => `${f.sprite}: ${f.msg}`)]],
+  ['FX', checkFx().filter((f) => f.level === 'error').map((f) => `${f.sprite}: ${f.msg}`)],
+  ['LOGO', checkLogo().filter((f) => f.level === 'error').map((f) => `${f.sprite}: ${f.msg}`)],
+  ['ROOMS', checkRooms().filter((f) => f.level === 'error').map((f) => `${f.sprite}: ${f.msg}`)],
+  ['NIGHT CITY', checkBackdrop().filter((f) => f.level === 'error').map((f) => `${f.sprite}: ${f.msg}`)],
+];
+for (const [name, list] of sections) {
+  console.log(`\n${name} MISSING OR BROKEN (${list.length})`);
+  for (const line of list) console.log(`  ${line}`);
+}

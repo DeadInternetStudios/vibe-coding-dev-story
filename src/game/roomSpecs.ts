@@ -1,4 +1,4 @@
-import { WALL_H, type RoomLook } from '../art/sprites/rooms';
+import { DOOR, WALL_H, wallBlocks, type RoomLook } from '../art/sprites/rooms';
 import { TILE } from '../art/sprites/office';
 import { OFFICE_TIERS } from '../sim/config';
 
@@ -37,8 +37,8 @@ interface TierLook {
 
 const LOOKS: TierLook[] = [
   { tilesW: 13, rows: 5, floor: 'concrete', wall: 'plank', windows: [136] },
-  { tilesW: 17, rows: 6, floor: 'carpet', wall: 'cream', windows: [28, 120, 212] },
-  { tilesW: 22, rows: 6, floor: 'wood', wall: 'brick', windows: [30, 130, 230, 300] },
+  { tilesW: 17, rows: 6, floor: 'carpet', wall: 'cream', windows: [38, 206] },
+  { tilesW: 22, rows: 6, floor: 'wood', wall: 'brick', windows: [34, 150, 266] },
   { tilesW: 28, rows: 6, floor: 'slate', wall: 'glass', windows: [] },
 ];
 
@@ -60,15 +60,20 @@ function build(tier: number): RoomSpec {
   }
   // bottom row below the desks
   for (let x = 22; x < rx0 - 10; x += 38) floorSpots.push({ x, y: h - 3 });
-  // wall: between windows, away from the pegboard
+  // wall: in the gaps the architecture leaves (windows, doors, fixtures), as many 32 wide pieces as fit
   const wallSpots: Spot[] = [];
-  const blocked = [...t.windows.map((wx) => [wx - 4, wx + 36] as const), ...(t.wall === 'plank' ? ([[4, 52]] as const) : [])];
-  for (let x = 30; x < w - 24; x += 44) {
-    if (blocked.some(([a, b]) => x + 14 > a && x - 14 < b)) continue;
-    wallSpots.push({ x, y: 9 });
+  const gaps: [number, number][] = [];
+  let edge = 0;
+  for (const [a, b] of wallBlocks(t).sort((p, q) => p[0] - q[0])) {
+    if (a > edge) gaps.push([edge, a]);
+    edge = Math.max(edge, b);
   }
-  // glass walls have no gaps, hang things on the mullions anyway
-  if (t.wall === 'glass') for (let x = 40; x < w - 24; x += 64) wallSpots.push({ x, y: 9 });
+  if (edge < w) gaps.push([edge, w]);
+  for (const [a, b] of gaps) {
+    const n = Math.floor((b - a + 4) / 36);
+    const x0 = a + (b - a - (n * 32 + (n - 1) * 4)) / 2 + 16;
+    for (let i = 0; i < n; i++) wallSpots.push({ x: Math.round(x0 + i * 36), y: 9 });
+  }
   return {
     look: { ...t },
     w,
@@ -76,7 +81,7 @@ function build(tier: number): RoomSpec {
     desks: spots.slice(0, desks),
     floorSpots,
     wallSpots,
-    door: { x: 8, y: WALL_H + 30 },
+    door: { x: DOOR.x + DOOR.w / 2, y: WALL_H + 4 },
     roam: { x0: 12, y0: WALL_H + 20, x1: w - 14, y1: h - 6 },
   };
 }

@@ -80,17 +80,17 @@ export const CHANNEL_ART: Record<string, string[]> = {
     '...OOOO...',
     '....YY....',
   ],
-  // a very small rocket, asleep, nobody noticed the launch
+  // muted speaker: the launch happened, the sound did not
   chan_quiet: [
-    '......ZZZ.',
-    '........Z.',
-    '..rr...Z..',
-    '.rwwr.Z...',
-    '.wBBw.ZZZ.',
-    '.wwww.....',
-    'rrwwrr....',
-    'r.wwwr....',
-    '..rrr.....',
+    '....A.....',
+    '...AA.....',
+    '..AAA.r..r',
+    'xxAAA..rr.',
+    'xeAAA..rr.',
+    'xeAAA.r..r',
+    'xxAAA.....',
+    '...AA.....',
+    '....A.....',
     '..........',
   ],
   // half a birdhouse and the hammer that will not finish it
