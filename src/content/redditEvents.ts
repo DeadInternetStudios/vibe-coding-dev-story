@@ -255,7 +255,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
         result: 'The big cloud arrives in four minutes and costs a month of rent. The site stays up. The invoice has a typo that is also a threat.',
         effects: [cash(-2500), stat('stability', 6), hype(10)] },
       { label: 'Let it ride',
-        result: 'The hug is warm and total. The server lasts four seconds. Its last log line is: bad gateway. Half the crowd leaves a comment. The other half leaves.',
+        result: 'The hug is warm and total. The server lasts four seconds and goes out mid sentence. Half the crowd leaves a comment. The other half leaves.',
         effects: [counter('hug_of_death'), chance(0.5, [hype(20), karma(100)], [hype(-10), stat('stability', -8), cash(-800)])] },
       { label: 'Serve one static page', hint: '1 day',
         result: 'The intern swaps the app for one page: we love you, come back tomorrow. It gets four thousand upvotes and zero signups. It is the best page she has built.',

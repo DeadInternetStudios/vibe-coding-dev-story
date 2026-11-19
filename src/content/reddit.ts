@@ -548,9 +548,9 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-ad-retarget', topic: 'channel', tone: 'roast', judges: 'hype', weight: 4, when: channel('ad'),
     comments: [
       { user: 'u/SeenItEverywhere', depth: 0, votes: [150, 1500],
-        line: vo('karen', 'I bought one toaster in March. I am still being sold toasters. Now it is a toaster app! It has a toaster in the logo!') },
+        line: vo('karen', 'I bought one garden gnome in March. I am still being sold gnomes. Now it is a gnome app! It has a gnome in the logo!') },
       { user: 'u/InTheWildDevs', flair: 'Narrator', depth: 1, votes: [300, 2400],
-        line: vo('narrator', 'The toaster, once bought, follows the buyer forever. Marketers call this personalization. The toaster calls it home.') },
+        line: vo('narrator', 'The gnome, once bought, follows the buyer forever. Marketers call this personalization. The gnome calls it a garden.') },
     ] },
   { id: 'rd-ad-or-parody', topic: 'channel', tone: 'neutral', judges: 'overall', weight: 4, when: channel('ad'),
     comments: [
@@ -650,7 +650,7 @@ export const REDDIT_TIPS: string[] = [
 
 export const REDDIT_HEADLINES: string[] = [
   'Man edits post to thank kind stranger for gold, receives no gold, edits post again',
-  'Hug of death claims another server. Last words: bad gateway',
+  'Hug of death claims another server. Witnesses say the hug was very warm',
   'Moderator removes post for being too good, cites rule seven',
   'Founder comments first on his own launch, wins nothing, asks for a recount',
   'Reddit user reads the whole article before commenting. Authorities investigating',
