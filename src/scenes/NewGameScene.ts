@@ -25,6 +25,8 @@ const LOOK_ROWS: { key: keyof Look; name: string; count: () => number }[] = [
 
 /** height of the two lines that explain the daily challenge, above its button */
 const DAILY_NOTE = 23;
+/** the width its whole name needs on the button, with the icon. Narrower buttons say DAILY. */
+const DAILY_FULL_W = 112;
 
 const ORIGIN_SKILL_NAMES: Record<string, string> = { prompt: 'PROMPT', taste: 'TASTE', debug: 'DEBUG', paranoia: 'PARANOIA', hustle: 'HUSTLE' };
 
@@ -184,18 +186,21 @@ export class NewGameScene extends Phaser.Scene {
     ry += 12;
 
     // ------------------------------------------------------ start, and the daily challenge beside it
-    // wide screens keep the daily in the empty corner under the avatar, narrow ones stack it above the start
-    const startY = wide ? L.H - 30 : Math.max(ry + 6 + DAILY_NOTE + 24 + 4, L.H - 34);
-    const startW = wide ? rightW : cw;
-    const start = button(this, rightX, startY, startW, 24, "LET'S VIBE", () => this.start(), { kind: 'orange', icon: 'bolt' });
+    // the start row keeps its old place on every screen. The daily takes the left of it, and wide screens
+    // have the empty corner under the avatar for it.
+    const startY = wide ? L.H - 30 : Math.max(ry + 6, L.H - 34);
+    const dailyW = wide ? leftW : Math.floor((cw - 4) * 0.46);
+    const startX = wide ? rightX : x0 + dailyW + 4;
+    const start = button(this, startX, startY, wide ? rightW : cw - dailyW - 4, 24, "LET'S VIBE", () => this.start(), { kind: 'orange', icon: 'bolt' });
     this.tweens.add({ targets: start, y: start.y - 1, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    const dailyY = wide ? startY : startY - 24 - 4;
-    const dailyW = wide ? leftW : cw;
-    const today = dailyKey();
-    const best = loadDailyBest(today);
-    label(this, x0, dailyY - DAILY_NOTE, dailyTag(today), { font: F.caps, tint: C.yellow });
-    label(this, x0, dailyY - 12, best ? `Normal difficulty. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'Normal difficulty. Same chaos for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: dailyW });
-    button(this, x0, dailyY, dailyW, 24, 'DAILY CHALLENGE', () => this.start(true), { kind: 'violet', icon: 'calendar' });
+    button(this, x0, startY, dailyW, 24, dailyW >= DAILY_FULL_W ? 'DAILY CHALLENGE' : 'DAILY', () => this.start(true), { kind: 'violet', icon: 'calendar' });
+    // two lines above it say what it is, if the screen has the room
+    if (startY - DAILY_NOTE >= (wide ? ay : ry) + 2) {
+      const today = dailyKey();
+      const best = loadDailyBest(today);
+      label(this, x0, startY - DAILY_NOTE, dailyTag(today), { font: F.caps, tint: C.yellow });
+      label(this, x0, startY - 12, best ? `Normal difficulty. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'Normal difficulty. Same chaos for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: wide ? leftW : cw });
+    }
     const back = button(this, 4, 4, 30, 14, 'BACK', () => fadeTo(this, 'Title'), { kind: 'plum' });
     void back;
     void cards;
