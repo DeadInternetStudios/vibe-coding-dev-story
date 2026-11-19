@@ -53,6 +53,7 @@ export function rawFromSource(): RawContent {
     achievements: pick(C.ACHIEVEMENTS, f.achievements),
     endings: pick(C.ENDINGS, f.endings),
     ambient: pick(C.AMBIENT, f.ambient),
+    titleQuips: pick(C.TITLE_QUIPS, f.titleQuips),
     loading: pick(C.LOADING, f.loading),
     tips: pick(C.TIPS, f.tips),
     headlines: pick(C.HEADLINES, f.headlines),

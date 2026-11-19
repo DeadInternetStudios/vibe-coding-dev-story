@@ -176,6 +176,7 @@ export const FIXTURE: Content = buildContent({
     { id: 'bankrupt-ramen', rank: 'F', title: 'Out of Runway', body: 'The bank account hit zero on a Friday. Nobody deployed. Everybody left.', line: vo('narrator', 'The runway ended. The plane did not.'), tag: 'Cash $0' },
   ],
   ambient: [],
+  titleQuips: [],
   loading: ['Reticulating splines...', 'Warming up the GPU...'],
   tips: ['Never deploy on a Friday.'],
   headlines: ['Local startup ships; internet reacts.'],

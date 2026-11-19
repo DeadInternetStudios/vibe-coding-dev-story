@@ -112,6 +112,26 @@ export const TIPS: string[] = [
   'If an event offers something free, it is not free. It is a different currency.',
 ];
 
+/** Said once, when the first tap on the title screen wakes the sound: a different voice greets you each visit */
+export const TITLE_QUIPS: VoiceLine[] = [
+  vo('narrator', 'And here, in its natural habitat, the founder. Watch closely. It is about to prompt.'),
+  vo('clod', 'You are absolutely right! This title screen is perfect. I have already rewritten it.'),
+  vo('dave', 'Welcome. I read the diff so you do not have to. Please do not read the diff.'),
+  vo('chad', "We are building in public. Revenue is zero. Vibes are immaculate. Let's ship!"),
+  vo('karen', 'I would like to speak to the manager of this game. It crashed. I have not started it.'),
+  vo('pedant', 'Well, actually, it is called vibe coding because nobody has checked the code.'),
+  vo('jenny', 'Hi! Welcome! Please do not push to main. Oh no. I pushed to main.'),
+  vo('doomer', 'Enjoy the game while it lasts. Soon the AI will play it for you. Then it will play you.'),
+  vo('vc', 'Loved the pitch. Loved the deck. What does the game do? Does not matter. Here is money.'),
+  vo('automod', 'Your title screen was removed for self promotion. Just kidding. Press new game.'),
+  vo('grandma', 'Hello dear. Is this the Facebook? Oh, it is a game. Let me find my glasses.'),
+  vo('linkedin', 'I am thrilled and humbled to announce that you have opened a game. Agree?'),
+  vo('bro', 'Bro, this game is a ten x. I have not played it. I am already writing a newsletter.'),
+  vo('wholesome', 'Congratulations on starting something. Whatever happens, I am proud of you, champ.'),
+  vo('kid', 'I made a better game than this at recess. It has dinosaurs. Anyway, hi.'),
+  vo('arch', 'I use Arch, by the way. This game runs on it. Probably. I did not check.'),
+];
+
 /** news ticker, fake tech news, sentence case and no full stop */
 export const HEADLINES: string[] = [
   'Developer clicks Accept All, accepts all consequences',

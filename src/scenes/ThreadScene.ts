@@ -957,8 +957,13 @@ export class ThreadScene extends Phaser.Scene {
     const done = () => {
       big.setText(`${score}`);
       verdictT.setText(verdict);
+      // the verdict lands like a stamp
+      if (!app.settings.reducedMotion && !this.instant) {
+        verdictT.setScale(1.9).setAlpha(0.2);
+        this.tweens.add({ targets: verdictT, scale: 1, alpha: 1, duration: 200, ease: 'Back.easeOut' });
+      }
       this.tweens.add({ targets: cont, alpha: 1, duration: 180 });
-      audio.sfx(score >= 28 ? 'fanfare_big' : score >= 18 ? 'fanfare_small' : score >= 10 ? 'deny' : 'game_over');
+      audio.sfx(score >= 34 ? 'victory' : score >= 28 ? 'fanfare_big' : score >= 18 ? 'fanfare_small' : score >= 10 ? 'deny' : 'game_over');
       if (score >= 28) this.cameras.main.shake(160, 0.004);
       if (score >= 28) buzz(BUZZ.win);
       if (score >= 28) confettiBurst(this, burstAt.x - 40, burstAt.y, { count: score >= 34 ? 44 : 28 });

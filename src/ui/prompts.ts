@@ -448,7 +448,7 @@ function deployBeats(ctx: UiCtx, onDone: () => void): void {
   const rng = new Rng(Math.floor(Math.random() * 1e9));
   const pool = steps.slice(0, -1);
   const two = rng.shuffle(pool).slice(0, 2);
-  dialogue(ctx, [...two, steps[steps.length - 1]!], onDone, { skippable: true });
+  dialogue(ctx, [...two, steps[steps.length - 1]!], onDone, { skippable: true, countdown: true });
 }
 
 /* ------------------------------------------------------------------- friday */

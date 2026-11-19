@@ -14,7 +14,7 @@ import type { StageCtx } from './ctx';
  * Talking heads. A box at the bottom with a face, a name, and words that
  * arrive as they are spoken. Tap to show it all, tap again for the next line.
  */
-export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => void, opts: { title?: string; skippable?: boolean } = {}): void {
+export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => void, opts: { title?: string; skippable?: boolean; /** the last step is a countdown: three beeps under it */ countdown?: boolean } = {}): void {
   const scene = ctx.scene;
   const L = layoutOf(scene);
   const release = ctx.hold('dialogue');
@@ -74,6 +74,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     const sp = new Speech(scene, text);
     speech = sp;
     audio.sfx('bubble');
+    if (opts.countdown && i === steps.length - 1) [0, 520, 1040].forEach((ms) => scene.time.delayedCall(ms, () => !closed && audio.sfx('deploy_beep')));
     void sp.say(step.line.text, step.speaker === 'system' ? undefined : step.line);
     mouthTimer = scene.time.addEvent({
       delay: 70,

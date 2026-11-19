@@ -15,7 +15,7 @@ export { TRAITS } from './traits';
 export { ARCHETYPES, FIRST_NAMES, LAST_NAMES, COMPANY_NAMES } from './staff';
 export { CHANNELS } from './channels';
 export { OP_BODIES } from './threads';
-export { PAYDAY_ITEMS, COMMIT_MESSAGES, APP_REVIEWS, AMBIENT } from './flavor';
+export { PAYDAY_ITEMS, COMMIT_MESSAGES, APP_REVIEWS, AMBIENT, TITLE_QUIPS } from './flavor';
 export { ENDINGS } from './endings';
 export { INTRO, TUTORIAL, YEAR_END, FUNDING, FRIDAY, DEPLOY, MONTH_NARRATION } from './story';
 

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
 import { audio } from '../core/audio';
-import { bake } from '../core/bake';
+import { bake, bakePortrait } from '../core/bake';
 import { dailyKey } from '../core/daily';
 import { feature } from '../core/features';
 import { loadHall, loadSave, saveSettings } from '../core/save';
@@ -15,6 +15,8 @@ import { wipeIn } from '../ui/wipe';
 import { openSettings } from '../ui/modals/settings';
 import { openHall } from '../ui/modals/hall';
 import { Session } from '../game/session';
+import { Speech } from '../ui/speech';
+import { VOICE_NAMES } from '../content/voiceNames';
 import { Rng } from '../sim/rng';
 
 interface Drifter {
@@ -38,6 +40,9 @@ export class TitleScene extends Phaser.Scene {
   private tickerX = 0;
   private clock = 0;
   private woke = false;
+  private greeted = false;
+  /** while a greeting is spoken, how loud it is: the logo bounces with it */
+  private greeting: Speech | null = null;
 
   constructor() {
     super('Title');
@@ -60,6 +65,7 @@ export class TitleScene extends Phaser.Scene {
     // the whole night: sky, moon, skyline, billboard, taxi and street in one picture
     this.add.image(0, 0, bake(this, `city:${W}x${H}`, () => nightCity(W, H))).setOrigin(0, 0).setDepth(DEPTH.bg);
     this.twinkle(W, H);
+    this.shootingStars(W, H);
 
     // logo, buttons: measure first so nothing collides
     const save = loadSave();
@@ -72,7 +78,7 @@ export class TitleScene extends Phaser.Scene {
     const logoH = LOGO_H * scale;
     const free = H - stripH - logoH - 14 - menuH;
     const logoY = Math.max(4, Math.floor(free * 0.32));
-    const logoHalf = this.buildLogo(L.cx, logoY, scale);
+    this.buildLogo(L.cx, logoY, scale);
     const subY = logoY + logoH + 4;
     const sub = label(this, L.cx, subY, 'a startup sim where the AI writes the code', { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     this.tweens.add({ targets: sub, alpha: { from: 1, to: 0.55 }, duration: 1300, yoyo: true, repeat: -1 });
@@ -101,7 +107,8 @@ export class TitleScene extends Phaser.Scene {
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
     // in the gap under the last button, so nothing above it moves
     if (feature('daily')) label(this, L.cx, y - 3, `daily: ${dailyKey()}`, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
-    this.buildDrifters(L, { half: Math.max(logoHalf, bw / 2), menuBottom: y, stripH });
+    const menuBottom = y;
+    this.buildDrifters(L, { half: bw / 2, top: subY + 14, menuBottom, stripH });
 
     // ticker
     rect(this, 0, H - stripH, W, stripH, C.ink0, 0.92).setDepth(DEPTH.hud);
@@ -139,14 +146,18 @@ export class TitleScene extends Phaser.Scene {
     sound.setDepth(DEPTH.hud);
     // browsers keep a page silent until someone touches it: say so, and let the first touch wake the title song
     if (!this.woke && !app.settings.muted && !audio.status().unlocked) {
-      const hint = label(this, W - 66, 7, 'tap for sound >', { font: F.body, tint: C.yellow, outline: true, origin: [1, 0], depth: DEPTH.hud });
+      // no arrow: the switch next to it turns sound OFF, and the tap that wakes it can be anywhere
+      const room = W - 66 - (hall.length ? 100 : 6);
+      const hint = label(this, W - 66, 7, room >= 96 ? 'tap anywhere for sound' : 'tap for sound', { font: F.body, tint: C.yellow, outline: true, origin: [1, 0], depth: DEPTH.hud });
       this.tweens.add({ targets: hint, alpha: { from: 1, to: 0.35 }, duration: 520, yoyo: true, repeat: -1 });
-      const wake = () => {
+      const wake = (over: Phaser.GameObjects.GameObject[]) => {
         this.woke = true;
         hint.destroy();
+        // a tap on empty sky: the first voice of the game says hello. A tap on a button just gets on with it.
+        if (over.length === 0) this.greet(W, H, stripH, menuBottom);
       };
-      this.input.once('pointerdown', wake);
-      this.input.keyboard?.once('keydown', wake);
+      this.input.once('pointerdown', (_p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => wake(over));
+      this.input.keyboard?.once('keydown', () => wake([]));
     }
 
     this.input.keyboard?.on('keydown-ENTER', () => (save ? this.continueGame() : fadeTo(this, 'NewGame')));
@@ -170,6 +181,51 @@ export class TitleScene extends Phaser.Scene {
     return (LOGO_W * scale) / 2;
   }
 
+  /** Every few seconds a star falls across the sky: the title should never be a still picture. */
+  private shootingStars(W: number, H: number): void {
+    if (app.settings.reducedMotion) return;
+    const rng = new Rng((Date.now() & 0xffff) + 9);
+    const fire = () => {
+      const x = Math.round(rng.range(W * 0.12, W * 0.78));
+      const y = Math.round(rng.range(5, H * 0.3));
+      const star = this.add.container(x, y).setDepth(DEPTH.bg + 2);
+      for (let i = 0; i < 8; i++) star.add(rect(this, -i * 3, -Math.round(i * 1.5), i === 0 ? 2 : i < 4 ? 2 : 1, i === 0 ? 2 : 1, i < 2 ? C.white : C.yellow, 1 - i * 0.11));
+      this.tweens.add({ targets: star, x: x + 86, y: y + 43, alpha: 0, duration: 620, ease: 'Sine.easeIn', onComplete: () => star.destroy() });
+      this.time.delayedCall(rng.int(4200, 8800), fire);
+    };
+    this.time.delayedCall(1600, fire);
+  }
+
+  /** The first tap on empty sky wakes the sound and one of the voices of the game says hello over the skyline. */
+  private greet(W: number, H: number, stripH: number, menuBottom: number): void {
+    const lines = app.content.titleQuips;
+    if (this.greeted || lines.length === 0) return;
+    this.greeted = true;
+    const line = lines[Math.floor(Math.random() * lines.length)]!;
+    const w = Math.min(W - 12, 224);
+    const faceW = 40;
+    const text = label(this, faceW + 12, 15, '', { font: F.body, tint: C.cream, maxWidth: w - faceW - 20 });
+    const root = this.add.container(0, 0).setDepth(DEPTH.hud + 6);
+    const name = label(this, faceW + 12, 4, `${VOICE_NAMES[line.voice] ?? line.voice}`.toUpperCase(), { font: F.caps, tint: C.orange2 });
+    root.add([panel(this, 0, 0, w, 54, 'night'), rect(this, 5, 5, faceW - 4, faceW - 4, C.ink2, 1), this.add.image(5 + (faceW - 4) / 2, 5 + faceW - 5, bakePortrait(this, line.voice)).setOrigin(0.5, 1).setScale(2), name, text]);
+    const x = Math.floor((W - w) / 2);
+    // low on the skyline, but never over the buttons or the daily line
+    const y = Math.min(H - stripH - 56, Math.max(menuBottom + 8, H - stripH - 60));
+    root.setPosition(x, y);
+    if (!app.settings.reducedMotion) {
+      root.setAlpha(0);
+      root.y += 8;
+      this.tweens.add({ targets: root, alpha: 1, y, duration: 180, ease: 'Back.easeOut' });
+    }
+    const speech = new Speech(this, text);
+    this.greeting = speech;
+    void speech.say(line.text, line).then(() => speech.done).then(() => {
+      this.greeting = null;
+      this.time.delayedCall(1300, () => this.tweens.add({ targets: root, alpha: 0, duration: 300, onComplete: () => root.destroy() }));
+    });
+    this.events.once('shutdown', () => speech.stop());
+  }
+
   /** A few stars that blink, over the still ones in the picture. */
   private twinkle(W: number, H: number): void {
     const rng = new Rng(2027);
@@ -190,7 +246,7 @@ export class TitleScene extends Phaser.Scene {
    * Reddit comments floating up past the city. Wide screens give them the lanes on both
    * sides of the logo; narrow ones give them the strip between the buttons and the skyline.
    */
-  private buildDrifters(L: ReturnType<typeof layoutOf>, at: { half: number; menuBottom: number; stripH: number }): void {
+  private buildDrifters(L: ReturnType<typeof layoutOf>, at: { half: number; top: number; menuBottom: number; stripH: number }): void {
     const { W, H } = L;
     const rng = new Rng(77);
     const amb = app.content.ambient.length ? app.content.ambient : [];
@@ -208,8 +264,9 @@ export class TitleScene extends Phaser.Scene {
     const rightMin = L.cx + at.half + gap;
     const bottom = H - at.stripH - 4;
     if (leftMax >= 4 && W - w - 4 >= rightMin) {
-      lanes.push({ x0: 4, x1: leftMax, y0: 26, y1: bottom });
-      lanes.push({ x0: rightMin, x1: W - w - 4, y0: 4, y1: bottom });
+      // beside the buttons, under the wordmark: the logo spans the screen, the buttons do not
+      lanes.push({ x0: 4, x1: leftMax, y0: at.top, y1: bottom });
+      lanes.push({ x0: rightMin, x1: W - w - 4, y0: at.top, y1: bottom });
     } else {
       lanes.push({ x0: 2, x1: Math.max(2, W - w - 2), y0: at.menuBottom + 4, y1: bottom });
     }
@@ -241,7 +298,7 @@ export class TitleScene extends Phaser.Scene {
   update(_t: number, dt: number): void {
     this.clock += dt / 1000;
     const reduce = app.settings.reducedMotion;
-    if (this.logo) this.logo.img.y = this.logo.y + (reduce ? 0 : Math.round(Math.sin(this.clock * 2.2) * 2));
+    if (this.logo) this.logo.img.y = this.logo.y + (reduce ? 0 : Math.round(Math.sin(this.clock * 2.2) * 2 - (this.greeting?.level ?? 0) * 3));
     for (const d of this.drifters) {
       d.y -= (dt / 1000) * d.speed;
       if (d.y + d.h < d.y0) d.y = d.y1;

@@ -40,6 +40,8 @@ export interface RawContent {
   achievements: Achievement[];
   endings: Ending[];
   ambient: VoiceLine[];
+  /** one is said when the first tap on the title screen wakes the sound */
+  titleQuips: VoiceLine[];
   loading: string[];
   tips: string[];
   headlines: string[];
