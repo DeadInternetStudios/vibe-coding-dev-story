@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
+import { audio } from '../core/audio';
 import { bake } from '../core/bake';
 import { dailyKey } from '../core/daily';
 import { feature } from '../core/features';
@@ -36,6 +37,7 @@ export class TitleScene extends Phaser.Scene {
   private tickerW = 0;
   private tickerX = 0;
   private clock = 0;
+  private woke = false;
 
   constructor() {
     super('Title');
@@ -43,6 +45,7 @@ export class TitleScene extends Phaser.Scene {
 
   create(): void {
     wipeIn(this);
+    audio.music('title', { fadeMs: 400 });
     this.cameras.main.setBackgroundColor(C.ink0);
     responsive(this, () => this.build());
   }
@@ -134,6 +137,17 @@ export class TitleScene extends Phaser.Scene {
       sound.setKind(soundKind());
     }, { kind: soundKind(), icon: 'speaker', font: F.body });
     sound.setDepth(DEPTH.hud);
+    // browsers keep a page silent until someone touches it: say so, and let the first touch wake the title song
+    if (!this.woke && !app.settings.muted && !audio.status().unlocked) {
+      const hint = label(this, W - 66, 7, 'tap for sound >', { font: F.body, tint: C.yellow, outline: true, origin: [1, 0], depth: DEPTH.hud });
+      this.tweens.add({ targets: hint, alpha: { from: 1, to: 0.35 }, duration: 520, yoyo: true, repeat: -1 });
+      const wake = () => {
+        this.woke = true;
+        hint.destroy();
+      };
+      this.input.once('pointerdown', wake);
+      this.input.keyboard?.once('keydown', wake);
+    }
 
     this.input.keyboard?.on('keydown-ENTER', () => (save ? this.continueGame() : fadeTo(this, 'NewGame')));
   }

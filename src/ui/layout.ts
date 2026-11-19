@@ -47,6 +47,11 @@ export function responsive(scene: Phaser.Scene, build: () => void, teardown?: ()
 
 const leaving = new WeakSet<Phaser.Scene>();
 
+/** True from the moment a wipe to another screen has started. Things that finish late (a fading menu) should not touch the sound then. */
+export function isLeaving(scene: Phaser.Scene): boolean {
+  return leaving.has(scene);
+}
+
 /** Wipe the screen over, then start another scene. A second tap during the wipe is ignored; Phaser would restart it each time and never finish. */
 export function fadeTo(scene: Phaser.Scene, key: string, data?: object, ms = 240): void {
   if (leaving.has(scene)) return;

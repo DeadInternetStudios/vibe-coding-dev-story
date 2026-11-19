@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
+import { audio } from '../core/audio';
 import { bakePerson } from '../core/bake';
 import { dailyKey, dailyRun, dailyTag, loadDailyBest } from '../core/daily';
 import { feature } from '../core/features';
@@ -51,6 +52,7 @@ export class NewGameScene extends Phaser.Scene {
 
   create(): void {
     wipeIn(this);
+    audio.music('title', { fadeMs: 400 });
     const rng = new Rng(Math.floor(Math.random() * 1e9));
     this.seed = rng.state;
     const c = app.content;

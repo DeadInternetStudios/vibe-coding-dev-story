@@ -14,12 +14,12 @@ import type { Content } from '../sim/content';
 import { Rng } from '../sim/rng';
 import { shopItem } from '../sim/shop';
 import type { Notice, Tone } from '../sim/types';
-import type { SfxId } from '../audio';
+import type { MusicId, SfxId } from '../audio';
 import type { VoiceLine } from '../content/vo';
 import type { DialogueStep } from '../content/types';
 import { Hud, type MenuId } from '../ui/hud';
 import { label, panel, pop, rect } from '../ui/kit';
-import { layoutOf, responsive } from '../ui/layout';
+import { isLeaving, layoutOf, responsive } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
 import type { Modal } from '../ui/modal';
 import { Chatter } from '../ui/chatter';
@@ -34,6 +34,9 @@ import { openPrompt } from '../ui/prompts';
 import { beat, showIntro } from '../ui/story';
 import { fadeTo } from '../ui/layout';
 import { shortMoney } from '../sim/format';
+
+/** Menus that bring their own song. */
+const MENU_SONG: Partial<Record<string, MusicId>> = { shop: 'shop', menu: 'menu' };
 
 /** Height kept free under the room on a tall screen for the office chatter box. */
 const CHATTER_LANE = 36;
@@ -338,8 +341,17 @@ export class OfficeScene extends Phaser.Scene {
       // a modal that fades out can finish after the next one has opened; only forget this one
       if (this.menuModal === m) this.menuModal = null;
       this.hud?.update(0, false);
+      this.restoreMusic();
     });
     this.menuModal = m;
+    const song = m ? MENU_SONG[id] : undefined;
+    if (song) audio.music(song, { fadeMs: 250 });
+  }
+
+  /** The shop plays mall music and the pause menu goes calm. When they close, the studio song comes back. */
+  private restoreMusic(): void {
+    if (this.menuModal || isLeaving(this)) return;
+    audio.music(this.session.s.company.crunch ? 'crunch' : 'office', { fadeMs: 300 });
   }
 
   /* ----------------------------------------------------------- effects */
