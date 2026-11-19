@@ -59,6 +59,8 @@ export interface Song {
   readonly defaultIntensity: number;
   /** Pitch classes (0..11) allowed outside the key. Only the diatonic test reads this. */
   readonly chromatic: readonly number[];
+  /** The chord symbols of each bar ("F" or "Gm7,C7"). Tests and the piano roll read this. */
+  readonly harmony: readonly string[];
   readonly tracks: readonly Track[];
 }
 

@@ -45,12 +45,20 @@ export interface EngineOptions {
   /** Random source, swapped for a seeded one when rendering. */
   random?: () => number;
   maxVoices?: number;
+  /** Songs to use instead of the built in ones. For tools and tests, for example to solo one layer. */
+  songs?: Readonly<Partial<Record<MusicId, Song>>>;
 }
 
 /** How far ahead of the clock notes get scheduled, seconds. */
 export const LOOKAHEAD = 0.2;
 /** How often the scheduler wakes up, milliseconds. */
 export const TICK_MS = 25;
+/**
+ * Nominal level of the music bus. Layers are gained like sound effects (a lone
+ * note peaks around 0.3), so a full mix runs hot. This puts the nominal song
+ * near -18 LUFS and leaves the per song trims in levels.ts small.
+ */
+export const MUSIC_BASE_DB = -6;
 /** First notes land this long after the call so the graph is ready. */
 const START_DELAY = 0.06;
 /** Longest `resume()` waits for the browser. Autoplay policy can leave the promise pending for ever. */
@@ -70,11 +78,6 @@ function settleWithin(start: () => Promise<unknown>, ms: number): Promise<void> 
       done();
     }
   });
-}
-
-interface Reap {
-  at: number;
-  nodes: AudioNode[];
 }
 
 /**
@@ -97,6 +100,7 @@ export class SoundEngine {
 
   private readonly ctx: AudioCtx;
   private readonly manual: boolean;
+  private readonly songs: Readonly<Partial<Record<MusicId, Song>>>;
   private rt!: SynthRuntime;
   private chain!: MasterChain;
   private dead = false;
@@ -110,7 +114,6 @@ export class SoundEngine {
   private current: MusicPlayer | null = null;
   private pending: { id: MusicId; opts?: MusicOpts } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
-  private reaps: Reap[] = [];
 
   private readonly lastPlayed = new Map<SfxId, number>();
   private readonly combos = new Map<SfxId, { t: number; n: number }>();
@@ -124,11 +127,11 @@ export class SoundEngine {
   constructor(ctx: AudioContext, out: AudioNode, opts?: EngineOptions) {
     this.ctx = ctx;
     this.manual = opts?.manualClock ?? false;
+    this.songs = opts?.songs ?? SONGS;
     try {
       this.rt = createRuntime(ctx, {
         maxVoices: opts?.maxVoices,
         rand: opts?.random,
-        cleanup: !this.manual,
       });
       this.chain = createMasterChain(ctx, out);
       this.applyVolumes(true);
@@ -275,6 +278,7 @@ export class SoundEngine {
       this.players = [];
       this.current = null;
       this.pending = null;
+      this.rt.sweep(Infinity);
       if (!this.manual) this.ctx.removeEventListener?.('statechange', this.onState);
       this.chain.dispose();
     } catch {
@@ -349,10 +353,8 @@ export class SoundEngine {
     if (def.song) this.playJingle(def.song, t0, rate, sink, nodes);
     else this.playEvents(def, t0, rate, sink);
 
-    if (!this.manual) {
-      this.reaps.push({ at: now + sfxDuration(def) / rate + 1, nodes });
-      this.ensureTimer();
-    }
+    this.rt.retire(nodes, now + sfxDuration(def) / rate + 1);
+    this.ensureTimer();
   }
 
   private playEvents(def: SfxBody, t0: number, rate: number, dest: AudioNode): void {
@@ -384,7 +386,7 @@ export class SoundEngine {
 
   private startMusic(id: MusicId, opts?: MusicOpts): void {
     if (this.dead) return;
-    const song = SONGS[id];
+    const song = this.songs[id];
     if (!song) return;
     if (!this.ready()) {
       this.pending = { id, opts };
@@ -407,7 +409,7 @@ export class SoundEngine {
     const player = new MusicPlayer(this.rt, song, this.chain.musicDuck, {
       intensity: this.intensity,
       tempoScale: this.tempoScale,
-      level: dbToGain(MUSIC_TRIM_DB[id] ?? 0),
+      level: dbToGain(MUSIC_BASE_DB + (MUSIC_TRIM_DB[id] ?? 0)),
       fadeInSec: fadeMs / 1000,
     });
     player.start(now + START_DELAY);
@@ -435,25 +437,8 @@ export class SoundEngine {
       }
       this.players.length = keep;
 
-      if (this.reaps.length > 0) {
-        let k = 0;
-        for (const r of this.reaps) {
-          if (now >= r.at) {
-            for (const n of r.nodes) {
-              try {
-                n.disconnect();
-              } catch {
-                /* gone */
-              }
-            }
-          } else {
-            this.reaps[k++] = r;
-          }
-        }
-        this.reaps.length = k;
-      }
-
-      if (this.players.length === 0 && this.reaps.length === 0) this.stopTimer();
+      this.rt.sweep(now);
+      if (this.players.length === 0 && this.rt.waiting === 0) this.stopTimer();
     } catch {
       /* the scheduler must survive anything */
     }

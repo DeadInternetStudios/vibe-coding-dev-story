@@ -328,6 +328,7 @@ export function compileSong(spec: SongSpec): Song {
     loop: spec.loop ?? true,
     defaultIntensity: spec.defaultIntensity ?? 1,
     chromatic: (spec.chromatic ?? []).map((n) => pitchClass(n)),
+    harmony: spec.harmony,
     tracks,
   };
 }

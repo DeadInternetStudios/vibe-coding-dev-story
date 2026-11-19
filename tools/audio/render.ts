@@ -6,6 +6,7 @@
  *   npx tsx tools/audio/render.ts sfx all
  *   npx tsx tools/audio/render.ts music office --loops 3 --intensity 0.5 --name office@50
  *   npx tsx tools/audio/render.ts music all --variants
+ *   npx tsx tools/audio/render.ts music office --solo bass,kit   (those layers alone, name office#bass+kit)
  *   npx tsx tools/audio/render.ts all
  *   npx tsx tools/audio/render.ts timeline --seconds 40 --name demo \
  *       --events "0:music=office,12:intensity=0.2,20:duck=0.6/200,24:unduck=300,30:sfx=coin"
@@ -110,7 +111,7 @@ function sfxJobs(ids: readonly SfxId[]): Planned[] {
   });
 }
 
-function musicJobs(ids: readonly MusicId[], opts: { loops?: number; seconds?: number; intensity?: number; name?: string; variants?: boolean }): Planned[] {
+function musicJobs(ids: readonly MusicId[], opts: { loops?: number; seconds?: number; intensity?: number; name?: string; variants?: boolean; solo?: string[] }): Planned[] {
   const out: Planned[] = [];
   for (const id of ids) {
     const song = SONGS[id];
@@ -119,6 +120,10 @@ function musicJobs(ids: readonly MusicId[], opts: { loops?: number; seconds?: nu
       continue;
     }
     const base = { kind: 'music', id, loops: opts.loops, seconds: opts.seconds } as const;
+    if (opts.solo) {
+      out.push({ name: opts.name ?? `${id}#${opts.solo.join('+')}`, group: 'music', job: { ...base, intensity: 1, solo: opts.solo }, label: `${MUSIC_LABELS[id]} (${opts.solo.join(' + ')} alone)`, family: 'music' });
+      continue;
+    }
     out.push({
       name: opts.name ?? (opts.intensity !== undefined ? `${id}@${Math.round(opts.intensity * 100)}` : id),
       group: 'music',
@@ -128,7 +133,8 @@ function musicJobs(ids: readonly MusicId[], opts: { loops?: number; seconds?: nu
     });
     const layered = song.tracks.some((t) => t.at > 0);
     if (opts.variants && layered) {
-      for (const v of [0, 0.5]) {
+      for (const v of [0, 0.5, 1]) {
+        if (Math.abs(v - song.defaultIntensity) < 0.01) continue; // the main render is already this one
         out.push({
           name: `${id}@${Math.round(v * 100)}`,
           group: 'music',
@@ -154,6 +160,7 @@ async function main(): Promise<void> {
   const intensity = flags.has('intensity') ? Number(flags.get('intensity')) : undefined;
   const name = flags.has('name') ? String(flags.get('name')) : undefined;
   const variants = flags.has('variants');
+  const solo = flags.has('solo') ? String(flags.get('solo')).split(',') : undefined;
 
   let planned: Planned[] = [];
   const allSfx = SFX_CATALOG.map((e) => e[0]);
@@ -162,7 +169,7 @@ async function main(): Promise<void> {
       planned = sfxJobs(rest.length === 0 || rest[0] === 'all' ? allSfx : (rest as SfxId[]));
       break;
     case 'music':
-      planned = musicJobs(rest.length === 0 || rest[0] === 'all' ? MUSIC_IDS : (rest as MusicId[]), { loops, seconds, intensity, name, variants });
+      planned = musicJobs(rest.length === 0 || rest[0] === 'all' ? MUSIC_IDS : (rest as MusicId[]), { loops, seconds, intensity, name, variants, solo });
       break;
     case 'all':
       planned = [...sfxJobs(allSfx), ...musicJobs(MUSIC_IDS, { loops, seconds, variants: true })];

@@ -71,7 +71,7 @@ function main(): void {
   const notes: string[] = [];
 
   for (const r of rows) {
-    if (r.name.includes('@')) continue; // intensity variants are for looking at, not calibrating
+    if (r.name.includes('@') || r.name.includes('#')) continue; // variants and solo layers are for looking at, not calibrating
     if (r.group === 'sfx' && r.lufs_event !== undefined) {
       const { trim, capped } = newTrim(r, r.lufs_event, r.trim_db);
       sfx.set(r.name, trim);

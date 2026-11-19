@@ -176,24 +176,6 @@ export function playVoice(rt: SynthRuntime, v: VoiceSpec, dest: AudioNode, essen
     sources.push(src);
   }
 
-  if (rt.cleanup && sources.length > 0) {
-    const first = sources[0]!;
-    first.onended = () => {
-      for (const s of sources) {
-        try {
-          s.disconnect();
-        } catch {
-          /* already gone */
-        }
-      }
-      for (const n of nodes) {
-        try {
-          n.disconnect();
-        } catch {
-          /* already gone */
-        }
-      }
-    };
-  }
+  rt.retire([...sources, ...nodes], stopAt + 0.05);
   return true;
 }

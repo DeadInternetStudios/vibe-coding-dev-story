@@ -94,13 +94,13 @@ export function playDrum(rt: SynthRuntime, id: DrumId, t: number, vel: number, d
     case 'kick': {
       const o = osc('triangle', 175 * tune, 52 * tune, 0.1, t + 0.33);
       const g = gainNode();
-      perc(g.gain, t, 0.95 * vel, 0.002, 0.27);
+      perc(g.gain, t, 0.62 * vel, 0.002, 0.27);
       o.connect(g).connect(out);
       // a short click so it reads on phone speakers
       const n = noiseSrc(0.6, t, t + 0.03);
       const bp = filt('bandpass', 2200, 0.8);
       const gc = gainNode();
-      perc(gc.gain, t, 0.2 * vel, 0.0008, 0.012);
+      perc(gc.gain, t, 0.16 * vel, 0.0008, 0.012);
       n.connect(bp).connect(gc).connect(out);
       break;
     }
@@ -123,14 +123,14 @@ export function playDrum(rt: SynthRuntime, id: DrumId, t: number, vel: number, d
       const n = noiseSrc(1, t, t + (long ? 0.28 : 0.06));
       const hp = filt('highpass', 6800, 0.6);
       const g = gainNode();
-      perc(g.gain, t, (long ? 0.15 : 0.17) * vel, 0.001, long ? 0.2 : 0.03);
+      perc(g.gain, t, (long ? 0.22 : 0.26) * vel, 0.001, long ? 0.2 : 0.03);
       n.connect(hp).connect(g).connect(out);
       break;
     }
     case 'tom': {
       const o = osc('triangle', 210 * tune, 108 * tune, 0.13, t + 0.34);
       const g = gainNode();
-      perc(g.gain, t, 0.7 * vel, 0.002, 0.24);
+      perc(g.gain, t, 0.5 * vel, 0.002, 0.24);
       o.connect(g).connect(out);
       break;
     }
@@ -166,7 +166,7 @@ export function playDrum(rt: SynthRuntime, id: DrumId, t: number, vel: number, d
       const n = noiseSrc(0.9, t, t + 0.1);
       const bp = filt('bandpass', 5200, 1.4);
       const g = gainNode();
-      perc(g.gain, t, 0.2 * vel, 0.009, 0.05);
+      perc(g.gain, t, 0.5 * vel, 0.009, 0.05);
       n.connect(bp).connect(g).connect(out);
       break;
     }
@@ -212,25 +212,7 @@ export function playDrum(rt: SynthRuntime, id: DrumId, t: number, vel: number, d
     }
   }
 
-  if (rt.cleanup && sources.length > 0) {
-    const first = sources[0]!;
-    first.onended = () => {
-      for (const s of sources) {
-        try {
-          s.disconnect();
-        } catch {
-          /* gone */
-        }
-      }
-      for (const n of nodes) {
-        try {
-          n.disconnect();
-        } catch {
-          /* gone */
-        }
-      }
-    };
-  }
+  rt.retire([...sources, ...nodes], stopAt + 0.05);
   return true;
 }
 

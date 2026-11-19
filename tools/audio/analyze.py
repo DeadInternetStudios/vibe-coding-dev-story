@@ -321,8 +321,9 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
         out["wrap_jump_ratio"] = float(abs(one[-1] - one[0]) / typical)
         out["wrap_jump_abs"] = float(abs(one[-1] - one[0]))
     # does loop 2 repeat loop 1? compare their loudness envelopes and low band waveforms
-    if len(seams) >= 3:
-        a, b, c = (int(round(s * sr)) for s in seams[:3])
+    edges = [start] + seams
+    if len(edges) >= 3:
+        a, b, c = (int(round(e * sr)) for e in edges[:3])
         l1, l2 = mono[a:b], mono[b:c]
         n = min(len(l1), len(l2))
         fr = max(int(0.01 * sr), 1)
@@ -399,6 +400,61 @@ def spectrogram_image(mono: np.ndarray, sr: int, title: str, path: Path, nfft: i
     plt.close(fig)
 
 
+# ----------------------------------------------------------------- piano roll
+
+DRUM_ROWS = ["kick", "snare", "hat", "ohat", "tom", "clap", "rim", "shaker", "crash", "cowbell", "riser"]
+TRACK_COLORS = ["#4c78a8", "#f58518", "#54a24b", "#e45756", "#b279a2", "#9d755d", "#72b7b2", "#eeca3b", "#ff9da6", "#bab0ac"]
+
+
+def piano_roll(song: dict, path: Path) -> None:
+    """Notes of every layer over bars, harmony underneath. For looking at contour, density and layering."""
+    spb = song["stepsPerBar"]
+    bars = song["bars"]
+    pitched = [t for t in song["tracks"] if t["inst"] != "drums"]
+    drums = [t for t in song["tracks"] if t["inst"] == "drums"]
+    lo = min((n["pitch"] for t in pitched for n in t["notes"]), default=36)
+    hi = max((n["pitch"] for t in pitched for n in t["notes"]), default=84)
+    fig = plt.figure(figsize=(max(11.0, bars * 0.55), 7.2), dpi=100)
+    gs = fig.add_gridspec(2, 1, height_ratios=[4, 1], hspace=0.08)
+    ax = fig.add_subplot(gs[0])
+    for i, t in enumerate(pitched):
+        col = TRACK_COLORS[i % len(TRACK_COLORS)]
+        for n in t["notes"]:
+            ax.add_patch(plt.Rectangle((n["step"] / spb, n["pitch"] - 0.4), n["dur"] / spb, 0.8, color=col, alpha=0.35 + 0.65 * n["vel"], lw=0))
+        ax.plot([], [], color=col, lw=6, label=f"{t['id']} ({t['inst']}, on from {t['at']:g})")
+    for b in range(bars + 1):
+        ax.axvline(b, color="black", alpha=0.35 if b % 4 == 0 else 0.12, lw=0.8 if b % 4 == 0 else 0.5)
+    ax.set_xlim(0, bars)
+    ax.set_ylim(lo - 2, hi + 3)
+    names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    ticks = [m for m in range(int(lo) - 1, int(hi) + 3) if m % 12 == 0 or m % 12 == 7]
+    ax.set_yticks(ticks)
+    ax.set_yticklabels([f"{names[m % 12]}{m // 12 - 1}" for m in ticks], fontsize=7)
+    ax.set_xticks(range(0, bars + 1, 4))
+    ax.tick_params(labelbottom=False)
+    ax.legend(loc="upper right", fontsize=6, ncol=2, framealpha=0.85)
+    ax.set_title(f"{song['id']}  {song['key']}  {song['bpm']} bpm  {bars} bars  swing {song.get('swing', 0)}", fontsize=9)
+    for b, chord in enumerate(song["harmony"]):
+        parts = chord.split(",")
+        for k, c in enumerate(parts):
+            ax.text(b + k / len(parts) + 0.03, hi + 2.2, c, fontsize=6, color="#333", va="center")
+    ax2 = fig.add_subplot(gs[1], sharex=ax)
+    rows = {name: i for i, name in enumerate(DRUM_ROWS)}
+    for t in drums:
+        for n in t["notes"]:
+            ax2.plot([n["step"] / spb, n["step"] / spb], [rows[n["drum"]] - 0.35, rows[n["drum"]] + 0.35], color="#333", alpha=0.3 + 0.7 * n["vel"], lw=1.2)
+    ax2.set_yticks(range(len(DRUM_ROWS)))
+    ax2.set_yticklabels(DRUM_ROWS, fontsize=6)
+    ax2.set_xlim(0, bars)
+    ax2.set_xticks(range(0, bars + 1, 4))
+    ax2.set_xlabel("bar")
+    for b in range(0, bars + 1, 4):
+        ax2.axvline(b, color="black", alpha=0.25, lw=0.8)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+
+
 # ----------------------------------------------------------------------- main
 
 
@@ -412,6 +468,11 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
     res.update(basic_metrics(data, sr))
     res.update(spectral_features(mono, sr, 2048 if meta.get("group") != "sfx" else 1024))
     kind = meta.get("kind")
+    if "#" in res["name"]:
+        # a layer (or a few) rendered alone: loudness and peak are all we want from it
+        res["solo"] = True
+        res.update(ffmpeg_ebur128(wav))
+        return res
     if kind == "music" or meta.get("group") == "music":
         eb = ffmpeg_ebur128(wav)
         res.update(eb)
@@ -428,13 +489,17 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
         if seam:
             res.update(seam)
         res["lufs_target"] = MUSIC_TARGET_LUFS
-        # music loudness is judged after the loop has settled: measure the middle loop alone
+        # music loudness is judged on one whole loop once it has settled: loop 2, or loop 1 if only one was rendered
         loop = float(meta.get("loopSeconds") or 0)
-        if loop > 0 and meta.get("loop") and len(mono) / sr > loop * 2.2:
-            a = int((0.06 + loop) * sr)
-            b = int((0.06 + 2 * loop) * sr)
-            res["lufs_loop"] = event_lufs(data[a:b], sr)[0]
-            res["peak_loop_db"] = db(np.abs(data[a:b]).max())
+        total = len(mono) / sr
+        if loop > 0 and meta.get("loop"):
+            for k in (1, 0):
+                t0 = 0.06 + k * loop
+                if t0 + loop <= total + 0.05:
+                    a, b = int(t0 * sr), int(min((t0 + loop) * sr, len(mono)))
+                    res["lufs_loop"] = event_lufs(data[a:b], sr)[0]
+                    res["peak_loop_db"] = db(np.abs(data[a:b]).max())
+                    break
     else:
         lufs, act = event_lufs(data, sr)
         res["lufs_event"] = lufs
@@ -450,6 +515,8 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
 
 
 def flags_for(r: dict) -> list[str]:
+    if r.get("solo"):
+        return []
     fl: list[str] = []
     if not r["finite"]:
         fl.append("NaN")
@@ -536,6 +603,32 @@ def sfx_table(rows: list[dict]) -> str:
     return head + "\n".join(lines) + "\n"
 
 
+# where each kind of layer should sit next to the lead, in LUFS dB (solo loudness)
+LAYER_TARGET_REL = {"lead": 0.0, "bass": -3.0, "kit": -4.0, "drums": -4.0, "chords": -6.0, "base": -6.0, "pad": -3.0, "extra": -9.0, "perc": -9.0}
+
+
+def layers_table(solo_rows: list[dict], mix_rows: list[dict]) -> str:
+    """Each layer's loudness alone, how far it is from where its role wants it, and the volume change that fixes it."""
+    mixes = {r["name"]: r for r in mix_rows}
+    by_song: dict[str, list[dict]] = {}
+    for r in solo_rows:
+        song, layers = r["name"].split("#", 1)
+        by_song.setdefault(song, []).append({**r, "layers": layers})
+    head = "| Song | Layer alone | LUFS-I | Peak dBFS | vs lead dB | wanted vs lead | change vol by |\n|---|---|---|---|---|---|---|\n"
+    lines = []
+    for song, rows in sorted(by_song.items()):
+        ref = next((r for r in rows if r["layers"] == "lead"), None)
+        ref_lufs = ref["lufs_i"] if ref and ref.get("lufs_i") is not None else max((r.get("lufs_i") or -99.0) for r in rows)
+        for r in sorted(rows, key=lambda r: r["layers"]):
+            if r.get("lufs_i") is None:
+                continue
+            rel = r["lufs_i"] - ref_lufs
+            want = LAYER_TARGET_REL.get(r["layers"])
+            fix = "" if want is None else f"x{10 ** ((want - rel) / 20):.2f}"
+            lines.append(f"| {song} | {r['layers']} | {fmt(r['lufs_i'])} | {fmt(r['peak_db'])} | {fmt(rel, '+.1f')} | {fmt(want, '+.1f')} | {fix} |")
+    return head + "\n".join(lines) + "\n"
+
+
 def replace_block(text: str, name: str, body: str) -> str:
     begin, end = f"<!-- AUTO:BEGIN {name} -->", f"<!-- AUTO:END {name} -->"
     block = f"{begin}\n{body}{end}"
@@ -576,9 +669,16 @@ def main() -> int:
     ap.add_argument("--only", default="", help="comma separated names to analyze (default all)")
     ap.add_argument("--no-notes", action="store_true", help="do not touch docs/audio-notes.md")
     ap.add_argument("--no-png", action="store_true")
+    ap.add_argument("--rolls", action="store_true", help="only draw piano rolls from out/songs/*.json (run dump.ts first)")
     args = ap.parse_args()
 
     out = Path(args.out)
+    if args.rolls:
+        for js in sorted((out / "songs").glob("*.json")):
+            song = json.loads(js.read_text())
+            piano_roll(song, out / "png" / "rolls" / f"{song['id']}.png")
+            print(f"piano roll {song['id']}")
+        return 0
     wav_root = out / "wav"
     only = {s for s in args.only.split(",") if s}
     results: list[dict] = []
@@ -595,21 +695,35 @@ def main() -> int:
         r["loop_seconds"] = meta.get("loopSeconds")
         r["flags"] = flags_for(r)
         results.append(r)
-        print(f"{r['name']:<18} peak {r['peak_db']:6.1f}  " + (f"LUFS-I {r['lufs_i']:6.1f}" if r.get("lufs_i") is not None else f"event {r.get('lufs_event', 0):6.1f}") + (f"  {' '.join(r['flags'])}" if r["flags"] else ""))
+        print(f"{r['name']:<24} peak {r['peak_db']:6.1f}  " + (f"LUFS-I {r['lufs_i']:6.1f}" if r.get("lufs_i") is not None else f"event {r.get('lufs_event', 0):6.1f}") + (f"  {' '.join(r['flags'])}" if r["flags"] else ""))
 
-    (out / "analysis.json").write_text(json.dumps(results, indent=2))
-    sfx_rows = [r for r in results if r["group"] == "sfx"]
-    music_rows = [r for r in results if r["group"] == "music"]
-    if not args.no_png and sfx_rows:
+    # merge into what is already there, so analysing one file never forgets the others
+    store = out / "analysis.json"
+    merged: dict[tuple[str, str], dict] = {}
+    if store.exists():
+        for r in json.loads(store.read_text()):
+            if (wav_root / str(r["group"]) / f"{r['name']}.wav").exists():
+                merged[(r["group"], r["name"])] = r
+    for r in results:
+        merged[(r["group"], r["name"])] = r
+    everything = sorted(merged.values(), key=lambda r: (r["group"], r["name"]))
+    store.write_text(json.dumps(everything, indent=2))
+
+    sfx_rows = [r for r in everything if r["group"] == "sfx"]
+    music_rows = [r for r in everything if r["group"] == "music" and not r.get("solo")]
+    solo_rows = [r for r in everything if r["group"] == "music" and r.get("solo")]
+    if not args.no_png and any(r["group"] == "sfx" for r in results):
         family_images(sfx_rows, wav_root / "sfx", out / "png")
 
-    if not args.no_notes and (sfx_rows or music_rows) and not only:
+    if not args.no_notes and (sfx_rows or music_rows):
         notes = Path(args.notes)
         text = notes.read_text() if notes.exists() else "# Audio notes\n"
         if music_rows:
             text = replace_block(text, "music", music_table(music_rows))
         if sfx_rows:
             text = replace_block(text, "sfx", sfx_table(sfx_rows))
+        if solo_rows:
+            text = replace_block(text, "layers", layers_table(solo_rows, music_rows))
         notes.write_text(text)
         print(f"wrote tables into {notes}")
     return 0

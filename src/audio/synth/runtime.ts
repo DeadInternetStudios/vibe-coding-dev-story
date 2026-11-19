@@ -61,16 +61,48 @@ export interface SynthRuntime {
   readonly pool: VoicePool;
   /** Random source in [0,1). Swapped for a seeded one when rendering. */
   rand: () => number;
-  /** Disconnect nodes when a voice ends. Worth it live, pointless offline. */
-  cleanup: boolean;
+  /**
+   * Hand over the nodes of a finished or soon to be finished sound. They are
+   * disconnected once the context clock passes `at`. Dead nodes left in the
+   * graph cost time on every render quantum, which adds up fast in a long song.
+   */
+  retire(nodes: readonly AudioNode[], at: number): void;
+  /** Disconnect everything whose time has come. The engine calls this from its tick. */
+  sweep(now: number): void;
+  /** How many sounds are waiting to be disconnected. */
+  readonly waiting: number;
 }
 
-export function createRuntime(ctx: AudioCtx, opts?: { maxVoices?: number; rand?: () => number; cleanup?: boolean }): SynthRuntime {
+export function createRuntime(ctx: AudioCtx, opts?: { maxVoices?: number; rand?: () => number }): SynthRuntime {
+  let graveyard: Array<{ at: number; nodes: readonly AudioNode[] }> = [];
   return {
     ctx,
     bank: new WaveBank(ctx),
     pool: new VoicePool(opts?.maxVoices ?? 44),
     rand: opts?.rand ?? Math.random,
-    cleanup: opts?.cleanup ?? true,
+    retire(nodes, at) {
+      graveyard.push({ at, nodes });
+    },
+    sweep(now) {
+      if (graveyard.length === 0) return;
+      const keep: typeof graveyard = [];
+      for (const g of graveyard) {
+        if (g.at > now) {
+          keep.push(g);
+          continue;
+        }
+        for (const n of g.nodes) {
+          try {
+            n.disconnect();
+          } catch {
+            /* already gone */
+          }
+        }
+      }
+      graveyard = keep;
+    },
+    get waiting() {
+      return graveyard.length;
+    },
   };
 }

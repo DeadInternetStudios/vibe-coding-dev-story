@@ -13,7 +13,7 @@ import type { MusicId, SfxId } from '../../src/audio/ids';
 import { MUSIC_TRIM_DB, SFX_TRIM_DB } from '../../src/audio/levels';
 import { SFX_DEFS } from '../../src/audio/sfx';
 import { sfxDuration } from '../../src/audio/sfx/dsl';
-import { barDuration, loopSeconds } from '../../src/audio/sequencer';
+import { barDuration, loopSeconds, type Song } from '../../src/audio/sequencer';
 import { SONGS } from '../../src/audio/songs';
 import { mulberry32 } from '../../src/audio/synth/notes';
 
@@ -43,13 +43,15 @@ export type RenderJob =
   | {
       kind: 'music';
       id: MusicId;
-      /** Full passes through the song. Default 3. */
+      /** Full passes through the song. Default 2: one to settle, one to measure. */
       loops?: number;
       /** Overrides loops. */
       seconds?: number;
       intensity?: number;
       tail?: number;
       events?: TimelineEvent[];
+      /** Render only these layers (all switched on), to judge the balance of a mix. */
+      solo?: string[];
     }
   | { kind: 'timeline'; seconds: number; events: TimelineEvent[] };
 
@@ -118,7 +120,7 @@ function planJob(job: RenderJob): { seconds: number; loopSec: number; events: Ti
     const song = SONGS[job.id];
     if (!song) throw new Error(`no song for ${job.id}`);
     const loopSec = loopSeconds(song);
-    const seconds = job.seconds ?? (song.loop ? loopSec * (job.loops ?? 3) + (job.tail ?? 2) + 0.1 : loopSec + (job.tail ?? 4) + 0.1);
+    const seconds = job.seconds ?? (song.loop ? loopSec * (job.loops ?? 2) + (job.tail ?? 2) + 0.1 : loopSec + (job.tail ?? 4) + 0.1);
     const events: TimelineEvent[] = [
       { at: 0, do: 'music', id: job.id, intensity: job.intensity, fadeMs: 0 },
       ...(job.events ?? []),
@@ -144,13 +146,22 @@ function planJob(job: RenderJob): { seconds: number; loopSec: number; events: Ti
   return { seconds: job.seconds, loopSec: job.seconds, events: job.events, meta: { kind: 'timeline' } };
 }
 
+/** A copy of the song with only the named layers, all of them on. */
+function soloSong(song: Song, layers: readonly string[]): Song {
+  const missing = layers.filter((l) => !song.tracks.some((t) => t.id === l));
+  if (missing.length > 0) throw new Error(`song ${song.id} has no layer ${missing.join(', ')}`);
+  return { ...song, tracks: song.tracks.filter((t) => layers.includes(t.id)).map((t) => ({ ...t, at: 0, to: 1 })) };
+}
+
 export async function renderJob(Ctor: OfflineCtor, job: RenderJob, sampleRate = 48000, seed = 1): Promise<RenderResult> {
   const plan = planJob(job);
   const frames = Math.ceil(plan.seconds * sampleRate);
   const ctx = new Ctor(2, frames, sampleRate);
+  const solo = job.kind === 'music' && job.solo ? { [job.id]: soloSong(SONGS[job.id]!, job.solo) } : undefined;
   const engine = new SoundEngine(ctx as unknown as AudioContext, ctx.destination, {
     manualClock: true,
     random: mulberry32(seed),
+    songs: solo,
   });
 
   const events = plan.events.slice().sort((a, b) => a.at - b.at);

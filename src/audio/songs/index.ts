@@ -1,8 +1,8 @@
 import type { MusicId } from '../ids';
 import type { Song } from '../sequencer';
+import { office } from './office';
 
-/**
- * Every song, keyed by id. Songs are added one file at a time; ids without a
- * song yet stay quiet (the engine ignores them).
- */
-export const SONGS: Readonly<Partial<Record<MusicId, Song>>> = {};
+/** Every song in the game, compiled once at load. */
+export const SONGS: Readonly<Partial<Record<MusicId, Song>>> = {
+  office,
+};
