@@ -78,3 +78,10 @@ uiEvents.on('settings', () => audio.applySettings());
 (window as unknown as { __game: Phaser.Game }).__game = game;
 
 if (import.meta.env.DEV || location.search.includes('debug')) installDriver(game);
+
+// offline play after the first visit; only in the built game. A dev server must always show the newest code,
+// so it also lets go of a worker an earlier build left on the same address
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));
+  else void navigator.serviceWorker.getRegistrations().then((list) => list.forEach((r) => void r.unregister()));
+}
