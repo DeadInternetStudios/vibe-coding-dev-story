@@ -12,6 +12,7 @@ import { confettiBurst } from '../ui/fx';
 import { BUZZ, buzz } from '../core/haptics';
 import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fadeTo, layoutOf } from '../ui/layout';
+import { wipeIn } from '../ui/wipe';
 import { Speech } from '../ui/speech';
 import { beat } from '../ui/story';
 import type { StageCtx } from '../ui/ctx';
@@ -180,7 +181,7 @@ export class ThreadScene extends Phaser.Scene {
     this.portrait = L.portrait;
     this.cw = Math.min(L.W - (L.portrait ? 4 : 12), 440);
     this.x0 = Math.floor((L.W - this.cw) / 2);
-    this.cameras.main.fadeIn(260, 18, 15, 36);
+    wipeIn(this);
     this.cameras.main.setBackgroundColor(C.ink0);
     rect(this, 0, 0, L.W, L.H, C.ink0, 1).setDepth(0);
     // faint rows behind the column so wide screens do not look empty

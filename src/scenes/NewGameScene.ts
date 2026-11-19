@@ -13,6 +13,7 @@ import { Session } from '../game/session';
 import { button, hoverFrame, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { editText } from '../ui/domInput';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
+import { wipeIn } from '../ui/wipe';
 import { nightSky } from '../art/sprites/scenery';
 import { bake } from '../core/bake';
 
@@ -49,7 +50,7 @@ export class NewGameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.fadeIn(220, 18, 15, 36);
+    wipeIn(this);
     const rng = new Rng(Math.floor(Math.random() * 1e9));
     this.seed = rng.state;
     const c = app.content;

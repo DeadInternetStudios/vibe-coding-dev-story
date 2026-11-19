@@ -11,6 +11,7 @@ import { recordTrophies } from '../core/trophies';
 import { dateLabel, shortMoney, shortNumber } from '../sim/format';
 import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
+import { wipeIn } from '../ui/wipe';
 import { openHall } from '../ui/modals/hall';
 import { RANK_COLOR, RANK_NAME } from '../ui/ranks';
 import { Speech } from '../ui/speech';
@@ -44,7 +45,7 @@ export class EndingScene extends Phaser.Scene {
     void data;
     this.fast = false;
     this.alive = true;
-    this.cameras.main.fadeIn(500, 18, 15, 36);
+    wipeIn(this, 500);
     this.input.on('pointerup', () => this.skip());
     this.input.keyboard?.on('keydown-SPACE', () => this.skip());
     this.events.once('shutdown', () => {

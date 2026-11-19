@@ -12,6 +12,7 @@ import { PHASES, TOKEN_PLANS } from '../sim/config';
 import { unlocked, type Game } from '../sim/game';
 import type { Content } from '../sim/content';
 import { Rng } from '../sim/rng';
+import { shopItem } from '../sim/shop';
 import type { Notice, Tone } from '../sim/types';
 import type { SfxId } from '../audio';
 import type { VoiceLine } from '../content/vo';
@@ -19,6 +20,7 @@ import type { DialogueStep } from '../content/types';
 import { Hud, type MenuId } from '../ui/hud';
 import { label, panel, pop, rect } from '../ui/kit';
 import { layoutOf, responsive } from '../ui/layout';
+import { wipeIn } from '../ui/wipe';
 import type { Modal } from '../ui/modal';
 import { Chatter } from '../ui/chatter';
 import { Dash, addLine, hash7, type TermKind, type TermLine } from '../ui/dash';
@@ -90,7 +92,7 @@ export class OfficeScene extends Phaser.Scene {
     this.session = session;
     session.clearHolds();
     this.cameras.main.setBackgroundColor(C.ink0);
-    this.cameras.main.fadeIn(260, 18, 15, 36);
+    wipeIn(this);
     this.introDone = !data?.intro;
     this.firstProjectWait = !!data?.intro;
     if (data?.intro) session.paused = true;
@@ -321,11 +323,8 @@ export class OfficeScene extends Phaser.Scene {
   }
 
   private itemQuip(id: string): void {
-    import('../sim/shop').then(({ shopItem }) => {
-      const it = shopItem(id);
-      this.toasts.push(it.quip, 'info', 'star');
-      audio.sfx('bubble');
-    });
+    this.toasts.push(shopItem(id).quip, 'info', 'star');
+    audio.sfx('bubble');
   }
 
   private openStaff(id: string): void {

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { MAX_CONTENT_W } from '../core/viewport';
+import { wipeOut } from './wipe';
 
 export interface Layout {
   /** logical canvas size in art pixels */
@@ -46,12 +47,10 @@ export function responsive(scene: Phaser.Scene, build: () => void, teardown?: ()
 
 const leaving = new WeakSet<Phaser.Scene>();
 
-/** Fade out, then start another scene. A second tap during the fade is ignored; Phaser would restart the fade each time and never finish. */
-export function fadeTo(scene: Phaser.Scene, key: string, data?: object, ms = 220): void {
+/** Wipe the screen over, then start another scene. A second tap during the wipe is ignored; Phaser would restart it each time and never finish. */
+export function fadeTo(scene: Phaser.Scene, key: string, data?: object, ms = 240): void {
   if (leaving.has(scene)) return;
   leaving.add(scene);
   scene.events.once('shutdown', () => leaving.delete(scene));
-  const cam = scene.cameras.main;
-  cam.fadeOut(ms, 18, 15, 36);
-  cam.once('camerafadeoutcomplete', () => scene.scene.start(key, data));
+  wipeOut(scene, () => scene.scene.start(key, data), ms);
 }

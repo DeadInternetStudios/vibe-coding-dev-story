@@ -10,6 +10,7 @@ import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
 import { fxPx } from '../art/sprites/fx';
 import { button, label, panel, rect, uiEvents, type ButtonKind } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
+import { wipeIn } from '../ui/wipe';
 import { openSettings } from '../ui/modals/settings';
 import { openHall } from '../ui/modals/hall';
 import { Session } from '../game/session';
@@ -41,7 +42,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.fadeIn(260, 18, 15, 36);
+    wipeIn(this);
     this.cameras.main.setBackgroundColor(C.ink0);
     responsive(this, () => this.build());
   }
