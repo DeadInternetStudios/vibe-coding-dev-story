@@ -20,6 +20,7 @@ import { layoutOf, responsive } from '../ui/layout';
 import type { Modal } from '../ui/modal';
 import { Chatter } from '../ui/chatter';
 import { Dash, addLine, hash7, type TermKind, type TermLine } from '../ui/dash';
+import { confettiBurst } from '../ui/fx';
 import { Ticker } from '../ui/ticker';
 import { Toasts } from '../ui/toasts';
 import type { UiCtx } from '../ui/ctx';
@@ -327,6 +328,7 @@ export class OfficeScene extends Phaser.Scene {
         if (a) {
           this.banner('ACHIEVEMENT!', a.name, 'wow');
           audio.sfx('achievement');
+          confettiBurst(this, layoutOf(this).W / 2, this.hud.topH + 24, { count: 22 });
           this.logLine('ok', 'ok', `unlocked: ${a.name}`);
         }
         break;

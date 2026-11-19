@@ -6,6 +6,7 @@ import { C, DEPTH, F } from '../core/theme';
 import type { AwardId, StatKey, ThreadComment } from '../content/types';
 import { shortMoney, shortNumber } from '../sim/format';
 import type { ShippedApp } from '../sim/types';
+import { confettiBurst } from '../ui/fx';
 import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { Speech } from '../ui/speech';
@@ -324,7 +325,7 @@ export class ThreadScene extends Phaser.Scene {
     const card = panel(this, x, y, w, h, 'plum', false);
     // vote column
     const up = iconImg(this, 'arrowUp', x + 6, y + 8);
-    const votes = label(this, x + 10, y + 19, '0', { font: F.caps, tint: C.orange2, origin: [0.5, 0] });
+    const votes = label(this, x + 10, y + 19, '0', { font: F.body, tint: C.orange2, origin: [0.5, 0] });
     const down = iconImg(this, 'arrowDownOff', x + 6, y + 30);
     const badge = this.add.image(x + left - 2, y + 3, bakeIcon(this, 'subBadge')).setOrigin(1, 0);
     const foot = this.add.container(x + left, footY);
@@ -652,17 +653,19 @@ export class ThreadScene extends Phaser.Scene {
     card.y = y + 10;
     this.tweens.add({ targets: card, alpha: 1, y, duration: 220, ease: 'Cubic.easeOut' });
     audio.music('launch', { fadeMs: 300 });
-    this.tickScore(big, verdictT, score, verdict, cont);
+    this.tickScore(big, verdictT, score, verdict, cont, { x: x + w / 2, y: y + 24 });
     void s;
   }
 
-  private tickScore(big: Phaser.GameObjects.BitmapText, verdictT: Phaser.GameObjects.BitmapText, score: number, verdict: string, cont: Phaser.GameObjects.Container): void {
+  private tickScore(big: Phaser.GameObjects.BitmapText, verdictT: Phaser.GameObjects.BitmapText, score: number, verdict: string, cont: Phaser.GameObjects.Container, burstAt: { x: number; y: number }): void {
     const done = () => {
       big.setText(`${score}`);
       verdictT.setText(verdict);
       this.tweens.add({ targets: cont, alpha: 1, duration: 180 });
       audio.sfx(score >= 28 ? 'fanfare_big' : score >= 18 ? 'fanfare_small' : score >= 10 ? 'deny' : 'game_over');
       if (score >= 28) this.cameras.main.shake(160, 0.004);
+      if (score >= 28) confettiBurst(this, burstAt.x - 40, burstAt.y, { count: score >= 34 ? 44 : 28 });
+      if (score >= 28) confettiBurst(this, burstAt.x + 40, burstAt.y, { count: score >= 34 ? 44 : 28 });
     };
     if (app.settings.reducedMotion || this.instant) {
       done();
