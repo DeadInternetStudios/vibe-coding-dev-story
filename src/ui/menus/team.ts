@@ -10,6 +10,7 @@ import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import { SKILL_WORD } from '../text';
+import { teamGrid } from './teamGrid';
 import type { UiCtx } from '../ctx';
 
 const SKILL_COLORS: Record<SkillKey, number> = { prompt: C.sky, taste: C.pink, debug: C.mint, paranoia: C.violet2, hustle: C.yellow };
@@ -32,8 +33,7 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
   let sel = Math.max(0, s.staff.findIndex((x) => x.id === focus));
 
   // ------------------------------------------------------------ the grid
-  const cols = wide ? 4 : 8;
-  const tile = wide ? 30 : 28;
+  const { cols, tile } = teamGrid(w, wide);
   const gridW = cols * (tile + 2);
   const gx = 6;
   const gy = 21;
