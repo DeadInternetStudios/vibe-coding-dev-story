@@ -10,11 +10,12 @@ Two sources of takes:
 
 Add --write to store the bands in voices.json; without it nothing is written.
 
-For each voice it takes the usable takes (WER at most 0.10, not capped) and centres the pitch band on the
-densest cluster of their pitches (+/- --st semitones; --center median uses the median instead) and the pace
-band on their median words per second (+/- --rate-pct percent). The densest cluster, not the median, because a
-voice with two registers (the announcer: a deep one and a shouting one) has its median in the empty gap
-between them.
+For each voice it takes the usable takes (WER at most 0.10, not capped) and centres the pitch band on their
+median pitch, unless the densest cluster is more than 4 semitones away from it: that is a voice with two
+registers (the announcer: a deep one and a shouting one) whose median sits in the empty gap, and the band goes
+round the denser register. --center mode or median forces one rule. The band is +/- --st semitones, wider for a
+voice whose takes are spread out (0.8 x their robust spread, so bro, who spans 84 to 378 Hz, gets a wide band
+instead of one that rejects half his takes). The pace band is the median words per second +/- --rate-pct percent.
 generate.py then keeps takes inside the band and prefers the ones near its middle. An `f0_std_st` band exists
 only for voices meant to be flat (monotone robot, doomer): if the voice has one, and the source has pitch
 spread numbers (tune.py runs do), its upper edge becomes 1.2 x the median spread.
@@ -103,8 +104,10 @@ def main() -> int:
     ap.add_argument("--variant", default=None, help="only rows of this variant label (tune.py runs)")
     ap.add_argument("--st", type=float, default=3.0, help="pitch band half width in semitones")
     ap.add_argument("--rate-pct", type=float, default=30.0, help="pace band half width in percent")
-    ap.add_argument("--center", choices=["mode", "median"], default="mode",
-                    help="centre the pitch band on the densest cluster of takes (default) or on their median")
+    ap.add_argument("--center", choices=["auto", "mode", "median"], default="auto",
+                    help="auto (default): the median, or the densest cluster when that is more than 4 st away; or force one")
+    ap.add_argument("--spread-k", type=float, default=0.8,
+                    help="band half width is at least this times the voice's robust pitch spread (semitones)")
     ap.add_argument("--min-n", type=int, default=4)
     ap.add_argument("--write", action="store_true", help="write the proposed f0 and wps bands into voices.json")
     args = ap.parse_args()
@@ -124,11 +127,16 @@ def main() -> int:
             continue
         f0s = sorted(r["f0"] for r in rows)
         med = statistics.median(f0s)
-        m = densest(f0s) if args.center == "mode" else med
+        mode = densest(f0s)
+        use_mode = args.center == "mode" or (args.center == "auto" and abs(12 * math.log2(mode / med)) > 4.0)
+        m = mode if use_mode else med
+        q1, q3 = f0s[int(0.25 * (len(f0s) - 1))], f0s[int(round(0.75 * (len(f0s) - 1)))]
+        spread_st = 12 * math.log2(q3 / q1) / 1.35  # robust standard deviation in semitones
+        half = max(args.st, args.spread_k * spread_st)
         p10, p90 = f0s[int(0.1 * (len(f0s) - 1))], f0s[int(round(0.9 * (len(f0s) - 1)))]
         rates = [r["wps"] for r in rows if r["rate_ok"]]
         w = statistics.median(rates) if rates else None
-        f0_band = [round(m * 2 ** (-args.st / 12)), round(m * 2 ** (args.st / 12))]
+        f0_band = [round(m * 2 ** (-half / 12)), round(m * 2 ** (half / 12))]
         wps_band = [round(w * (1 - args.rate_pct / 100), 2), round(w * (1 + args.rate_pct / 100), 2)] if w else None
         old = voices[vid].get("target", {})
         stats[vid] = (m, f0_band, wps_band)
@@ -152,7 +160,9 @@ def main() -> int:
         print("  %-10s %6.0f Hz  %s%s" % (vid, m, "" if gap is None else "+%.1f st" % gap, twin))
 
     if args.write:
-        Path(args.voices).write_text(dump_voices(voices), encoding="utf-8")
+        tmp = Path(args.voices).with_suffix(".json.tmp")
+        tmp.write_text(dump_voices(voices), encoding="utf-8")
+        tmp.replace(args.voices)  # atomic: a render run that starts right now never sees half a file
         print("\nwrote bands for %d voices to %s" % (len(stats), args.voices))
     return 0
 
