@@ -116,6 +116,23 @@ def master_sig(voice: dict, kbps: int) -> str:
     return _sha({"trim": voice.get("trim", 0.0), "lufs": audio.TARGET_LUFS, "ceil": audio.PEAK_CEILING_DB, "kbps": kbps, "v": PIPELINE_VERSION})
 
 
+MAX_POLISH_ROUNDS = 3
+
+
+def needs_polish(rec: dict, voice: dict, line: dict) -> bool:
+    """A kept take that is weak, or outside its voice's pitch band, deserves fresh takes (`--polish`)."""
+    if rec.get("polish", 0) >= MAX_POLISH_ROUNDS:
+        return False
+    if rec.get("bad", 0.0) >= 1.0:
+        return True
+    band = (voice.get("target") or {}).get("f0")
+    f0 = rec.get("f0", 0.0)
+    if band and f0 > 0:
+        slack = qa.BAND_SLACK_ST + (qa.EXPRESSIVE_EXTRA_SLACK_ST if line.get("delivery") else 0.0)
+        return not (band[0] * 2 ** (-slack / 12) <= f0 <= band[1] * 2 ** (slack / 12))
+    return False
+
+
 def seed_for(line_id_: str, attempt: int) -> int:
     return (fnv1a32(line_id_.encode()) + 7919 * attempt) & 0x7FFFFFFF
 
@@ -165,7 +182,7 @@ def entry_from(line: dict, att: Attempt, sr: int) -> dict:
     return entry
 
 
-def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, note: str = "") -> dict:
+def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, note: str = "", polish: int = 0) -> dict:
     m = att.assessment.metrics
     s = {
         "sig": voice_sig(voice), "msig": master_sig(voice, kbps), "seed": att.seed,
@@ -176,14 +193,20 @@ def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, 
         s["problems"] = att.assessment.problems
     if note:
         s["note"] = note
+    if polish:
+        s["polish"] = polish
     return s
 
 
 # --------------------------------------------------------------------------- rendering
 
 
-def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, takes_dir: Path):
-    """Up to args.attempts takes, stopping at the first excellent one. Returns (best Attempt, attempts used)."""
+def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, takes_dir: Path, round_: int = 0):
+    """Up to args.attempts takes, stopping at the first excellent one. Returns (best Attempt, attempts used).
+
+    `round_` 0 is the first render. A polish round uses fresh seeds (attempts 4, 5, ... of the line) and keeps its
+    raw take beside the stored one until the caller decides the new take won.
+    """
     from ttslib import tts
 
     sampling = voice_sampling(voice)
@@ -195,7 +218,7 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
     for k in range(args.attempts):
         if STOP:
             break
-        seed = seed_for(line["id"], k)
+        seed = seed_for(line["id"], k + args.attempts * round_)
         try:
             take = eng.design(instruct, line["text"], seed, **sampling)
         except Exception:
@@ -225,7 +248,7 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
             try:
                 import soundfile as sf
 
-                sf.write(takes_dir / f"{line['id']}.flac", take.wav, sr)
+                sf.write(takes_dir / (f"{line['id']}.flac" if round_ == 0 else f".{line['id']}.polish.flac"), take.wav, sr)
             except Exception:
                 log.warning("%s: could not store the raw take", line["id"])
         else:
@@ -261,7 +284,7 @@ def adopt_line(line: dict, voice: dict, st: stt.Stt, args, out_dir: Path):
 
 def classify(lines: list, manifest: dict, state: dict, voices: dict, out_dir: Path, args) -> dict:
     """Sort every wanted line into: todo (render), adopt, remaster, stale, ok, unknown_voice."""
-    buckets = {"render": [], "adopt": [], "remaster": [], "ok": [], "unknown_voice": []}
+    buckets = {"render": [], "adopt": [], "remaster": [], "polish": [], "ok": [], "unknown_voice": []}
     redo_ids = set(args.redo_id or [])
     for line in lines:
         v = voices.get(line["voice"])
@@ -288,6 +311,8 @@ def classify(lines: list, manifest: dict, state: dict, voices: dict, out_dir: Pa
         elif not args.keep_stale and st_.get("msig") and st_["msig"] != master_sig(v, args.kbps) \
                 and (Path(args.takes) / f"{line['id']}.flac").exists():
             buckets["remaster"].append(line)
+        elif args.polish and needs_polish(st_, v, line):
+            buckets["polish"].append(line)
         else:
             buckets["ok"].append(line)
     return buckets
@@ -392,6 +417,8 @@ def main() -> int:
     ap.add_argument("--redo-id", action="append", help="re-render this line id")
     ap.add_argument("--redo-voice", action="append", help="re-render every line of this voice")
     ap.add_argument("--redo-wer", type=float, default=None, help="re-render lines whose manifest WER is above this")
+    ap.add_argument("--polish", action="store_true",
+                    help="second chance for kept takes that are weak or outside their voice's pitch band: fresh seeds, the better take stays")
     ap.add_argument("--keep-stale", action="store_true", help="do not re-render lines whose voice changed since they were rendered")
     ap.add_argument("--dry-run", action="store_true", help="list what would be rendered, load no model")
     ap.add_argument("--audit", action="store_true", help="print per-voice stats and suspicious lines from the manifest, then exit")
@@ -419,9 +446,9 @@ def main() -> int:
     todo = buckets["render"]
     if args.limit is not None:
         todo = todo[: args.limit]
-    log.info("plan: %d lines wanted, %d ok, %d to render%s, %d to adopt, %d to remaster, %d unknown voice",
+    log.info("plan: %d lines wanted, %d ok, %d to render%s, %d to adopt, %d to remaster, %d to polish, %d unknown voice",
              len(lines), len(buckets["ok"]), len(buckets["render"]), f" (limit {args.limit})" if args.limit is not None else "",
-             len(buckets["adopt"]), len(buckets["remaster"]), len(buckets["unknown_voice"]))
+             len(buckets["adopt"]), len(buckets["remaster"]), len(buckets["polish"]), len(buckets["unknown_voice"]))
     if args.dry_run:
         for line in todo:
             print(f"render {line['id']} {line['voice']}: {line['text'][:70]!r}")
@@ -429,6 +456,8 @@ def main() -> int:
             print(f"adopt  {line['id']}")
         for line in buckets["remaster"]:
             print(f"remast {line['id']}")
+        for line in buckets["polish"]:
+            print(f"polish {line['id']} {line['voice']}: f0 {state['lines'].get(line['id'], {}).get('f0')} {line['text'][:50]!r}")
         return 0
 
     with mf.run_lock(args.manifest):
@@ -436,7 +465,7 @@ def main() -> int:
         signal.signal(signal.SIGINT, on_signal)
         sync_voices(manifest, voices)
         mf.save_manifest(args.manifest, manifest)
-        if not (todo or buckets["adopt"] or buckets["remaster"]):
+        if not (todo or buckets["adopt"] or buckets["remaster"] or buckets["polish"]):
             log.info("nothing to do")
             return 0
 
@@ -512,9 +541,50 @@ def main() -> int:
             log.info("progress %d/%d lines (%d failed) %.0fs elapsed, line took %.1fs, ETA %.0fs, peak mem %.1f GB",
                      i, len(todo), failed, el, time.time() - t_line, eta, eng.peak_gb() if eng else 0.0)
 
+        polished = improved = 0
+        for line in buckets["polish"]:
+            if STOP:
+                break
+            voice = voices[line["voice"]]
+            rec = state["lines"].get(line["id"], {})
+            round_ = rec.get("polish", 0) + 1
+            if eng is None:
+                from ttslib import tts
+
+                eng = tts.Engine()
+                log.info("engine ready in %.1fs", eng.load_s)
+            try:
+                old = adopt_line(line, voice, st, args, out_dir)
+                best, used = render_line(line, voice, eng, st, args, out_dir, Path(args.takes), round_)
+                polished += 1
+                raw_new = Path(args.takes) / f".{line['id']}.polish.flac"
+                if best is not None and best.assessment.badness < old.assessment.badness:
+                    os.replace(best.path, out_dir / f"{line['id']}.mp3")
+                    if raw_new.exists():
+                        os.replace(raw_new, Path(args.takes) / f"{line['id']}.flac")
+                    commit_entry(args, manifest, state, line, entry_from(line, best, sr),
+                                 state_from(line, voice, best, used, args.kbps, polish=round_))
+                    improved += 1
+                    log.info("%s polish round %d: bad %.2f -> %.2f, f0 %.0f -> %.0f Hz", line["id"], round_, old.assessment.badness,
+                             best.assessment.badness, old.assessment.metrics["f0_med"], best.assessment.metrics["f0_med"])
+                else:
+                    if best is not None:
+                        best.path.unlink(missing_ok=True)
+                    raw_new.unlink(missing_ok=True)
+                    kept = state_from(line, voice, old, rec.get("attempts", 0), args.kbps, polish=round_)
+                    kept["seed"] = rec.get("seed", 0)
+                    kept["rtf"] = rec.get("rtf", 0.0)
+                    commit_entry(args, manifest, state, line, entry_from(line, old, sr), kept)
+                    log.info("%s polish round %d: kept the existing take (bad %.2f, f0 %.0f Hz), nothing better in %d takes",
+                             line["id"], round_, old.assessment.badness, old.assessment.metrics["f0_med"], used)
+            except Exception:
+                failed += 1
+                log.error("%s polish FAILED, moving on\n%s", line["id"], traceback.format_exc())
+
         mean_wer = sum(wers) / len(wers) if wers else 0.0
-        log.info("DONE rendered=%d adopted=%d remastered=%d failed=%d weak=%d mean_wer=%.3f in %.0fs%s",
-                 done, adopted, remastered, failed, len(weak), mean_wer, time.time() - t_start, " (stopped early)" if STOP else "")
+        log.info("DONE rendered=%d adopted=%d remastered=%d polished=%d improved=%d failed=%d weak=%d mean_wer=%.3f in %.0fs%s",
+                 done, adopted, remastered, polished, improved, failed, len(weak), mean_wer, time.time() - t_start,
+                 " (stopped early)" if STOP else "")
         for lid, bad, probs in weak:
             log.info("  weak %s bad=%.2f %s", lid, bad, "; ".join(probs))
         all_w = [e["wer"] for e in manifest["lines"].values()]

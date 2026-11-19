@@ -79,6 +79,7 @@ continues. A second run on the same manifest refuses to start while the first ho
 | `--limit N` | render at most N lines this run |
 | `--attempts N` | takes per line, 1 to 4 (the contract's maximum) |
 | `--redo-id ID`, `--redo-voice VOICE`, `--redo-wer X` | render again: that line, that voice, every line above that WER |
+| `--polish` | second chance for kept takes that are weak or outside their voice's pitch band: 4 fresh takes (new seeds), the better take stays, at most 3 rounds per line |
 | `--keep-stale` | leave lines alone even if their voice changed |
 | `--dry-run` | list what would be rendered, load no model |
 | `--audit` | per-voice statistics and suspicious lines from the manifest, then exit |
@@ -104,6 +105,25 @@ cd "$TOOLS" && .venv/bin/python generate.py \
 
 `manifest.json` and `render-state.json` are generated files. If a merge conflicts on them, take either
 side and run `generate.py` again: it converges (valid MP3s are kept, missing entries are adopted).
+
+To keep the shop open without babysitting it, `watch.sh` polls another checkout's `lines.json` and renders what
+is new into this one (`tools/tts/watch.sh /path/to/game/checkout 600 --commit`). It does nothing, and loads no model,
+while there is no new work.
+
+### Bands, own lines, and the polish pass
+
+A voice's bands should describe what it does on its **own lines**, not on neutral test sentences: hype lines
+come out much higher than calm ones (bro 111 Hz on probe sentences, 228 Hz on his own lines; karen 331 against
+439). After the first full render:
+
+```sh
+.venv/bin/python calibrate.py --log generate.log           # look: first take of every line, per voice
+.venv/bin/python calibrate.py --log generate.log --write   # store the bands
+.venv/bin/python generate.py --polish                      # fresh takes for lines now outside their band, repeat if you like
+```
+
+`--polish` re-renders only lines that are weak or off band, with seeds the line has not tried, and replaces the
+existing take only when the new one scores better, so it can only improve things. Run it up to 3 times.
 
 ## Adding or changing lines
 
