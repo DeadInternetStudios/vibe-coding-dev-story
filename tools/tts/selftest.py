@@ -4,7 +4,7 @@
     .venv/bin/python selftest.py
 
 Covers the contract id, the WER normalizer and word timings, the take scoring gate, the polish rule, the
-loudness and MP3 chain, and the manifest writer. Run it after touching anything under ttslib/ or generate.py.
+identity gate (synthetic embeddings, no model), the loudness and MP3 chain, and the manifest writer. Run it after touching anything under ttslib/ or generate.py.
 """
 from __future__ import annotations
 
@@ -163,6 +163,34 @@ def needs_polish_rules():
     assert not generate.needs_polish({"bad": 0.2, "f0": 160}, voice, {"delivery": "tired"}), "a delivery note widens the band"
     assert not generate.needs_polish({"bad": 5.0, "f0": 200, "polish": generate.MAX_POLISH_ROUNDS}, voice, {}), "gives up after the last round"
     assert not generate.needs_polish({"bad": 0.2, "f0": 0.0}, voice, {}), "no pitch measured, nothing to compare with"
+    assert generate.needs_polish({"bad": 0.2, "f0": 120, "idm": -0.2}, voice, {}), "sounds like another voice"
+    assert not generate.needs_polish({"bad": 0.2, "f0": 120, "idm": 0.02}, voice, {}), "a close call is not a misfit"
+
+
+@test
+def identity_gate():
+    from ttslib import ident
+
+    rng = np.random.default_rng(3)
+    dim = 24
+    common = rng.normal(size=dim) * 3  # what every speaker shares: raw cosines are all high, centring removes it
+    centers = {v: rng.normal(size=dim) for v in ("a", "b", "c")}
+
+    def take(v, noise=0.25):
+        e = common + centers[v] + rng.normal(size=dim) * noise
+        return (e / np.linalg.norm(e)).astype(np.float32)
+
+    emb = np.stack([take(v) for v in centers for _ in range(8)] + [take("a") for _ in range(3)])
+    owners = [v for v in centers for _ in range(8)] + ["rare"] * 3
+    data = ident.build(emb, owners)
+    assert sorted(data["voices"]) == ["a", "b", "c"], "a voice with under 5 lines gets no centroid"
+    idn = ident.Identity(data)
+    own = idn.score_embedding("a", take("a"))
+    assert own["margin"] > 0 and ident.penalty(own)[0] < 1.0, "a typical take costs (almost) nothing"
+    other = idn.score_embedding("a", take("b"))
+    bad, note = ident.penalty(other)
+    assert bad >= ident.MISFIT_PENALTY and "sounds more like b" in note, "a take of another voice is a misfit"
+    assert idn.score_embedding("rare", take("a")) is None and ident.penalty(None) == (0.0, None)
 
 
 def main() -> int:

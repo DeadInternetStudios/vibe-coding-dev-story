@@ -39,7 +39,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
-from ttslib import audio, qa, stt  # noqa: E402
+from ttslib import audio, ident, qa, stt  # noqa: E402
 from ttslib import manifest as mf  # noqa: E402
 from ttslib.lineid import fnv1a32, line_id  # noqa: E402
 
@@ -117,6 +117,7 @@ def master_sig(voice: dict, kbps: int) -> str:
 
 
 MAX_POLISH_ROUNDS = 3
+IDENT = None  # ttslib.ident.Identity when ident.json exists: takes are also scored on sounding like their own voice
 
 
 def needs_polish(rec: dict, voice: dict, line: dict) -> bool:
@@ -124,6 +125,8 @@ def needs_polish(rec: dict, voice: dict, line: dict) -> bool:
     if rec.get("polish", 0) >= MAX_POLISH_ROUNDS:
         return False
     if rec.get("bad", 0.0) >= 1.0:
+        return True
+    if rec.get("idm", 0.0) < -ident.MISFIT_MARGIN:
         return True
     band = (voice.get("target") or {}).get("f0")
     f0 = rec.get("f0", 0.0)
@@ -154,6 +157,20 @@ class Attempt:
     tokens: int
 
 
+def apply_identity(a, line: dict, decoded) -> None:
+    """Add the identity penalty to a take's assessment (hard failures are not worth an embedding)."""
+    if IDENT is None or a.badness >= qa.HARD:
+        return
+    sc = IDENT.score(line["voice"], decoded)
+    if sc is None:
+        return
+    a.metrics["ident_z"], a.metrics["ident_margin"] = round(sc["z"], 2), round(sc["margin"], 3)
+    bad, note = ident.penalty(sc)
+    a.badness += bad
+    if note:
+        a.problems.append(note)
+
+
 def finish_take(raw, sr: int, line: dict, voice: dict, st: stt.Stt, tmp: Path, kbps: int, capped: bool,
                 accept_wer: float, k: int, seed: int, rtf: float, tokens: int) -> Attempt:
     x = audio.trim_silence(raw, sr)
@@ -163,6 +180,7 @@ def finish_take(raw, sr: int, line: dict, voice: dict, st: stt.Stt, tmp: Path, k
     tr = st.transcribe(tmp)
     sc = stt.score(line["text"], tr.text)
     a = qa.assess(decoded, sr, line["text"], voice, sc, capped, accept_wer, expressive=bool(line["delivery"]))
+    apply_identity(a, line, decoded)
     return Attempt(k, seed, tmp, decoded, tr, sc, a, rtf, gain, tokens)
 
 
@@ -189,6 +207,8 @@ def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, 
         "attempts": attempts, "bad": att.assessment.badness, "f0": m["f0_med"], "wps": m["wps"],
         "lufs": m["lufs"], "peak": m["peak_db"], "rtf": round(att.rtf, 2), "ts": int(time.time()),
     }
+    if "ident_z" in m:
+        s["idz"], s["idm"] = m["ident_z"], m["ident_margin"]
     if att.assessment.problems:
         s["problems"] = att.assessment.problems
     if note:
@@ -236,8 +256,9 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
             tmp.unlink(missing_ok=True)
             continue
         a = att.assessment
-        log.info("%s take %d/%d seed=%d dur=%.2fs wer=%.2f f0=%.0f wps=%.2f rtf=%.2f bad=%.2f %s",
+        log.info("%s take %d/%d seed=%d dur=%.2fs wer=%.2f f0=%.0f wps=%.2f rtf=%.2f bad=%.2f%s %s",
                  line["id"], k + 1, args.attempts, seed, a.dur, a.wer, a.metrics["f0_med"], a.metrics["wps"], take.rtf, a.badness,
+                 " idz=%+.1f idm=%+.2f" % (a.metrics["ident_z"], a.metrics["ident_margin"]) if "ident_z" in a.metrics else "",
                  "ACCEPT" if a.excellent else ("ok, sampling for a closer take" if a.ok else "RETRY: " + "; ".join(a.problems)))
         keep_raw = best is None or a.badness < best.assessment.badness
         if keep_raw:
@@ -276,6 +297,7 @@ def adopt_line(line: dict, voice: dict, st: stt.Stt, args, out_dir: Path):
     tr = st.transcribe(path)
     sc = stt.score(line["text"], tr.text)
     a = qa.assess(decoded, sr, line["text"], voice, sc, False, args.accept_wer, expressive=bool(line["delivery"]))
+    apply_identity(a, line, decoded)
     return Attempt(0, 0, path, decoded, tr, sc, a, 0.0, 0.0, 0)
 
 
@@ -401,6 +423,7 @@ def on_signal(signum, _frame):
 
 
 def main() -> int:
+    global IDENT
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--lines", nargs="+", help="lines files, merged by id (default: lines.json if it has lines, else lines.seed.json)")
     ap.add_argument("--out", default=str(REPO / "public" / "audio" / "vo"), help="where the MP3s go")
@@ -419,6 +442,9 @@ def main() -> int:
     ap.add_argument("--redo-wer", type=float, default=None, help="re-render lines whose manifest WER is above this")
     ap.add_argument("--polish", action="store_true",
                     help="second chance for kept takes that are weak or outside their voice's pitch band: fresh seeds, the better take stays")
+    ap.add_argument("--identity", default=str(HERE / "ident.json"),
+                    help="voice centroids from castcheck.py --save; takes that sound like another voice are retried (used when the file exists)")
+    ap.add_argument("--no-identity", action="store_true", help="ignore --identity, score pitch and pace only")
     ap.add_argument("--keep-stale", action="store_true", help="do not re-render lines whose voice changed since they were rendered")
     ap.add_argument("--dry-run", action="store_true", help="list what would be rendered, load no model")
     ap.add_argument("--audit", action="store_true", help="print per-voice stats and suspicious lines from the manifest, then exit")
@@ -469,6 +495,11 @@ def main() -> int:
             log.info("nothing to do")
             return 0
 
+        if not args.no_identity and Path(args.identity).exists():
+            IDENT = ident.Identity.load(args.identity)
+            log.info("identity gate on: %d voices have a centroid (%s)", len(IDENT.voices), args.identity)
+        else:
+            log.info("identity gate off (pitch and pace only)")
         st = stt.Stt()
         eng = None
         sr = 24000

@@ -54,6 +54,8 @@ and a word highlight driven by the manifest timings. It does not play anything b
 5. Scores the take (`ttslib/qa.py`). Hard failures: WER above 0.25, hit the token cap, clipping, rushed
    or dragged. Soft: extra words the model improvised, a long pause, pitch or pace outside the voice's
    `target` band. A pull toward the middle of the band keeps sampling until a take is close to the voice.
+   When `ident.json` exists it also compares the take's speaker embedding with the voice's centroid
+   (`ttslib/ident.py`): a take that sounds more like another character than like its own is retried.
 6. Up to 4 takes, stops at the first excellent one, keeps the best. A line that never passes keeps its
    best take and shows up as weak in the summary, so there is always something to hear.
 7. Writes the MP3 and rewrites `manifest.json` atomically after **every** line, plus
@@ -80,6 +82,7 @@ continues. A second run on the same manifest refuses to start while the first ho
 | `--attempts N` | takes per line, 1 to 4 (the contract's maximum) |
 | `--redo-id ID`, `--redo-voice VOICE`, `--redo-wer X` | render again: that line, that voice, every line above that WER |
 | `--polish` | second chance for kept takes that are weak or outside their voice's pitch band: 4 fresh takes (new seeds), the better take stays, at most 3 rounds per line |
+| `--identity FILE`, `--no-identity` | voice centroids from `castcheck.py --save` (default `tools/tts/ident.json`, used when it exists); `--no-identity` scores pitch and pace only |
 | `--keep-stale` | leave lines alone even if their voice changed |
 | `--dry-run` | list what would be rendered, load no model |
 | `--audit` | per-voice statistics and suspicious lines from the manifest, then exit |
@@ -124,6 +127,26 @@ come out much higher than calm ones (bro 111 Hz on probe sentences, 228 Hz on hi
 
 `--polish` re-renders only lines that are weak or off band, with seeds the line has not tried, and replaces the
 existing take only when the new one scores better, so it can only improve things. Run it up to 3 times.
+
+### The identity gate (`ident.json`)
+
+Pitch and pace bands do not make a voice recognisable: a take can sit inside its bands and still sound like
+another character (on the first 230 rendered lines only 78% were nearest to their own voice's centroid in speaker
+space). `castcheck.py --save ident.json` embeds every rendered line with the Base model's speaker encoder and
+stores the cast mean plus each voice's centroid, and how tightly the voice's lines sit round it. `generate.py`
+then adds a penalty to every take that is atypical for its voice (z-score of its cosine to the centroid) and a
+larger one when another voice's centroid is nearer than its own. Rebuild it after a big render or a voice
+change, because it describes whatever is in the manifest at that moment:
+
+```sh
+# stop watch.sh and generate.py first, both write render-state.json
+.venv/bin/python castcheck.py --save ident.json --annotate-state render-state.json
+.venv/bin/python generate.py --polish       # now also retakes the lines that sound like someone else
+```
+
+A voice needs 5 rendered lines before it gets a centroid. After you change a voice's description, drop it from
+`ident.json` (or delete the file) until its lines are re-rendered, or the gate will punish the new voice for not
+sounding like the old one.
 
 ## Adding or changing lines
 
@@ -204,10 +227,12 @@ python3 verify.py                     # manifest and MP3s against the contract, 
 .venv/bin/python castcheck.py         # speaker embeddings: does each line sound closest to its own voice? (loads the Base model)
 ```
 
+`selftest.py` also covers the polish rule and the identity gate.
+
 `verify.py` exits 1 on contract errors (wrong id, `dur` not matching the MP3, `env` or `words` of the wrong
 length, stereo, over 64 kbps) and only warns about WER above 0.25 or lines not rendered yet.
-`castcheck.py --list-misfits` names the lines that sound nearer another voice; retake one with
-`generate.py --redo-id ID`.
+`castcheck.py --list-misfits` names the lines that sound nearer another voice; `generate.py --polish` retakes
+them once `ident.json` and the annotated state exist (see the identity gate above).
 
 ## Quiet machine
 
@@ -223,13 +248,15 @@ numbers. Only open the gallery when a human is at the machine.
 | `generate.py` | the render pipeline |
 | `voices.json` | the cast: descriptions, loudness trims, intent bands |
 | `lines.seed.json`, `lines.extra.json` | lines built from `cast.seed.md` and `cast.extra.md` by `build_seed.py` |
-| `ttslib/` | `lineid` (contract id), `tts` (model), `stt` (speech to text, WER, word timings), `audio` (trim, loudness, MP3, measurements), `qa` (take scoring), `manifest` (atomic writes, state, lock) |
+| `ttslib/` | `lineid` (contract id), `tts` (model), `stt` (speech to text, WER, word timings), `audio` (trim, loudness, MP3, measurements), `qa` (take scoring), `ident` (speaker-embedding identity gate), `manifest` (atomic writes, state, lock) |
 | `tune.py`, `calibrate.py`, `spike.py` | measurement tools: voice tuning, band calibration from tuning runs, and the spike that picked the approach |
 | `selftest.py`, `verify.py`, `castcheck.py` | checks: logic, contract, cast separation |
 | `idtest.py` | contract test vector, standard library only |
 | `gallery.html` | static page to browse voices and lines |
 | `setup.sh`, `requirements*.txt` | recreate the venv |
 | `render-state.json` | how each line was rendered (committed so reruns converge) |
+| `ident.json` | cast mean and voice centroids for the identity gate (rebuild with `castcheck.py --save`) |
+| `watch.sh` | keeps the shop open: polls a game checkout (or a git ref of it) and renders what is missing |
 | `.venv/`, `scratch/`, `generate.log` | local only, git ignored |
 
 Design notes, measurements and the tuning log: [`docs/voice-notes.md`](../../docs/voice-notes.md).
