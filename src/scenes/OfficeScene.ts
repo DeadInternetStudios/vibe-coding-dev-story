@@ -218,6 +218,12 @@ export class OfficeScene extends Phaser.Scene {
     const L = layoutOf(this);
     const rw = this.room.w;
     if (rw <= L.W) return;
+    // the room is wider than the screen: say so once, then it can be dragged
+    const seen = this.session.s.tutorial;
+    if (!seen.includes('pan')) {
+      seen.push('pan');
+      this.time.delayedCall(2200, () => this.toasts?.push('The office is bigger than your screen. Drag it to look around.', 'info', 'star'));
+    }
     const minX = L.W - rw;
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       if (p.y > this.view.y && p.y < this.view.y + this.view.h && !this.menuModal && !this.promptOpen) {
