@@ -15,6 +15,8 @@ import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { NewGameScene } from './scenes/NewGameScene';
 import { OfficeScene } from './scenes/OfficeScene';
+import { ThreadScene } from './scenes/ThreadScene';
+import { EndingScene } from './scenes/EndingScene';
 import { app } from './core/app';
 import { audio } from './core/audio';
 import { uiEvents } from './ui/kit';
@@ -38,7 +40,7 @@ const game = new Phaser.Game({
   input: { activePointers: 3 },
   banner: false,
   audio: { noAudio: true },
-  scene: [BootScene, TitleScene, NewGameScene, OfficeScene],
+  scene: [BootScene, TitleScene, NewGameScene, OfficeScene, ThreadScene, EndingScene],
 });
 
 let pending = 0;

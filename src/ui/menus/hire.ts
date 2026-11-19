@@ -20,11 +20,11 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
   const w = Math.min(L.W - 4, wide ? 410 : 246);
   const rowH = wide ? 29 : 42;
   const rows = Math.max(1, s.candidates.length);
-  const h = Math.min(L.H - 4, 44 + rows * (rowH + 2) + 24);
+  const h = Math.min(L.H - 4, 44 + rows * (rowH + 2) + 32);
   const m = new Modal(scene, { w, h, title: 'JOB BOARD', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'hire');
 
-  const deskLabel = label(scene, w - 8, 6, '', { font: F.caps, tint: C.cream, origin: [1, 0] });
+  const deskLabel = label(scene, w - 24, 6, '', { font: F.caps, tint: C.cream, origin: [1, 0] });
   m.add(deskLabel);
   const paintDesks = () => {
     const f = game.freeDesks();
@@ -33,9 +33,9 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
   };
   paintDesks();
 
-  const subtitle = label(scene, 8, h - 20, 'Tap a face to hear them out.', { font: F.read, tint: C.ink2, maxWidth: w - 16 });
+  const subtitle = label(scene, 8, h - 28, 'Tap a face to hear them out.', { font: F.read, tint: C.ink2, maxWidth: w - 16 });
   m.add(subtitle);
-  m.add(label(scene, 8, h - 10, `Cash ${money(s.company.cash)}. New applicants every month.`, { font: F.body, tint: C.ink3 }));
+  m.add(label(scene, 8, h - 11, `Cash ${money(s.company.cash)}. New applicants every month.`, { font: F.body, tint: C.ink3 }));
 
   let speaking: string | null = null;
   const rowsUi: Phaser.GameObjects.Container[] = [];

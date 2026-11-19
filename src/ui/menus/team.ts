@@ -25,7 +25,7 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
   const game = ctx.session.game;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const h = Math.min(L.H - 4, wide ? 232 : 340);
+  const h = Math.min(L.H - 4, wide ? 246 : 350);
   const m = new Modal(scene, { w, h, title: 'THE TEAM', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'team');
   let sel = Math.max(0, s.staff.findIndex((x) => x.id === focus));
@@ -103,9 +103,9 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
     for (const k of SKILL_KEYS) {
       detail.add(iconImg(scene, k, px, y - 1));
       detail.add(label(scene, px + 10, y, k.slice(0, 5).toUpperCase(), { font: F.body, tint: C.ink2 }));
-      detail.add(rect(scene, px + 40, y + 1, dw - 100, 5, C.ink1, 1));
-      detail.add(rect(scene, px + 41, y + 2, Math.max(1, Math.round((Math.min(40, mem.skills[k]) / 40) * (dw - 102))), 3, SKILL_COLORS[k], 1));
-      detail.add(label(scene, px + dw - 56, y, `${mem.skills[k]}`, { font: F.body, tint: C.ink1, origin: [1, 0] }));
+      detail.add(rect(scene, px + 40, y + 1, dw - 110, 5, C.ink1, 1));
+      detail.add(rect(scene, px + 41, y + 2, Math.max(1, Math.round((Math.min(40, mem.skills[k]) / 40) * (dw - 112))), 3, SKILL_COLORS[k], 1));
+      detail.add(label(scene, px + dw - 58, y, `${mem.skills[k]}`, { font: F.body, tint: C.ink1, origin: [1, 0] }));
       const cost = game.trainCost(mem, k);
       const tb = button(scene, px + dw - 52, y - 2, 44, 10, `+ ${shortMoney(cost)}`, () => {
         const err = game.train(mem.id, k);

@@ -3,6 +3,7 @@
  * with an ink outline so it reads on light paper and on dark plum alike.
  */
 import { Px, type Legend } from '../pixel';
+import { THREAD_ART } from './threadIcons';
 
 export const ICON_LEGEND: Legend = {
   '.': 'clear',
@@ -591,7 +592,7 @@ export const ICON_NAMES = Object.keys(ART);
 export function iconPx(name: string): Px | null {
   const hit = cache.get(name);
   if (hit) return hit;
-  const rows = ART[name];
+  const rows = ART[name] ?? THREAD_ART[name];
   if (!rows) return null;
   const p = Px.fromRows(rows, ICON_LEGEND);
   cache.set(name, p);
@@ -599,5 +600,5 @@ export function iconPx(name: string): Px | null {
 }
 
 export function hasIcon(name: string): boolean {
-  return name in ART;
+  return name in ART || name in THREAD_ART;
 }

@@ -30,7 +30,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const s = ctx.session.s;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const h = Math.min(L.H - 4, wide ? 232 : 360);
+  const h = Math.min(L.H - 4, wide ? 246 : 372);
   const m = new Modal(scene, { w, h, title: 'NEW PROJECT', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'idea');
 
@@ -73,7 +73,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const wrap = (i: number, n: number) => ((i % n) + n) % n;
 
   const kindRow = cycler(
-    21,
+    20,
     'WHAT',
     () => {
       const k = c.kinds[st.kind]!;
@@ -91,7 +91,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     },
   );
   const nicheRow = cycler(
-    58,
+    63,
     'FOR WHOM',
     () => {
       const n = c.niches[st.niche]!;
@@ -120,7 +120,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     },
   );
   const toolRow = cycler(
-    95,
+    106,
     'WITH WHAT',
     () => ownedTools[st.tool]?.name.toUpperCase() ?? 'NO TOOL',
     () => {
@@ -136,12 +136,12 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   );
 
   // ------------------------------------------------------------ scope
-  m.add(label(scene, 6, 132, 'HOW BIG', { font: F.caps, tint: C.ink3 }));
+  m.add(label(scene, 6, 150, 'HOW BIG', { font: F.caps, tint: C.ink3 }));
   const scopes = Object.keys(SCOPES) as Scope[];
   const sw = Math.floor((lw - 4) / 3);
   const scopeBtns = scopes.map((sc, i) => {
     const ok = unlocked(game, SCOPES[sc].unlock);
-    const b = button(scene, 6 + i * (sw + 2), 141, sw, 15, ok ? SCOPES[sc].label.replace('Weekend ', '').replace('The Full Thing', 'FULL').toUpperCase() : 'LOCKED', () => {
+    const b = button(scene, 6 + i * (sw + 2), 159, sw, 15, ok ? SCOPES[sc].label.replace('Weekend ', '').replace('The Full Thing', 'FULL').toUpperCase() : 'LOCKED', () => {
       if (!ok) {
         ctx.toast(`Full scope needs ${SCOPES[sc].unlock.karma} karma.`, 'bad');
         return;
@@ -152,18 +152,18 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     m.add(b);
     return { sc, b, ok };
   });
-  const scopeHint = label(scene, 6, 158, '', { font: F.body, tint: C.ink3, maxWidth: lw });
+  const scopeHint = label(scene, 6, 176, '', { font: F.body, tint: C.ink3, maxWidth: lw });
   m.add(scopeHint);
 
   // ------------------------------------------------------------ team
-  m.add(label(scene, 6, 172, 'WHO BUILDS (tap to toggle)', { font: F.caps, tint: C.ink3 }));
+  m.add(label(scene, 6, 190, 'WHO BUILDS (tap to toggle)', { font: F.caps, tint: C.ink3 }));
   const faces: { id: string; img: Phaser.GameObjects.Image; ring: Phaser.GameObjects.Image }[] = [];
   const per = Math.min(s.staff.length, Math.floor((lw - 4) / 19));
   s.staff.forEach((mem, i) => {
     const col = i % Math.max(1, per);
     const row = Math.floor(i / Math.max(1, per));
     const fx = 6 + col * 19;
-    const fy = 182 + row * 24;
+    const fy = 200 + row * 24;
     const ring = rect(scene, fx, fy, 18, 22, C.ink0, 1);
     const bg = rect(scene, fx + 1, fy + 1, 16, 20, C.sky, 1);
     const img = scene.add.image(fx + 9, fy + 21, bakePerson(scene, mem.look, 'stand', 'normal')).setOrigin(0.5, 1).setScale(1);
@@ -184,7 +184,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
 
   // ------------------------------------------------------------ forecast
   const fx = rx;
-  const fy = wide ? 21 : 214;
+  const fy = wide ? 21 : 246;
   m.add(label(scene, fx, fy, 'FORECAST', { font: F.caps, tint: C.ink3 }));
   const qLabel = label(scene, fx + rw - 2, fy - 2, '', { font: F.title, tint: C.teal1, origin: [1, 0] });
   m.add(qLabel);

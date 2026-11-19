@@ -19,3 +19,9 @@ export const app: App = {
   content: undefined as unknown as Content,
   session: null,
 };
+
+/** The running game. Scenes that only exist during a run call this. */
+export function current(): Session {
+  if (!app.session) throw new Error('no game is running');
+  return app.session;
+}
