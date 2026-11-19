@@ -191,13 +191,13 @@ export function mug(): Px {
 /** A rubber duck, 6 x 6 and 8 x 8 with its outline. */
 export function duck(): Px {
   return px([
-    '..yy..',
+    '..wy..',
     '.ykyy.',
     'rryyy.',
     'yyyyyy',
     'yyyyYy',
     '.YYYY.',
-  ], { y: 'yellow', r: 'orange2', K: 'ink1', Y: 'orange3' }).outline('ink0');
+  ], { y: 'yellow', r: 'orange2', K: 'ink1', Y: 'orange3', w: 'white' }).outline('ink0');
 }
 
 /** A sad potted plant. One leaf has already given up, and the pot knows. */
