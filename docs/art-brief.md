@@ -1,0 +1,32 @@
+# Art brief: Vibe Coding Dev Story
+
+You are the pixel artist for a browser game, a Game Dev Story style management sim about vibe coding a startup, with Reddit humor. The game is Phaser 4 and TypeScript. All art is drawn in code as letter maps and small drawing calls (no image files), then baked into textures at runtime. You own `src/art/**` and `tools/art/**` only. Do not edit the UI or the sim.
+
+## How to work
+
+- Preview: `npx tsx tools/art/preview.ts list`, then `npx tsx tools/art/preview.ts <group> --zoom 8 --bg plum`. It writes `tools/art/out/<group>.png`. Open the PNG with the Read tool and look at it. Look at every sprite you draw, at zoom 8, and again at zoom 1 (the real size). If it is not clear at zoom 1 it is not done.
+- Add new groups to `src/art/catalog.ts` so you can preview them.
+- Work list: `npx tsx tools/art/missing.ts` prints every icon the code asks for and every decor sprite that is missing. Run it first and again at the end. Finish when both lists are empty.
+- Palette: only the named colors in `src/art/palette.ts` and the role colors for people. Outline in `ink0`. Light from the top left. Three tones per material (light, mid, dark). No gradients, no dithering unless it is the point (CRT scanlines, fabric). Warm, cozy, saturated. Each sprite should have one funny detail.
+- Letter maps: see `src/art/sprites/icons.ts` for the legend (`ICON_LEGEND`) and how an icon is declared. Every row of an icon must be the same width. Any square size works; the baker does not care. `src/art/pixel.ts` has the `Px` class (ellipse, rect, halo, crop, blit, flip and so on) for anything that is easier to draw than to type.
+- Quiet machine: nothing here plays sound or opens a window. No global installs. Do not touch files outside this repo.
+- Commit on your branch at least every 30 minutes. Keep `npx tsc --noEmit` and `npx vitest run` green. Log what you did, one line per step with a timestamp, in `.100x/children/art.md`.
+
+## Look
+
+Chunky and legible, like a 2010 handheld management game: thick outlines, bright flat fills, tiny jokes. The UI is cream paper and plum ink with tomato orange accents. Reddit is the subject but never draw the real Reddit mascot or logos. Never use emoji, never leave a gray placeholder.
+
+## Deliverables, in this order
+
+1. **Missing 8x8 icons.** Everything `missing.ts` lists that is not in family 3: right now that is `bell`. Also look at the existing icons in `tools/art/out/icons.png` and redraw any that are weak at 1x.
+2. **Decor.** One sprite per shop item art id in `src/art/sprites/decor.ts` (`DECOR`). 18 are missing. Anchors and max sizes are in the file header. `plant` and `duck` are done and set the style. Each should say what it is from across the room and have a joke: the espresso machine has a tiny queue sign, the whiteboard has three arrows and a box labeled AI, the neon sign says SHIP IT, the server rack blinks green, the couch is questionable, the barista robot draws a cursor in the foam, the trophy shelf holds participation trophies. Sizes: floor and corner up to 32x36, wall up to 32x24, desk up to 12x10.
+3. **Big icons, 12x12.** Names: `kind_<id>` (16 app kinds), `niche_<id>` (14 audiences), `tool_<id>` (7 AI tools), `chan_<id>` (8 launch channels), and the 24 card icons at 12x12 under `card_<name>` (for example `card_doc`, `card_snoo`). The `snoo` card icon must be a generic friendly alien or speech bubble creature, never the real Reddit mascot. Names come from `missing.ts`. They show up next to cyclers and lists in the project wizard and the launch screen, so make each one readable and different: a todo app is a checklist with one box checked and the rest suspiciously empty, an OS is a window with a tiny skull, a CRM is a rolodex, cats are a cat face, plumbers are a wrench and a pipe, degens are a diamond hand, lawyers are a gavel, redditors are an upvote arrow with a tiny orange face. Tools: the Chatty Tab is a browser tab with a speech bubble, the Cursed IDE has a glowing red eye, the Terminal Agent is a prompt with a smiling cursor, the Local LLM is a sweaty old laptop, the Swarm is five tiny robots, the Singularity is a white hole with a halo.
+4. **Voice portraits.** 20 characters in `src/art/sprites/portraits.ts`. `portraitPx(voice)` must return a 16 wide by 17 tall head and shoulders sprite. They show at 1x in the Reddit thread and 2x in dialogue, so shapes must read tiny. Right now they are re-used paper dolls. Make each one unmistakable:
+   clod (friendly AI pair programmer, a smiling clay blob with a sparkle), chad (bro CEO, vest, shades pushed up, huge grin), dave (tired senior dev, glasses, stubble, mug), jenny (anxious intern, huge eyes, lanyard), automod (robot with a green visor), announcer (game show host, headset mic, shiny jacket), narrator (nature documentary, khaki hat, binoculars), vc (fleece vest, shades, dollar tie), karen (angry bob haircut, phone), bro (backwards cap, shades, rocket pin), pedant (glasses, raised finger, bow tie), doomer (pale, hood, gloom cloud), linkedin (suit, perfect smile, open to work badge), arch (hoodie, beard, blue A logo), ghost (a ghost with a tiny stack of orange bars), duck (rubber duck), hacker (hood, green glasses, glow), wholesome (halo, heart, huge smile), grandma (bun, glasses, cardigan), kid (cap, controller).
+5. **Room art.** `src/art/sprites/rooms.ts` and `src/game/roomSpecs.ts` describe four office tiers: garage, shared office, loft, tower. Polish all four so each has a clear identity and the step up feels like an upgrade (garage door and oil stain, cubicle carpet and printer, exposed brick and neon, glass tower with a skyline). Add wall decals, a door, and light spill from the windows. Do not change `RoomSpec` sizes or spots without checking `src/game/room.ts` still works.
+6. **Backdrop and FX.** A night city backdrop to sit behind the office room (reuse `scenery.ts`). Small effect sprites, 8x8 or less: confetti pieces, sparkle, steam, zzz, music note, sweat drop, anger vein, heart, coin, smoke puff, a lightbulb (the hot idea). Put them in a new `src/art/sprites/fx.ts` and add a catalog group.
+7. **Logo.** A pixel wordmark "VIBE CODING DEV STORY" in `src/art/sprites/logo.ts`, about 190x48, in the palette, chunky, with a little laptop or lightbulb. Export `logoPx()`.
+
+## Done means
+
+`missing.ts` prints nothing missing, every sprite has been looked at at zoom 1 and zoom 8, tsc and vitest pass, and `.100x/children/art.md` ends with a summary: what you drew, what you are least happy with, what to look at first.
