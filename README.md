@@ -49,6 +49,8 @@ Every extra sits behind one seam, so you can hand someone a plainer game. Add `?
 Jump to a screen for testing: `?demo=dev`, `hire`, `rich`, `late`, `event`, `card`, `ready`, `payday`, `funding`, `awards`, `thread`, `thread1`, `flop`, `ending`.
 Add `&seed=7&notut=1&paused=1` to freeze it and skip the tutorial, and `&debug=1` for `window.__drive` (list and click things from the console).
 
+Test links are silent on purpose: `?debug`, `?demo`, `?scene` and any browser driven by automation play everything inside the page and send nothing to the speakers, so a test run never makes noise in the room. Add `&sound=1` to a test link to hear it yourself (a browser driven by automation stays silent either way).
+
 ## How it is built
 
 ```

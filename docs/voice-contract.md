@@ -64,6 +64,9 @@ A voiced line is `{ voice, text, delivery? }`.
 
 - Nobody plays audio on this machine. No `afplay`, no `ffplay`, no `open x.mp3`,
   no browser with sound. Check voices with speech-to-text and numbers.
+  The game backs this up: test links (`?debug`, `?demo`, `?scene`) and any automated
+  browser send their sound to a silent output (`src/audio/quiet.ts`). Open a test link
+  with `&sound=1` only if a person is at the machine and wants to hear it.
 - The Python venv lives in `tools/tts/.venv` and is never committed.
 - Voice descriptions describe sound (age, pitch, pace, timbre, accent, mood),
   never a real person's name.

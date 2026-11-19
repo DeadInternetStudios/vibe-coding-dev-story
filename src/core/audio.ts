@@ -4,6 +4,7 @@
  * no manifest, a missing line: the game goes on and the text still shows.
  */
 import { SoundEngine, type MusicId, type SfxId, type SfxOpts } from '../audio';
+import { quietRun, silentSink } from '../audio/quiet';
 import type { VoiceLine } from '../content/vo';
 import { app } from './app';
 
@@ -51,6 +52,8 @@ class AudioHub {
   private buffers = new Map<string, AudioBuffer | null>();
   private active: { stop: () => void } | null = null;
   private unlocked = false;
+  /** a test run: everything plays inside the page and nothing reaches the speakers */
+  private quiet = false;
   private wantMusic: MusicId | null = null;
   private base = '';
 
@@ -61,9 +64,11 @@ class AudioHub {
       const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!Ctor) return;
       this.ctx = new Ctor({ latencyHint: 'interactive' });
-      this.engine = new SoundEngine(this.ctx, this.ctx.destination);
+      this.quiet = quietRun(location.search, navigator.webdriver === true);
+      const speakers = this.quiet ? silentSink(this.ctx) : this.ctx.destination;
+      this.engine = new SoundEngine(this.ctx, speakers);
       this.voiceGain = this.ctx.createGain();
-      this.voiceGain.connect(this.ctx.destination);
+      this.voiceGain.connect(speakers);
       this.base = import.meta.env.BASE_URL ?? '/';
       this.applySettings();
       document.addEventListener('visibilitychange', () => this.followTab());
@@ -85,8 +90,8 @@ class AudioHub {
   }
 
   /** For the test driver: what the sound system is doing right now. */
-  status(): { ctx: string; unlocked: boolean; music: MusicId | null } {
-    return { ctx: this.ctx?.state ?? 'none', unlocked: this.unlocked, music: this.engine?.currentMusic() ?? null };
+  status(): { ctx: string; unlocked: boolean; quiet: boolean; music: MusicId | null } {
+    return { ctx: this.ctx?.state ?? 'none', unlocked: this.unlocked, quiet: this.quiet, music: this.engine?.currentMusic() ?? null };
   }
 
   /** A hidden tab goes quiet and picks up where it left off: the music is not left looping behind another page. */
