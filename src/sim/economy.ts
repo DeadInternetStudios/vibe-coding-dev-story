@@ -118,8 +118,8 @@ export function isBankrupt(ctx: Ctx): boolean {
 export function fundingOffers(ctx: Ctx): { id: string; label: string; cash: number; blurb: string }[] {
   const v = valuation(ctx);
   return [
-    { id: 'vc', label: 'Take the VC money', cash: Math.round(v * 0.3), blurb: 'Big check. They own 20% of how this ends. They say "10x" when they greet you.' },
-    { id: 'angel', label: 'Take the angel check', cash: Math.round(v * 0.1), blurb: 'A friendly dentist. He owns 5% and wants his name on the logo.' },
+    { id: 'vc', label: 'Take the VC money', cash: Math.round(v * 0.3), blurb: `Big check. They own ${Math.round(DILUTION.vc * 100)}% of how this ends. They say "10x" when they greet you.` },
+    { id: 'angel', label: 'Take the angel check', cash: Math.round(v * 0.1), blurb: `A friendly dentist. He owns ${Math.round(DILUTION.angel * 100)}% and wants his name on the logo.` },
     { id: 'decline', label: 'Stay scrappy', cash: 0, blurb: 'Keep every share. Keep the ramen.' },
   ];
 }
@@ -153,8 +153,8 @@ export function finalScore(ctx: Ctx): number {
 }
 
 /**
- * Cut points set from bot runs (24 seeds, normal): the careful bot lands near 43M, a casual one and a
- * reckless one near 36M, a button masher under 1M. S needs a better run than any bot's median.
+ * Cut points set from bot runs (48 seeds, normal): the careful bot lands near 40M, a casual one near 37M, a
+ * reckless one near 30M, a button masher under 1M. S needs a better run than any bot's median.
  */
 export const RANK_CUTS: readonly { rank: EndingResult['rank']; min: number }[] = [
   { rank: 'S', min: 46_000_000 },

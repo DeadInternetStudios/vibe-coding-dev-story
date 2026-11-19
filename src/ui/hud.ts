@@ -241,7 +241,7 @@ export class Hud {
     this.project.add(this.progressBar);
     // quality and the crunch switch sit on the right, clear of the stat grid
     const rx = x + w - 6;
-    this.qualityText = label(s, rx, y + 3, 'Q 0', { font: F.read, tint: C.mint, origin: [1, 0] });
+    this.qualityText = label(s, rx, y + 3, 'QUAL 0', { font: F.read, tint: C.mint, origin: [1, 0] });
     this.project.add(this.qualityText);
     this.crunchBtn = button(s, rx - 44, pipY - 1, 44, 13, 'CRUNCH', () => this.onCrunch(), { kind: this.session.s.company.crunch ? 'berry' : 'plum', font: F.body });
     this.project.add(this.crunchBtn);
@@ -347,7 +347,7 @@ export class Hud {
       const t = this.statVals.get(k);
       if (t) this.setText(`st${k}`, t, `${view.stats[k]}`);
     }
-    if (this.qualityText) this.setText('q', this.qualityText, `Q ${view.quality}`);
+    if (this.qualityText) this.setText('q', this.qualityText, `QUAL ${view.quality}`);
     this.hypeBar?.set(Math.min(1, p.hype / 100), true);
     if (this.hypeVal) this.setText('hype', this.hypeVal, `${Math.round(p.hype)}`);
     const crunch = this.session.s.company.crunch;

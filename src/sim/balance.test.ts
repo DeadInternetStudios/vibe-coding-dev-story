@@ -26,7 +26,7 @@ describe('balance on the shipped content', () => {
     const casual = mean(play('casual').map((r) => r.score));
     const yolo = mean(play('yolo').map((r) => r.score));
     expect(smart).toBeGreaterThan(casual * 1.05);
-    expect(smart).toBeGreaterThan(yolo * 1.05);
+    expect(smart).toBeGreaterThan(yolo * 1.15);
   }, TIMEOUT);
 
   it('does not let reckless play win the top rank', () => {

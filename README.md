@@ -85,9 +85,9 @@ Every clip is checked by machine, speech to text and loudness, and none of that 
 ## Balance
 
 The bots in `src/sim/bot.ts` are the acceptance test for the money. `npx tsx tools/balance.ts 48 normal smart,casual,yolo` plays whole
-three year games: the careful bot finishes ahead of the casual one, which finishes ahead of the reckless one that spams weekend hacks
-and Friday deploys (48 seeds, normal: 39.6M, 36.7M and 36.0M), and on Ramen the reckless one sometimes goes bankrupt. Bots that only mash buttons or do nothing go
-bankrupt in most runs, usually inside the first year.
+three year games: the careful bot finishes ahead of the casual one, which finishes ahead of the reckless one that spams weekend hacks,
+Friday deploys and VC money (48 seeds, normal: 39.6M, 36.7M and 30.0M; Ramen: 34.7M, 29.8M and 23.8M), and on Ramen the reckless one sometimes goes bankrupt.
+Bots that only mash buttons or do nothing go bankrupt in most runs, usually inside the first year. `src/sim/balance.test.ts` fails if that order ever flips.
 
 ## Credits, licence, privacy
 

@@ -339,12 +339,13 @@ export class ThreadScene extends Phaser.Scene {
   private async play(): Promise<void> {
     const sctx: StageCtx = { scene: this, session: current(), hold: () => () => undefined };
     await this.addOp();
+    let narrated = false;
     if (!this.instant && !this.replay) {
-      await new Promise<void>((res) => {
-        if (!beat(sctx, 'thread', res)) res();
+      narrated = await new Promise<boolean>((res) => {
+        if (!beat(sctx, 'thread', () => res(true))) res(false);
       });
     }
-    await this.wait(400);
+    await this.wait(narrated ? 400 : 120);
     const groups = this.items();
     for (const group of groups) {
       let card: Card | null = null;
@@ -470,11 +471,11 @@ export class ThreadScene extends Phaser.Scene {
     card.setAlpha(0);
     [badge, head, meta, title, body, up, votes, down, foot].forEach((o) => o.setAlpha(0));
     this.tweens.add({ targets: [card, badge, head, meta, title, body, up, votes, down, foot], alpha: 1, duration: 260 });
-    await this.wait(500);
+    // the first reply's outline is up with the post, so the page is never a post over an empty void
+    this.buildGhosts();
+    await this.wait(320);
     this.tickNumber(votes, rec.thread.opVotes, 1100, true);
     this.bumpKarma(rec.thread.opVotes);
-    this.buildGhosts();
-    await this.wait(350);
   }
 
   /* -------------------------------------------------------------- stage */

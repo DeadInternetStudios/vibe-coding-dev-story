@@ -124,7 +124,7 @@ export const SPEEDS = [1, 2, 4, 8] as const;
 export const FRIDAY = { hype: 6, incidentHype: 8, incidentCost: 4000, incidentMood: 7, incidentRevenue: 0.6 } as const;
 
 /** Each round of outside money takes this share of the final score. The check is bigger than the bite, early. */
-export const DILUTION = { vc: 0.2, angel: 0.05 } as const;
+export const DILUTION = { vc: 0.25, angel: 0.05 } as const;
 
 /** Chance per working day that an event fires. */
 export const EVENT_CHANCE = { dev: 0.07, month: 0.7, launch: 0.4, rare: 0.012 };
