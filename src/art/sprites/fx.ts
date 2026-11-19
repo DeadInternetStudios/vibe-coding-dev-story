@@ -15,7 +15,7 @@ import { art } from './draw';
 const SOLID: Record<string, readonly string[]> = {
   // a heart that is allowed to be a little round
   heart: ['.p.r.', 'pprrr', 'rrrrR', '.rrR.', '..R..'],
-  // a coin in three turns of its spin: face on, three quarters, edge on
+  // a coin in three turns of its spin: face on, three quarters, edge on (flip the middle one for the way back)
   coin: ['.OYYO.', 'OyYYYo', 'OyYoYo', 'OYYoYo', 'oYYYYo', '.oooo.'],
   coinTurn: ['.OY.', 'OyYo', 'OyYo', 'OYYo', 'oYYo', '.oo.'],
   coinEdge: ['Oo', 'Yo', 'Yo', 'Yo', 'Yo', 'oo'],
