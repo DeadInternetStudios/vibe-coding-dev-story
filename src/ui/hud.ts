@@ -6,7 +6,7 @@ import { dateLabel, money, shortMoney } from '../sim/format';
 import { projectView } from '../sim/views';
 import type { Session } from '../game/session';
 import { hasIcon } from '../art/sprites/icons';
-import { bar, button, iconImg, label, panel, rect, type BarObj, type ButtonObj } from './kit';
+import { bar, button, fit, iconImg, label, panel, rect, type BarObj, type ButtonObj } from './kit';
 import type { Layout } from './layout';
 
 export type MenuId = 'hire' | 'team' | 'shop' | 'tools' | 'room' | 'menu' | 'apps' | 'project' | 'launch';
@@ -216,9 +216,9 @@ export class Hud {
     const art = hasIcon(`kind_${p.kind}`);
     if (art) this.project.add(iconImg(s, `kind_${p.kind}`, x + 5, y + 3));
     const nx = x + (art ? 20 : 6);
-    this.project.add(label(s, nx, y + 3, p.name.length > 22 ? `${p.name.slice(0, 21)}~` : p.name, { font: F.caps, tint: C.yellow }));
+    this.project.add(label(s, nx, y + 3, fit(p.name, 22), { font: F.caps, tint: C.yellow }));
     const sub = `${kind.name} / ${niche.plural}`;
-    this.project.add(label(s, nx, y + 12, sub.length > 38 ? `${sub.slice(0, 37)}~` : sub, { font: F.body, tint: C.ink4 }));
+    this.project.add(label(s, nx, y + 12, fit(sub, 38), { font: F.body, tint: C.ink4 }));
     if (p.status !== 'dev') {
       const b = button(s, x + 6, y + h - 22, Math.min(150, w - 12), 18, p.status === 'ready' ? 'LAUNCH IT' : 'WAITING FOR MONDAY', () => this.onMenu('launch'), { kind: p.status === 'ready' ? 'orange' : 'plum', icon: 'ship', disabled: p.status !== 'ready' });
       this.project.add(b);

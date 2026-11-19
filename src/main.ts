@@ -7,6 +7,7 @@ import '@fontsource/tiny5/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
 import { computeViewport } from './core/viewport';
 import { crispBitmapText } from './core/crispText';
+import { feature } from './core/features';
 import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { NewGameScene } from './scenes/NewGameScene';
@@ -84,6 +85,6 @@ if (import.meta.env.DEV || location.search.includes('debug')) installDriver(game
 // offline play after the first visit; only in the built game. A dev server must always show the newest code,
 // so it also lets go of a worker an earlier build left on the same address
 if ('serviceWorker' in navigator) {
-  if (import.meta.env.PROD) window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));
+  if (import.meta.env.PROD && feature('install')) window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => undefined));
   else void navigator.serviceWorker.getRegistrations().then((list) => list.forEach((r) => void r.unregister()));
 }

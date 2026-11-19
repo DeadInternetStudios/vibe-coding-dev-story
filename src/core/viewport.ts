@@ -25,6 +25,13 @@ export interface Viewport {
 const TARGET_LANDSCAPE_H = 232;
 const TARGET_PORTRAIT_W = 252;
 const PREF_STEP = 40;
+/**
+ * The office needs this much room to show everything. Landscape: the room plus a log and a chart of 72 or more on each side.
+ * Portrait: the room, the project card and the menus, with space above the room for the log and the chart. A tablet or a
+ * squarish window gets a smaller scale (more art pixels) so those panels fit, unless the player asked for a bigger UI.
+ */
+const NEED_LANDSCAPE_W = 380;
+const NEED_PORTRAIT_H = 440;
 
 export function computeViewport(cssW: number, cssH: number, dprRaw: number, pref: UiSizePref = 0): Viewport {
   const dpr = Math.min(4, Math.max(1, dprRaw || 1));
@@ -33,9 +40,13 @@ export function computeViewport(cssW: number, cssH: number, dprRaw: number, pref
   const portrait = cssH > cssW * 1.02;
   // pref -1 is a smaller UI (more logical pixels), +1 a bigger one
   const shift = -pref * PREF_STEP;
-  const scale = portrait
-    ? Math.max(1, Math.floor(devW / (TARGET_PORTRAIT_W + shift * 0.9)))
-    : Math.max(1, Math.floor(devH / (TARGET_LANDSCAPE_H + shift)));
+  const roomy = pref <= 0;
+  const scale = Math.max(
+    1,
+    portrait
+      ? Math.min(Math.floor(devW / (TARGET_PORTRAIT_W + shift * 0.9)), roomy ? Math.floor(devH / NEED_PORTRAIT_H) : Infinity)
+      : Math.min(Math.floor(devH / (TARGET_LANDSCAPE_H + shift)), roomy ? Math.floor(devW / NEED_LANDSCAPE_W) : Infinity),
+  );
   const w = Math.ceil(devW / scale);
   const h = Math.ceil(devH / scale);
   return { w, h, scale, dpr, cssPerPx: scale / dpr, portrait };

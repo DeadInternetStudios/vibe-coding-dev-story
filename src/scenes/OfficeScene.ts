@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
 import { audio } from '../core/audio';
+import { feature } from '../core/features';
 import { writeSave } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
 import { Room } from '../game/room';
@@ -218,7 +219,7 @@ export class OfficeScene extends Phaser.Scene {
   /** Desktop shortcuts. They stay quiet while a story box or a popup owns the screen. */
   private installKeys(): void {
     const kb = this.input.keyboard;
-    if (!kb) return;
+    if (!kb || !feature('keys')) return;
     const free = () => this.introDone && !this.launching && !this.promptOpen && !this.beatOpen && !this.children.getByName('dialogue');
     const on = (key: string, fn: () => void, whileMenu = false) =>
       kb.on(`keydown-${key}`, () => {
@@ -499,6 +500,9 @@ export class OfficeScene extends Phaser.Scene {
           { kind: 'warn', head: 'warn', text: 'runway is finite. optimism is not' },
         ]
       : [
+          // a company that has been around has a past: the log fills a tall terminal instead of leaving it empty at the top
+          { kind: 'cmd', head: '$', text: 'git log --oneline' },
+          ...Array.from({ length: 9 }, (): TermLine => ({ kind: 'commit', head: hash7(), text: this.nextCommit() })),
           { kind: 'cmd', head: '$', text: 'cd ~/garage' },
           { kind: 'cmd', head: '$', text: 'git pull' },
           { kind: 'warn', head: 'warn', text: 'merge conflict. nobody knows why' },

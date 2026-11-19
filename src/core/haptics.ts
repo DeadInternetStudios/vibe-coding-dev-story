@@ -1,4 +1,5 @@
 import { app } from './app';
+import { feature } from './features';
 
 /**
  * A short buzz on phones that can do it (Android browsers; iPhones ignore the call).
@@ -6,7 +7,7 @@ import { app } from './app';
  */
 export function buzz(pattern: number | readonly number[]): void {
   const s = app.settings;
-  if (!s.shake || s.reducedMotion || s.muted) return;
+  if (!feature('buzz') || !s.shake || s.reducedMotion || s.muted) return;
   try {
     navigator.vibrate?.(typeof pattern === 'number' ? pattern : [...pattern]);
   } catch {

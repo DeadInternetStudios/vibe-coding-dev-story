@@ -3,6 +3,8 @@ import { app, current } from '../core/app';
 import { audio } from '../core/audio';
 import { C, DEPTH, F } from '../core/theme';
 import { clearSave, pushHall, type HallEntry } from '../core/save';
+import { copyText, shareText } from '../core/share';
+import { feature } from '../core/features';
 import { openShare } from '../features/share/modal';
 import { dateLabel, shortMoney, shortNumber } from '../sim/format';
 import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
@@ -270,7 +272,11 @@ export class EndingScene extends Phaser.Scene {
       openHall(this);
     }, { kind: 'violet', icon: roomy ? 'trophy' : undefined });
     const share: ButtonObj = button(this, at(2), by, bw, 18, 'SHARE', () => {
-      openShare(this, s, ending?.title);
+      if (feature('share')) {
+        openShare(this, s, ending?.title);
+        return;
+      }
+      void copyText(shareText(s, ending?.title, `${location.origin}${location.pathname}`)).then((ok) => share.setText(ok ? 'COPIED' : 'SHARE'));
     }, { kind: 'teal', icon: roomy ? 'ship' : undefined });
     const home = button(this, at(3), by, bw, 18, 'TITLE', () => {
       audio.music(null, { fadeMs: 300 });

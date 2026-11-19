@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { bakePortrait } from '../core/bake';
 import { audio } from '../core/audio';
+import { feature } from '../core/features';
 import { C, DEPTH, F } from '../core/theme';
 import type { DialogueStep } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
@@ -94,7 +95,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     advance();
   });
   // desktop: space and enter turn the page, escape skips the whole scene when that is allowed
-  const kb = scene.input.keyboard;
+  const kb = feature('keys') ? scene.input.keyboard : null;
   const onAdvance = () => !closed && advance();
   const onSkip = () => !closed && skip && close();
   kb?.on('keydown-SPACE', onAdvance);

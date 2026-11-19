@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { app, current } from '../core/app';
 import { audio } from '../core/audio';
+import { feature } from '../core/features';
 import { bakeIcon, bakePortrait } from '../core/bake';
 import { C, DEPTH, F } from '../core/theme';
 import type { AwardId, StatKey, ThreadComment } from '../content/types';
@@ -152,9 +153,11 @@ export class ThreadScene extends Phaser.Scene {
       if (p.y > L.H - 16 && p.x > L.W - 52) return;
       this.tapped();
     });
-    this.input.keyboard?.on('keydown-SPACE', () => this.tapped());
-    this.input.keyboard?.on('keydown-ENTER', () => this.tapped());
-    this.input.keyboard?.on('keydown-ESC', () => this.skipAll());
+    if (feature('keys')) {
+      this.input.keyboard?.on('keydown-SPACE', () => this.tapped());
+      this.input.keyboard?.on('keydown-ENTER', () => this.tapped());
+      this.input.keyboard?.on('keydown-ESC', () => this.skipAll());
+    }
     this.scale.on('resize', this.onResize, this);
     this.events.once('shutdown', () => {
       this.alive = false;

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { C, DEPTH, F, T } from '../core/theme';
 import { app } from '../core/app';
+import { feature } from '../core/features';
 import { button, label, panel, rect, uiEvents, type PanelObj } from './kit';
 import { layoutOf } from './layout';
 import type { BoxName } from '../art/sprites/ui';
@@ -111,7 +112,7 @@ export class Modal {
   /** Run `fn` when this key goes down while the modal is open. The key is let go when the modal closes. Names are Phaser's: 'ENTER', 'SPACE', 'ONE'. */
   key(name: string, fn: () => void): void {
     const kb = this.scene.input.keyboard;
-    if (!kb) return;
+    if (!kb || !feature('keys')) return;
     const event = `keydown-${name}`;
     const handler = () => {
       if (!this.closed) fn();
