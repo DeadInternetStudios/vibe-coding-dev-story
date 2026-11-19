@@ -81,12 +81,15 @@ export class TitleScene extends Phaser.Scene {
       y += bh + 5;
       return btn;
     };
-    add('NEW GAME', 'orange', () => fadeTo(this, 'NewGame'), 'ship');
+    // one main button: a returning player's is CONTINUE, a new player's is NEW GAME
     if (save) {
       const month = Math.floor(save.day / 28) + 1;
-      add('CONTINUE', 'teal', () => this.continueGame(), 'play');
+      add('CONTINUE', 'orange', () => this.continueGame(), 'play');
       label(this, L.cx, y - 3, `${save.company.name}  -  month ${month}`, { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
       y += 9;
+      add('NEW GAME', 'teal', () => fadeTo(this, 'NewGame'), 'ship');
+    } else {
+      add('NEW GAME', 'orange', () => fadeTo(this, 'NewGame'), 'ship');
     }
     add('HALL OF FAME', 'cream', () => openHall(this), 'trophy');
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
