@@ -7,6 +7,7 @@ import { bar, button, iconImg, label, panel } from '../kit';
 import { fadeTo, layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { tabs } from './common';
+import { buildingRows } from './roomLayout';
 import type { UiCtx } from '../ctx';
 
 /** The office itself: the building, the code, and the things you have shipped. */
@@ -36,19 +37,22 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
     const cur = OFFICE_TIERS[s.company.officeTier]!;
     const next = OFFICE_TIERS[s.company.officeTier + 1];
     const iw = w - 12;
-    content.add(panel(scene, 6, 38, iw, 42, 'paperDim', false));
-    content.add(iconImg(scene, 'office', 11, 43, 2));
-    content.add(label(scene, 32, 42, cur.name.toUpperCase(), { font: F.caps, tint: C.ink1 }));
-    content.add(label(scene, 32, 52, cur.blurb, { font: F.body, tint: C.ink3, maxWidth: iw - 34 }));
-    content.add(label(scene, 32, 68, `${s.staff.length} of ${cur.desks} desks   Rent ${money(cur.rent)}/mo`, { font: F.body, tint: C.ink2 }));
+    const R = buildingRows(h);
+    // inside a panel: text rows sit a little closer on a short card
+    const dy = (roomy: number, tight: number) => (R.tight ? tight : roomy);
+    content.add(panel(scene, 6, R.curY, iw, R.panelH, 'paperDim', false));
+    content.add(iconImg(scene, 'office', 11, R.curY + dy(5, 4), 2));
+    content.add(label(scene, 32, R.curY + dy(4, 3), cur.name.toUpperCase(), { font: F.caps, tint: C.ink1 }));
+    content.add(label(scene, 32, R.curY + dy(14, 12), cur.blurb, { font: F.body, tint: C.ink3, maxWidth: iw - 34 }));
+    content.add(label(scene, 32, R.curY + dy(30, 21), `${s.staff.length} of ${cur.desks} desks   Rent ${money(cur.rent)}/mo`, { font: F.body, tint: C.ink2 }));
 
     if (next) {
-      const y = 84;
-      content.add(panel(scene, 6, y, iw, 42, 'chipLight', false));
-      content.add(label(scene, 11, y + 4, `NEXT: ${next.name.toUpperCase()}`, { font: F.caps, tint: C.orange1 }));
-      content.add(label(scene, 11, y + 14, next.blurb, { font: F.body, tint: C.ink3, maxWidth: iw - 90 }));
-      content.add(label(scene, 11, y + 30, `${next.desks} desks   Rent ${money(next.rent)}/mo`, { font: F.body, tint: C.ink2 }));
-      content.add(button(scene, 6 + iw - 76, y + 20, 72, 18, `MOVE ${shortMoney(next.upgrade)}`, () => {
+      const y = R.nextY;
+      content.add(panel(scene, 6, y, iw, R.panelH, 'chipLight', false));
+      content.add(label(scene, 11, y + dy(4, 3), `NEXT: ${next.name.toUpperCase()}`, { font: F.caps, tint: C.orange1 }));
+      content.add(label(scene, 11, y + dy(14, 12), next.blurb, { font: F.body, tint: C.ink3, maxWidth: iw - 90 }));
+      content.add(label(scene, 11, y + dy(30, 21), `${next.desks} desks   Rent ${money(next.rent)}/mo`, { font: F.body, tint: C.ink2 }));
+      content.add(button(scene, 6 + iw - 76, y + dy(20, 7), 72, 18, `MOVE ${shortMoney(next.upgrade)}`, () => {
         const err = game.upgradeOffice();
         if (err) {
           ctx.toast(err, 'bad');
@@ -63,35 +67,35 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
         m.close();
       }, { kind: 'orange', disabled: s.company.cash < next.upgrade }));
     } else {
-      content.add(label(scene, 6 + iw / 2, 96, 'This is the top floor. There is nowhere left to go but down.', { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: iw - 10, align: 'center' }));
+      content.add(label(scene, 6 + iw / 2, R.nextY + 12, 'This is the top floor. There is nowhere left to go but down.', { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: iw - 10, align: 'center' }));
     }
 
     // health
-    const hy = 132;
+    const hy = R.healthY;
     content.add(label(scene, 6, hy, 'SPAGHETTI', { font: F.caps, tint: C.ink3 }));
     content.add(bar(scene, 64, hy + 1, iw - 62, 6, C.orange2, s.company.spaghetti / 100));
     const mood = s.staff.length ? s.staff.reduce((n, x) => n + x.mood, 0) / s.staff.length : 0;
-    content.add(label(scene, 6, hy + 12, 'TEAM MOOD', { font: F.caps, tint: C.ink3 }));
-    content.add(bar(scene, 64, hy + 13, iw - 62, 6, mood > 60 ? C.green2 : mood > 30 ? C.yellow : C.pink, mood / 100));
+    content.add(label(scene, 6, hy + dy(12, 11), 'TEAM MOOD', { font: F.caps, tint: C.ink3 }));
+    content.add(bar(scene, 64, hy + dy(13, 12), iw - 62, 6, mood > 60 ? C.green2 : mood > 30 ? C.yellow : C.pink, mood / 100));
 
     // actions
-    const ay = hy + 26;
+    const ay = R.actionsY;
     const hw = Math.floor((iw - 3) / 2);
-    content.add(button(scene, 6, ay, hw, 18, s.company.crunch ? 'CRUNCH: ON' : 'CRUNCH: OFF', () => {
+    content.add(button(scene, 6, ay, hw, R.actionH, s.company.crunch ? 'CRUNCH: ON' : 'CRUNCH: OFF', () => {
       game.setCrunch(!s.company.crunch);
       ctx.refresh();
       redraw();
     }, { kind: s.company.crunch ? 'berry' : 'plum' }));
-    content.add(button(scene, 6 + hw + 3, ay, hw, 18, 'REFACTOR WEEK', () => {
+    content.add(button(scene, 6 + hw + 3, ay, hw, R.actionH, 'REFACTOR WEEK', () => {
       game.refactorSprint();
       ctx.sfx('fix');
       ctx.refresh();
       redraw();
     }, { kind: 'teal' }));
-    content.add(label(scene, 6, ay + 22, 'Crunch: faster, grumpier. Refactor: cleaner code, five lost days.', { font: F.body, tint: C.ink3, maxWidth: iw }));
+    content.add(label(scene, 6, R.hintY, 'Crunch: faster, grumpier. Refactor: cleaner code, five lost days.', { font: F.body, tint: C.ink3, maxWidth: iw }));
 
     // the floor plan: one cell for each desk, a person where somebody sits
-    const fy = ay + 40;
+    const fy = R.floorY;
     const free = Math.max(0, cur.desks - s.staff.length);
     content.add(label(scene, 6, fy, 'THE FLOOR', { font: F.caps, tint: C.ink3 }));
     content.add(label(scene, 6 + iw, fy, free ? `${free} free ${free === 1 ? 'desk' : 'desks'}` : 'every desk taken', { font: F.body, tint: free ? C.green1 : C.ink3, origin: [1, 0] }));
@@ -99,10 +103,10 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
     const cols = Math.max(1, Math.floor(iw / cell));
     for (let i = 0; i < cur.desks; i++) {
       const cx = 6 + (i % cols) * cell;
-      const cy = fy + 12 + Math.floor(i / cols) * 28;
+      const cy = R.cellsY + Math.floor(i / cols) * R.cellStep;
       const who = s.staff[i];
-      content.add(panel(scene, cx, cy, cell - 2, 26, who ? 'chipLight' : 'paperDim', false));
-      if (who) content.add(scene.add.image(cx + (cell - 2) / 2, cy + 25, bakePerson(scene, who.look, 'stand', who.mood > 60 ? 'happy' : who.mood > 30 ? 'normal' : 'sad')).setOrigin(0.5, 1));
+      content.add(panel(scene, cx, cy, cell - 2, R.cellH, who ? 'chipLight' : 'paperDim', false));
+      if (who) content.add(scene.add.image(cx + (cell - 2) / 2, cy + R.cellH - 1, bakePerson(scene, who.look, 'stand', who.mood > 60 ? 'happy' : who.mood > 30 ? 'normal' : 'sad')).setOrigin(0.5, 1));
       else content.add(iconImg(scene, 'plus', cx + 6, cy + 9).setAlpha(0.35));
     }
   }

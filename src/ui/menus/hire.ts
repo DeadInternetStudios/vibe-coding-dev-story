@@ -9,6 +9,7 @@ import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
+import { HIRE_TOP, HIRE_WIDE_FOOT, hireLayout } from './hireLayout';
 
 /** The job board. Six hopefuls, each with a voice and a salary that sounds fine until the first payday. */
 export function openHire(ctx: UiCtx, onClose: () => void): Modal {
@@ -18,25 +19,29 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
   const s = ctx.session.s;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const rowH = wide ? 29 : 42;
   const rows = Math.max(1, s.candidates.length);
-  const h = popupH(L, 44 + rows * (rowH + 2) + 32);
+  const { rowH, h } = hireLayout(popupH(L, 1e4), rows, wide);
   const m = new Modal(scene, { w, h, title: 'JOB BOARD', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'hire');
 
   const deskLabel = label(scene, w - 24, 6, '', { font: F.caps, tint: C.cream, origin: [1, 0] });
   m.add(deskLabel);
+  // the cash is always in view and always current: beside the title on a wide card, under the rows on a narrow one
+  const cashLabel = wide ? label(scene, 8, 6, '', { font: F.caps, tint: C.mint }) : label(scene, 8, h - 11, '', { font: F.body, tint: C.ink3 });
+  m.add(cashLabel);
   const paintDesks = () => {
     const f = game.freeDesks();
     // a phone's job board has no room beside the title for the long form
     deskLabel.setText(wide ? (f > 0 ? `${f} FREE DESK${f === 1 ? '' : 'S'}` : 'NO FREE DESK') : f > 0 ? `${f} DESK${f === 1 ? '' : 'S'}` : 'NO DESKS');
     deskLabel.setTint(f > 0 ? C.mint : C.pink);
+    cashLabel.setText(wide ? `CASH ${money(s.company.cash)}` : `Cash ${money(s.company.cash)}. New applicants every month.`);
   };
   paintDesks();
 
-  const subtitle = label(scene, 8, h - 28, 'Tap a face to hear them out.', { font: F.read, tint: C.ink2, maxWidth: w - 16 });
+  // a wide card has one line under the rows, so it carries the "how it works" too
+  const hint = wide ? 'Tap a face to hear them out. New applicants every month.' : 'Tap a face to hear them out.';
+  const subtitle = label(scene, 8, wide ? h - HIRE_WIDE_FOOT + 2 : h - 28, hint, { font: F.read, tint: C.ink2, maxWidth: w - 16 });
   m.add(subtitle);
-  m.add(label(scene, 8, h - 11, `Cash ${money(s.company.cash)}. New applicants every month.`, { font: F.body, tint: C.ink3 }));
 
   let speaking: string | null = null;
   const rowsUi: Phaser.GameObjects.Container[] = [];
@@ -55,7 +60,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
     }
     s.candidates.forEach((cand, i) => {
       const arch = ctx.content.archetype(cand.archetype);
-      const y = 22 + i * (rowH + 2);
+      const y = HIRE_TOP + i * (rowH + 2);
       const r = scene.add.container(6, y);
       r.add(panel(scene, 0, 0, w - 12, rowH, speaking === cand.id ? 'chipLight' : 'paperDim', false));
       r.add(rect(scene, 3, 3, 18, rowH - 6, C.sky, 1));
@@ -77,7 +82,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
       r.add(label(scene, 25, 13, arch.role, { font: F.body, tint: C.orange1 }));
       // skills
       const sx = wide ? 140 : 25;
-      const sy = wide ? 5 : 24;
+      const sy = wide ? 5 : 25;
       SKILL_KEYS.forEach((k, j) => {
         const x = sx + j * (wide ? 26 : 31);
         r.add(iconImg(scene, k, x, sy - 1));
@@ -85,11 +90,13 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
       });
       // traits
       const tx = wide ? 140 : 25;
-      const ty = wide ? 16 : 33;
+      const ty = wide ? 16 : 34;
       r.add(label(scene, tx, ty, cand.traits.map((id) => ctx.content.trait(id).name).join(', '), { font: F.body, tint: C.ink3, maxWidth: wide ? 150 : w - 90 }));
-      // price and button
+      // price and button; on a wide row the salary sits right under a short button, clear of the row's bottom edge
       const bw = wide ? 78 : 62;
-      const hb = button(scene, w - 12 - bw - 4, wide ? 4 : 7, bw, 16, `HIRE ${shortMoney(cand.fee)}`, () => {
+      const btnH = wide ? 14 : 16;
+      const btnY = wide ? (rowH >= 29 ? 4 : rowH >= 28 ? 3 : 2) : 7;
+      const hb = button(scene, w - 12 - bw - 4, btnY, bw, btnH, `HIRE ${shortMoney(cand.fee)}`, () => {
         const err = game.hire(cand.id);
         if (err) {
           ctx.toast(err, 'bad');
@@ -100,7 +107,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
         draw();
       }, { kind: 'orange', font: F.body, disabled: game.freeDesks() <= 0 });
       r.add(hb);
-      r.add(label(scene, w - 12 - bw / 2 - 4, wide ? 21 : 25, `${shortMoney(cand.salary)}/mo`, { font: F.body, tint: C.ink2, origin: [0.5, 0] }));
+      r.add(label(scene, w - 12 - bw / 2 - 4, wide ? btnY + btnH + 1 : 26, `${shortMoney(cand.salary)}/mo`, { font: F.body, tint: C.ink2, origin: [0.5, 0] }));
       m.add(r);
       rowsUi.push(r);
     });
