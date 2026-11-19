@@ -74,7 +74,7 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
   y += 20;
   // the save as one line of text: copy it here, paste it on another device
   const FOOT = 'tap anywhere outside to close';
-  const foot = label(scene, w / 2, h - 12, FOOT, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 8, align: 'center' });
+  const foot = label(scene, w / 2, h - 12, FOOT, { font: F.body, tint: C.ink2, origin: [0.5, 0], maxWidth: w - 8, align: 'center' });
   m.add(foot);
   const say = (text: string) => {
     foot.setText(text);

@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { bakePortrait } from '../core/bake';
+import { app } from '../core/app';
 import { audio } from '../core/audio';
 import { feature } from '../core/features';
 import { C, DEPTH, F } from '../core/theme';
 import type { DialogueStep } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
-import { hoverFrame, label, panel, rect } from './kit';
+import { hintChip, hoverFrame, label, panel, rect } from './kit';
 import { layoutOf } from './layout';
 import { tuckPopups } from './modal';
 import { Speech } from './speech';
@@ -48,9 +49,10 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: (skipped:
   root.add([faceFrame, faceBg, face]);
   const name = label(scene, x + 50, y + 6, '', { font: F.caps, tint: C.orange1 });
   const text = label(scene, x + 50, y + 17, '', { font: F.read, tint: C.ink1, maxWidth: w - 58 });
-  const hint = label(scene, x + w - 10, y + h - 14, 'tap', { font: F.body, tint: C.ink3, origin: [1, 0] });
+  // how to go on is a chip like SKIP is: bordered and full strength. It breathes a little, and sits still in calm mode.
+  const hint = hintChip(scene, x + w - 6, y + h - 16, 'TAP: NEXT', true);
   root.add([name, text, hint]);
-  scene.tweens.add({ targets: hint, alpha: { from: 1, to: 0.2 }, duration: 500, yoyo: true, repeat: -1 });
+  if (!app.settings.reducedMotion) scene.tweens.add({ targets: hint, alpha: { from: 1, to: 0.7 }, duration: 600, yoyo: true, repeat: -1 });
   let skip = false;
   const skipScene = () => close(true);
   if (opts.skippable !== false && steps.length > 1) {
@@ -91,6 +93,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: (skipped:
       return;
     }
     face.setTexture(bakePortrait(scene, step.speaker));
+    hint.setText(i < steps.length - 1 ? 'TAP: NEXT' : 'TAP: OK');
     name.setText(step.speaker === 'system' ? 'SYSTEM' : (VOICE_NAMES[step.speaker] ?? step.speaker).toUpperCase());
     text.setText('');
     const sp = new Speech(scene, text);

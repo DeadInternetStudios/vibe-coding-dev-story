@@ -10,7 +10,7 @@ import { shortMoney, shortNumber } from '../sim/format';
 import type { ShippedApp } from '../sim/types';
 import { confettiBurst, gild } from '../ui/fx';
 import { BUZZ, buzz } from '../core/haptics';
-import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
+import { button, hintChip, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fit } from '../ui/text';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
@@ -125,7 +125,7 @@ export class ThreadScene extends Phaser.Scene {
   private nudge: (() => void) | null = null;
   private slots: { text: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Image }[] = [];
   private skipBtn!: Phaser.GameObjects.Container;
-  private tapHint: Phaser.GameObjects.BitmapText | null = null;
+  private tapHint: Phaser.GameObjects.Container | null = null;
   private resultsOpen = false;
   private ratingsSum = 0;
   private opBox: { x: number; y: number; w: number; h: number } | null = null;
@@ -191,9 +191,7 @@ export class ThreadScene extends Phaser.Scene {
     if (this.stageH) this.buildStage(L);
     // tapping is the fast way through a thread, and nothing said so: a few seconds of hint, then it goes
     if (!this.instant && !this.replay) {
-      const hint = this.stageH
-        ? label(this, L.W - 5, L.H - this.stageH + 8, 'TAP: NEXT LINE', { font: F.body, tint: C.ink4, origin: [1, 0], depth: DEPTH.hud + 1 })
-        : label(this, 5, L.H - 11, 'TAP: NEXT LINE', { font: F.body, tint: C.ink4, outline: true, depth: DEPTH.panel + 3 });
+      const hint = this.stageH ? hintChip(this, L.W - 5, L.H - this.stageH + 5, 'TAP: NEXT LINE', true).setDepth(DEPTH.hud + 1) : hintChip(this, 5, L.H - 16, 'TAP: NEXT LINE').setDepth(DEPTH.panel + 3);
       this.tweens.add({ targets: hint, alpha: 0, delay: 9000, duration: 700 });
       this.tapHint = hint;
     }

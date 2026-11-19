@@ -228,6 +228,34 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   return c;
 }
 
+export interface HintChip extends Phaser.GameObjects.Container {
+  setText(text: string): void;
+}
+
+/**
+ * A small bordered chip with words in it: how to go on, as easy to find as the SKIP button is.
+ * `x` is its left edge, or its right edge when `fromRight` is set, and it stays there when the words change.
+ */
+export function hintChip(scene: Scene, x: number, y: number, text: string, fromRight = false): HintChip {
+  const c = scene.add.container(Math.round(x), Math.round(y)) as HintChip;
+  const word = label(scene, 5, 2, text, { font: F.caps, tint: C.ink1 });
+  const face = panel(scene, 0, 0, 10, 12, 'paperDim', false);
+  c.add([face, word]);
+  const edge = Math.round(x);
+  const fit = () => {
+    const bw = Math.ceil(word.width) + 10;
+    face.setBoxSize(bw, 12);
+    c.x = fromRight ? edge - bw : edge;
+    c.setSize(bw, 12);
+  };
+  c.setText = (t) => {
+    word.setText(t);
+    fit();
+  };
+  fit();
+  return c;
+}
+
 /** A state, not a button: the thing you already have, in the colour of a yes. It cannot be pressed, so it never looks like it can. */
 export function stateTag(scene: Scene, x: number, y: number, w: number, h: number, text: string, font: FontKey = F.caps): Phaser.GameObjects.Container {
   const c = scene.add.container(Math.round(x), Math.round(y));
