@@ -7,9 +7,8 @@ import { layoutOf } from '../layout';
 
 /** What a player is owed: who made the parts, what the game keeps about them, and that the jokes are jokes. */
 const ROWS: readonly (readonly [string, string])[] = [
-  ['MADE WITH', 'Phaser 4. The pixel art, music and sound effects were made for this game.'],
-  ['VOICES', 'Twenty characters, each invented from a text description by Qwen3-TTS 1.7B VoiceDesign and rendered offline.'],
-  ['FONTS', 'Silkscreen, Jersey, Tiny5 and VT323, under the SIL Open Font License.'],
+  ['MADE WITH', 'Phaser 4. The pixel art, music and sound effects were made for this game. Fonts: Silkscreen, Jersey, Tiny5 and VT323, under the SIL Open Font License.'],
+  ['AI VOICES', 'Twenty characters, each invented from a text description by Qwen3-TTS 1.7B VoiceDesign and rendered offline. A machine checked every clip. Sounds off? Turn AI VOICES down in Settings.'],
   ['PRIVACY', 'No accounts. No tracking. Your saves and scores stay in this browser, on this device.'],
   ['NOTE', 'A parody. Not affiliated with Reddit, Hacker News, Product Hunt, LinkedIn or anyone else named in a joke. Every post and person in here is made up.'],
 ];

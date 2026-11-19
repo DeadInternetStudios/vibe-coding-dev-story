@@ -26,7 +26,7 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
     ['MASTER', 'volMaster'],
     ['MUSIC', 'volMusic'],
     ['SOUND FX', 'volSfx'],
-    ['VOICES', 'volVoice'],
+    ['AI VOICES', 'volVoice'],
   ];
   for (const [name, key] of sliders) {
     m.add(label(scene, 10, y + 4, name, { font: F.caps, tint: C.ink1 }));
