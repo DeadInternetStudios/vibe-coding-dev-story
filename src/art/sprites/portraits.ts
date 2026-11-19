@@ -1,11 +1,17 @@
 /**
- * Faces for the voices. Each speaker gets one stable look so a voice is
- * recognizable on sight: the same hair, the same glasses, every time.
+ * Faces for the voices. Each speaker is drawn by hand as a 14 x 15 letter map
+ * (head and shoulders), then outlined to 16 x 17. One stable look per voice so
+ * a speaker is recognizable on sight, with one joke in every face.
+ *
+ * Rows use the shared icon legend (see `ICON_LEGEND` in `icons.ts`).
+ * Light comes from the top left, so left edges are light and right edges dark.
  */
 import { Px } from '../pixel';
-import { buildPerson, type Face, type Look } from './people';
+import type { Face, Look } from './people';
 import type { VoiceId } from '../../content/vo';
+import { art, stamp } from './draw';
 
+/** The old generated looks. Kept as the speaker's description for the tools and the baker. */
 export const PORTRAIT_LOOKS: Record<VoiceId, { look: Look; face: Face }> = {
   clod: { look: { skin: 4, hair: 7, hairColor: 6, outfit: 11, accessory: 1 }, face: 'happy' },
   chad: { look: { skin: 2, hair: 2, hairColor: 2, outfit: 1, accessory: 0 }, face: 'smug' },
@@ -29,8 +35,392 @@ export const PORTRAIT_LOOKS: Record<VoiceId, { look: Look; face: Face }> = {
   kid: { look: { skin: 2, hair: 6, hairColor: 4, outfit: 6, accessory: 0 }, face: 'happy' },
 };
 
+/** Letter maps, 14 wide x 15 tall, no outline. */
+const FACE_ART: Record<VoiceId, readonly string[]> = {
+  // a smiling clay blob with a sparkle
+  clod: [
+    '...........y..',
+    '...........y..',
+    '..........ywy.',
+    '...YYYYOO..y..',
+    '..YwYYYOOOOO..',
+    '.YYYYYYOOOOOO.',
+    '.YYYkYYOOkOOO.',
+    'YYYYkYYOOkOOOo',
+    'YYpYYYYOOOOpOo',
+    'YYYYkYYOOkOOOo',
+    'YYYYYkkkkOOOOo',
+    'YYYYYOOOOOOOoo',
+    'YYYYOOOOOOOooo',
+    'YYYOOOOOOOoooo',
+    'oooooooooooooo',
+  ],
+  // bro CEO: shades pushed up, huge grin, vest
+  chad: [
+    '....yyYYYY....',
+    '..yyYYYYYYOO..',
+    '..YxxxYYxxxO..',
+    '..YxexYYxexO..',
+    '..YSSSSSSSSO..',
+    '..SSSSSSSSSS..',
+    '..SSkSSSSkSS..',
+    '..SLSSSSSSLS..',
+    '...kwwwwwwk...',
+    '...SkwwwwkS...',
+    '....SkkkkS....',
+    '...wwSSSSww...',
+    '.BbbwwwwwwbbZ.',
+    'BBbbbwwwwbbbzz',
+    'BBbybwwwwbbbzz',
+  ],
+  // tired senior dev: bald, glasses, stubble, mug
+  dave: [
+    '..............',
+    '....CCCCCC....',
+    '..ACCCCCCCCA..',
+    '..ALLLLLLLLA..',
+    '..xxxxLLxxxx..',
+    '..xwwxxxxwwx..',
+    '..xwkxLLxkwx..',
+    '..xxxxLLxxxx..',
+    '...LSLLLLSL...',
+    '...SDSSSDSS...',
+    '....DkkkkD....',
+    '.....DDDD.....',
+    '..JJIJDDJIJJ..',
+    '.JJJIJJJJIJJJ.',
+    'JJJJIJJJJIJJJJ',
+  ],
+  // anxious intern: huge eyes, sweat drop, lanyard
+  jenny: [
+    '....hhhhhh....',
+    '..hhhhhhhhhh..',
+    '.hhnhhhhhhnhh.',
+    '.hhSSSSSSSShh.',
+    '.hSSSSSSSSSSh.',
+    '.hSwwwSSwwwSh.',
+    '.hSwkwSSwkwSh.',
+    '.hSwwwSSwwwSh.',
+    '..SSSSSSSSSSs.',
+    '...SSSkkSSS.B.',
+    '....SSkkSS....',
+    '...BBrSSrBB...',
+    '..BBBBrrBBBB..',
+    '.BBBBBwwBBBBb.',
+    'BBBBBBwDBBBBbb',
+  ],
+  // the moderator bot
+  automod: [
+    '......rr......',
+    '......aa......',
+    '..eeeeeeeeee..',
+    '..eAAAAAAAAa..',
+    '..exxxxxxxxa..',
+    '..exGGxxGGxa..',
+    '..exxxxxxxxa..',
+    '..eAAAAAAAAa..',
+    '..eAaAaAaAAa..',
+    '..eAAAAAAAAa..',
+    '...aaaaaaaa...',
+    '....xxxxxx....',
+    '..eAAAAAAAAa..',
+    '.eAAAAAAAAGAa.',
+    'eAAAAAAAAAAAAa',
+  ],
+  // game show host: headset mic, shiny jacket, bow tie
+  announcer: [
+    '....hhHHHH....',
+    '..AhhHHHHHHA..',
+    '..AHHHHHHHHA..',
+    '..ASSSSSSSSA..',
+    '.xxSSSSSSSSxx.',
+    '.xxSkSSSSkSxx.',
+    '.xxSSSSSSSSxx.',
+    '..xSSSSSSSSS..',
+    '...xSSSSSSS...',
+    '...xewwwwwk...',
+    '....SkkkkS....',
+    '...YYwrrwYY...',
+    '..yYYYwwYYOO..',
+    '.yYwYYYYYYwYO.',
+    'yYYYYYYYYYYYOO',
+  ],
+  // nature documentary: safari hat, moustache, binoculars
+  narrator: [
+    '....NNNNNN....',
+    '...qNNNNNNn...',
+    '...hhhhhhhh...',
+    '.qNNNNNNNNNNn.',
+    '..nDDDDDDDDn..',
+    '..SSkSSSSkSS..',
+    '..SSSSSSSSSS..',
+    '..SSSllllSSS..',
+    '...SSSkkSSS...',
+    '...SSSSSSSS...',
+    '....SSSSSS....',
+    '.....DDDD.....',
+    '..NNhNDDNhNN..',
+    '.NNxxxxxxxxNN.',
+    'NNNxexNNxexNNN',
+  ],
+  // venture capitalist: shades indoors, fleece vest, dollar tie
+  vc: [
+    '....iiiiii....',
+    '..iiiiiiiiii..',
+    '..iCCCCCCCCi..',
+    '..iCCCCCCCCi..',
+    '..CxxxxxxxxC..',
+    '..CxGxxxxGxC..',
+    '..CCCCCCCCCC..',
+    '..CLCCCCCCLC..',
+    '...CCCCCCCk...',
+    '...CCCkkkkC...',
+    '....CCCCCC....',
+    '...AAwwwwAA...',
+    '..AAAwgGwAAA..',
+    '.AAAAAgGAAAAa.',
+    'eAAAAAgGAAAAAa',
+  ],
+  // entitled customer: angry bob, phone, red cheeks
+  karen: [
+    '...YYYYYYYY...',
+    '..yyYYYYYYYY..',
+    '.yyYYYYYYYYYo.',
+    '.YYYYLLLLYYYo.',
+    '.YYYLLLLLLYYo.',
+    '.YYkLLLLLLkYo.',
+    '.YYLkLLLLkLYo.',
+    '.YYLrLLLLrLYo.',
+    '.YYLLkkkkLLYo.',
+    '.YYLLkrrkLLYo.',
+    '..YYLkkkkLYY..',
+    '....MLLLLM....',
+    '..MMMMLLMMMM..',
+    '.MMMMMMMMMMMJ.',
+    'MMMMMMMMMMMMJJ',
+  ],
+  // crypto and hustle bro: backwards cap, shades, rocket pin
+  bro: [
+    '....bbbbbb....',
+    '..BBBbbbbbbz..',
+    '..Bbbbbbbbbz..',
+    '..bbbbllbbbz..',
+    '..SSSSSSSSSS..',
+    '..xxxxxxxxxx..',
+    '..SexxSSexxS..',
+    '..SLSSSSSSLS..',
+    '...SSSSSSSk...',
+    '...SSSkkkkS...',
+    '....SSSSSS....',
+    '...TTSDDSTT...',
+    '..mTTTTTrTTt..',
+    '.mTTTTwTTTTTt.',
+    'mTTTyTTTTTTTtt',
+  ],
+  // well actually: glasses, smirk, bow tie, argyle vest, raised finger
+  pedant: [
+    '....hhhhhh....',
+    '..hhhhhhhhhh..',
+    '..hhhhhhhhhh..',
+    '..hCCCCCCCCh..',
+    '..CCCCCCCCCC..',
+    '..CxxxCCxxxC..',
+    '..CxwxCCxwxC..',
+    '..CxxxCCxxxC..',
+    '...CCCCCCCk...',
+    '...CCCkkkkC...',
+    '....CCCCCC....',
+    '...wrrRRrrw...',
+    '..vvwrwwrwvv..',
+    '.vvvVvvvvVvvv.',
+    'vvVvvvvvvvvVvv',
+  ],
+  // the AI will take our jobs: hood, gloom cloud
+  doomer: [
+    '....eee.eee...',
+    '..eeeeeeeeeee.',
+    '.eeeeAAAAAAAAa',
+    '..B..B..B..B..',
+    '...aaxxxxxx...',
+    '..aaxxxxxxxK..',
+    '..aCCCCCCCCx..',
+    '..aCkkCCkkCx..',
+    '..aCllCCllCx..',
+    '..aCCCCCCCCx..',
+    '..aCCCkkCCCx..',
+    '..aaCkCCkCxx..',
+    '.aaaalaalaaxx.',
+    'aaaaalaalaaxxx',
+    'aaaaajaajaaxxx',
+  ],
+  // thrilled and humbled: suit, perfect smile, open to work badge
+  linkedin: [
+    '....hhhhhh....',
+    '..hhhhhhhhhh..',
+    '..hhhhhhhhhh..',
+    '..hLLLLLLLLh..',
+    '..LLLLLLLLLL..',
+    '..LhhLLLLhhL..',
+    '..LLkLLLLkLL..',
+    '..LSLLLLLLSL..',
+    '...LLLLLLLL...',
+    '...kwwwwwwk...',
+    '....LkkkkL....',
+    '..zzwwDDwwzz..',
+    '.zzzzwBBwzzzz.',
+    'zzGgzzBBzzzzzz',
+    'zzzzzzBBzzzzzz',
+  ],
+  // i use arch btw: beard, hoodie, blue A
+  arch: [
+    '...hhhhhhhh...',
+    '..hnhhhhhhhh..',
+    '.hhhhhhhhhhhh.',
+    '.hhLLLLLLLLhh.',
+    '..hLLLLLLLLh..',
+    '..LLLLLLLLLL..',
+    '..LLkLLLLkLL..',
+    '..hLLLLLLLLh..',
+    '..hhLLLLLLhh..',
+    '..hhhkkkkhhh..',
+    '...hhHHHHhh...',
+    '....hhhhhh....',
+    '..iiiiBBiiii..',
+    '.iiiiBBBBiiiK.',
+    'iiiiBBiiBBiiKK',
+  ],
+  // the stack overflow ghost: a sheet and a tiny stack of orange bars
+  ghost: [
+    '..wwwwww......',
+    '.wwwwwwwe.....',
+    'wwwwwwwwee....',
+    'wwkkwwkkwe....',
+    'wwkkwwkkwe....',
+    'wwkkwwkkwe....',
+    'wwwwwwwwwe....',
+    'wwwwkkwwwe....',
+    'wwwwkkwwwe.YYY',
+    'wwwwwwwwwe.OOO',
+    'wwwwwwwwwe.ddd',
+    'wwwwwwwwwe.YYY',
+    'wwewwwwewe.OOO',
+    'wwwwwwwwwe.ddd',
+    'w.ww.ww.we.ooo',
+  ],
+  // rubber duck
+  duck: [
+    '.........sw...',
+    '....yyyyyy.s..',
+    '..yyyyyyyyyY..',
+    '.yyyyyyyyyyYY.',
+    '.yyykyyykyyYY.',
+    '.yyywyyywyyYY.',
+    '.yyOOOOOOOYY..',
+    '.yyOOOOOOOYY..',
+    '..yYoooooYYY..',
+    '..yyyYYYYYYY..',
+    '...yyyyyYYY...',
+    '..yyyyyyyYYY..',
+    '.yyyyyyyyyYYY.',
+    'BBsBBsBBBsBBBB',
+    'bBBbBBbBBBbbBb',
+  ],
+  // hooded hacker: green glasses, green glow
+  hacker: [
+    '...iiiiiiii...',
+    '..iiKKKKKKKK..',
+    '..iKKKKKKKKK..',
+    '..iKDDDDDDDK..',
+    '..iDDDDDDDDK..',
+    '..iDDDDDDDDK..',
+    '..iGGGDDGGGK..',
+    '..iGmGDDGmGK..',
+    '..iDDDDDDDDK..',
+    '..iDDDkkkkDK..',
+    '..iDDDDDDDDK..',
+    '..iiDgDDgDKK..',
+    '.iiKKGKKKKGKK.',
+    'iiKKKgKGKKKgKK',
+    'iKKgKKKKKgKKKK',
+  ],
+  // wholesome redditor: halo, huge smile, heart sweater
+  wholesome: [
+    '....yyyyyy....',
+    '...y......y...',
+    '....YYYYYY....',
+    '..............',
+    '...NNNNNNNN...',
+    '..NNNNNNNNNN..',
+    '..NSSSSSSSSN..',
+    '..SSkSSSSkSS..',
+    '..SpSSSSSSpS..',
+    '...kwwwwwwk...',
+    '....SkrrkS....',
+    '.....SSSS.....',
+    '..ccrrccrrcc..',
+    '.cccrrrrrrccc.',
+    'cccccrrrrccccc',
+  ],
+  // grandma discovers vibe coding: bun, glasses, cardigan, pearls
+  grandma: [
+    '.....WWWW.....',
+    '....WWWWWlpy..',
+    '..WWWWWWWWWl..',
+    '..WWWWWWWWWl..',
+    '..WCCCCCCCCl..',
+    '..WYYYCCYYYl..',
+    '..WYkYCCYkYl..',
+    '..WYYYCCYYYl..',
+    '..WCpCCCCpCl..',
+    '...CkCCCCkC...',
+    '....CkkkkC....',
+    '...ppwCCwpp...',
+    '..pppwpwpppp..',
+    '.pppppjjppppp.',
+    'ppppppjjpppppp',
+  ],
+  // ten year old game maker: cap, freckles, missing tooth, controller
+  kid: [
+    '....rrrrrr....',
+    '..pprrrrrrrr..',
+    '..prrrrrrrrR..',
+    '..prrrrrrrrR..',
+    '.RRRRRRRRRRRR.',
+    '..SSSSSSSSSS..',
+    '..LLkLLLLkLL..',
+    '..LDLLLLLLDL..',
+    '...LLDLLDLL...',
+    '...kwwkwwwk...',
+    '....LkkkkL....',
+    '...BBLLLLBB...',
+    '..BBBBBBBBBB..',
+    '.BBBBBBBBBBBb.',
+    'BBBBBBBBBBBBbb',
+  ],
+};
+
+/** Props that cannot be mirrored or read well in the base map: x, y, rows. */
+const OVERLAYS: Partial<Record<VoiceId, readonly (readonly [number, number, readonly string[]])[]>> = {
+  dave: [
+    [9, 12, ['hhhh.', 'wwwwe', 'wwwwe']],
+    [10, 10, ['.e.', 'e.e']],
+  ],
+  karen: [[12, 4, ['xx', 'xe', 'xe', 'xx', 'LL', 'LL']]],
+  pedant: [[12, 0, ['.C', '.C', '.C', '.C', 'CC', 'CL', 'LL']]],
+  linkedin: [[11, 7, ['.y.', 'ywy', '.y.']]],
+  kid: [[1, 12, ['.xxxxxxxxxx.', 'xxeexxxxrxyx', '.xxx....xxx.']]],
+};
+
+const cache = new Map<VoiceId, Px>();
+
 /** Head and shoulders of a speaker, 16 x 17 before scaling. */
 export function portraitPx(voice: VoiceId): Px {
-  const spec = PORTRAIT_LOOKS[voice];
-  return buildPerson(spec.look, 'stand', spec.face).crop(0, 0, 16, 17);
+  let px = cache.get(voice);
+  if (!px) {
+    const base = art(FACE_ART[voice]);
+    for (const [x, y, rows] of OVERLAYS[voice] ?? []) stamp(base, x, y, rows);
+    px = base.outline('ink0');
+    cache.set(voice, px);
+  }
+  return px.clone();
 }

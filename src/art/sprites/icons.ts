@@ -3,9 +3,19 @@
  * with an ink outline so it reads on light paper and on dark plum alike.
  */
 import { Px, type Legend } from '../pixel';
+import { BIG_ART } from './bigIcons';
 import { THREAD_ART } from './threadIcons';
 
 export const ICON_LEGEND: Legend = {
+  // dark and rare tones, added for the 12 x 12 icons
+  H: 'wood0',
+  Z: 'teal0',
+  C: 'skin4',
+  D: 'skin1',
+  E: 'skin0',
+  I: 'brick0',
+  J: 'brick1',
+  M: 'brick2',
   '.': 'clear',
   k: 'ink0',
   K: 'ink1',
@@ -57,7 +67,7 @@ const ART: Record<string, string[]> = {
     'kYyoYYYk',
     'kYyoooYk',
     'kYYYYoYk',
-    '.kYoooK.',
+    '.kYoook.',
     '..kkkk..',
   ],
   karma: [
@@ -132,13 +142,13 @@ const ART: Record<string, string[]> = {
   ],
   star: [
     '...kk...',
-    '...kyk..',
-    'kkkyyykk',
-    'kyyyyyyk',
-    '.kyyyyk.',
-    '.kyykyk.',
-    'kyk..kyk',
-    'kk....kk',
+    '..kyyk..',
+    'kkkwykkk',
+    'kywyyyYk',
+    '.kyyyYk.',
+    '.kyyyYk.',
+    'kyykkYyk',
+    'kkk..kkk',
   ],
   lock: [
     '..kkkk..',
@@ -206,7 +216,7 @@ const ART: Record<string, string[]> = {
     'kk..kk..',
     'kwkkkwkk',
     'kwwkkwwk',
-    'kwwwkwww',
+    'kwwkkwwk',
     'kwwkkwwk',
     'kwkkkwkk',
     'kk..kk..',
@@ -265,33 +275,33 @@ const ART: Record<string, string[]> = {
   ],
   taste: [
     '..kkkk..',
-    '.kqqqNk.',
+    '.kqqqqk.',
     'kqrqqbNk',
     'kqqqqqNk',
-    'kqyqqqNk',
-    '.kqqqNk.',
+    'kqyqkkNk',
+    '.kqqqqkk',
     '..kkkkk.',
-    '......k.',
+    '........',
   ],
   debug: [
     '.k.kk.k.',
-    '..kggk..',
-    'kkgGGgkk',
-    '.kgkkgk.',
-    'kkgGGgkk',
-    '.kgGGgk.',
-    'kk.gg.kk',
+    '..kGGk..',
     '..kkkk..',
+    '.kGGggk.',
+    'kkGGfgkk',
+    '.kGgfgk.',
+    'kkggffkk',
+    '.kkkkkk.',
   ],
   paranoia: [
-    'kkkkkkkk',
-    'kBBBkbbk',
-    'kBBBkbbk',
-    'kBBBkbbk',
-    '.kBBkbk.',
-    '..kBkbk.',
-    '...kkk..',
-    '........',
+    '..kkkk..',
+    '.kwwwwk.',
+    'kwwBBwwk',
+    'krBkkBwk',
+    'kwBkkBrk',
+    'kwwBBwwk',
+    '.kwwwwk.',
+    '..kkkk..',
   ],
   hustle: [
     '....kkk.',
@@ -306,23 +316,23 @@ const ART: Record<string, string[]> = {
   // ---- stats
   vibes: [
     '...kk...',
-    '...kyk..',
-    '.kkkyykk',
-    'kyyyyyyk',
-    '.kkyyykk',
-    '..kyykk.',
-    '.kyk.kyk',
+    '...kpk..',
+    '.kkkppkk',
+    'kppwpppk',
+    '.kkpppkk',
+    '..kppkk.',
+    '.kpkkkpk',
     '.kk...kk',
   ],
   features: [
-    'kkkk....',
-    'kBBkkkk.',
-    'kBBkGGk.',
-    'kkkkGGkk',
-    '.kkkkkBk',
-    '.kOOkkBk',
-    '.kOOk.kk',
-    '.kkkk...',
+    '.kk..kk.',
+    'kyykkyyk',
+    '.kkyykk.',
+    'kssyyssk',
+    'kkkyykkk',
+    'kBByyBBk',
+    'kBByybbk',
+    'kkkkkkkk',
   ],
   polish: [
     '..kkkk..',
@@ -335,24 +345,24 @@ const ART: Record<string, string[]> = {
     '...kk...',
   ],
   stability: [
-    '..kkkk..',
-    '.kaaeak.',
-    'kaeaaxxk',
-    'kaaaaxxk',
-    'kaaaxxxk',
-    'kaaxxxxk',
-    '.kxxxxk.',
+    'kkkkkkkk',
+    'kzzzzzzk',
+    'kzzmzzzk',
+    'kmmzmzmk',
+    'kzzzzmzk',
+    'kzzzzzzk',
+    'kkkkkkkk',
     '..kkkk..',
   ],
   security: [
-    'kkkkkkkk',
-    'kTTTkttk',
-    'kTTTkttk',
-    'kTTTkttk',
-    'kTTTkttk',
-    '.kTTkttk',
-    '..kTktk.',
-    '...kkk..',
+    '.kkkkkk.',
+    'kVVVvvuk',
+    'kVVvvwuk',
+    'kVwvwvuk',
+    'kVvwvvuk',
+    '.kvvvuk.',
+    '..kvuk..',
+    '...kk...',
   ],
   // ---- phases
   plan: [
@@ -370,10 +380,10 @@ const ART: Record<string, string[]> = {
     '..kwwk..',
     '.kwwbwk.',
     '.kwwwwk.',
-    '.kwwwwk.',
     'kkaaaakk',
-    '.ko..ok.',
-    '..kyyk..',
+    'kokwwkok',
+    '.kkyykk.',
+    '..kkkk..',
   ],
   dice: [
     '.kkkkkk.',
@@ -402,44 +412,44 @@ const ART: Record<string, string[]> = {
   ],
   // ---- menu
   hire: [
-    '..kkk...',
-    '.kSSSk.k',
-    '.kSSSkkG',
-    '..kkkGGG',
-    '.kooookG',
-    'kooooook',
-    'kooooook',
-    'kkkkkkkk',
+    '.kkkk...',
+    'khhhhk..',
+    'kSSSSk..',
+    'kSSSkkk.',
+    '.kkkkGkk',
+    'kookGGGk',
+    'kookkGkk',
+    'kkk.kkk.',
   ],
   team: [
-    '.kk..kk.',
-    'kSSkkSSk',
-    'kSSkkSSk',
-    'kttkkvvk',
-    'kttkkvvk',
+    '.kkk....',
+    'khhhkkk.',
+    'kSSkyyyk',
+    'kSSkSSSk',
+    '.kkkSSSk',
+    'kbbbkkk.',
+    'kbbkoook',
     'kkkkkkkk',
-    '........',
-    '........',
   ],
   shop: [
-    '..kkkk..',
-    '.k.kk.k.',
+    '.kkkkkk.',
+    'kowowowk',
+    'kowowowk',
     'kkkkkkkk',
-    'kooooook',
-    'kooyyook',
-    'kooyyook',
-    'kooooook',
+    'kcsscddk',
+    'kcsscdyk',
+    'kcsscddk',
     'kkkkkkkk',
   ],
   tools: [
-    '..kkk...',
-    '.kAAAk..',
-    '.kAekAk.',
-    '..kkkAk.',
-    '...kAk..',
-    '..kAk...',
-    '.kok....',
-    '.kk.....',
+    '.kkkkkk.',
+    'kAeeAAxk',
+    'kAAAAxxk',
+    '.kkNnkk.',
+    '..kNnk..',
+    '..kNnk..',
+    '..kNnk..',
+    '..kkkk..',
   ],
   office: [
     'kkkkkkkk',
@@ -452,14 +462,14 @@ const ART: Record<string, string[]> = {
     'kkkkkkkk',
   ],
   gear: [
-    '..k.k...',
-    '.kakak..',
-    'kkaAAkak',
-    '.kAkkAk.',
-    '.kAkkAk.',
-    'kkaAAkak',
-    '.kakak..',
-    '..k.k...',
+    '..kkkk..',
+    '..keAk..',
+    '.kkeAkk.',
+    'keAkkAak',
+    'kAAkkAak',
+    '.kkAakk.',
+    '..kAak..',
+    '..kkkk..',
   ],
   trophy: [
     'kkkkkkkk',
@@ -583,22 +593,46 @@ const ART: Record<string, string[]> = {
     '........',
     '........',
   ],
+  bell: [
+    '...kk...',
+    '..kyyk..',
+    '.kywyYk.',
+    '.kyyyYk.',
+    '.kyyyYk.',
+    'kyyyyyYk',
+    'kkkkkkkk',
+    '...kk...',
+  ],
 };
 
 const cache = new Map<string, Px>();
 
-export const ICON_NAMES = Object.keys(ART);
+/** The small icons, 8 x 8 (and the 5 x 3 bubble tail). */
+export const ICON_NAMES = [...Object.keys(ART), ...Object.keys(THREAD_ART)];
+
+/** The 12 x 12 icons, in the order they were drawn. */
+export const BIG_ICON_NAMES = Object.keys(BIG_ART);
+
+/** BIG_ART holds the picture without its outline, at most 10 x 10. This adds the ink0 outline and centers it in 12 x 12. */
+function bigPx(rows: readonly string[]): Px {
+  const p = Px.fromRows(rows, ICON_LEGEND).outline('ink0');
+  if (p.w > 12 || p.h > 12) throw new Error(`big icon is ${p.w}x${p.h} with its outline, the limit is 12x12`);
+  const l = Math.floor((12 - p.w) / 2);
+  const t = Math.floor((12 - p.h) / 2);
+  return p.pad(l, t, 12 - p.w - l, 12 - p.h - t);
+}
 
 export function iconPx(name: string): Px | null {
   const hit = cache.get(name);
   if (hit) return hit;
-  const rows = ART[name] ?? THREAD_ART[name];
-  if (!rows) return null;
-  const p = Px.fromRows(rows, ICON_LEGEND);
+  const small = ART[name] ?? THREAD_ART[name];
+  const big = BIG_ART[name];
+  if (!small && !big) return null;
+  const p = small ? Px.fromRows(small, ICON_LEGEND) : bigPx(big!);
   cache.set(name, p);
   return p;
 }
 
 export function hasIcon(name: string): boolean {
-  return name in ART || name in THREAD_ART;
+  return name in ART || name in THREAD_ART || name in BIG_ART;
 }

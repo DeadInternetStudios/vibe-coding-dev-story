@@ -1,0 +1,183 @@
+/**
+ * 12x12 icons for the 14 niches (who the app is for). Each is a letter map of the picture
+ * without its outline; iconPx adds the ink0 outline and centers it. Rows must all be the same width.
+ */
+export const NICHE_ART: Record<string, string[]> = {
+  // white hair, reading glasses, huge grin, thumbs up on everything
+  niche_boomers: [
+    '..WWWWWW..',
+    '.WWWWWWWW.',
+    '.WSSSSSSW.',
+    '.SxxSSxxS.',
+    '.SxeSSexS.',
+    '.SSSSSSSS.',
+    '.SWWWWWWS.',
+    '..SkwwkS..',
+    '.bbbSSbbb.',
+    'bbbbbbbbbb',
+  ],
+  // orange tabby, green eyes, whiskers
+  niche_cats: [
+    'oO......Oo',
+    'OOO....OOO',
+    'OpOOOOOOpO',
+    'OOoOOOOoOO',
+    'OOGkOOkGOO',
+    'OOGkOOkGOO',
+    'WWOOppOOWW',
+    '.OOOkkOOO.',
+    '..OOOOOO..',
+  ],
+  // diamond hands: a gem and a fist that will never let go
+  niche_degens: [
+    '..wsssBb..',
+    '.wsBBBBBb.',
+    'sBBBBBBBBb',
+    'sBkBBBBkBb',
+    '.bBkBBkBb.',
+    'DDbBwwBbDD',
+    'DD.bBBb.DD',
+    '...bbbb...',
+  ],
+  // a laptop covered in stickers, one of them a rubber duck
+  niche_devs: [
+    '.AAAAAAAA.',
+    '.AeeeeeeA.',
+    '.AerreyyA.',
+    '.AerreyOA.',
+    '.AGGeeeeA.',
+    '.AGGBBBeA.',
+    '.AAAAAAAA.',
+    'eeeeeeeeee',
+    'aaaaaaaaaa',
+    '..xxxxxx..',
+  ],
+  // floppy ears, big nose, tongue out
+  niche_dogs: [
+    '..NNNNNN..',
+    'hhNNNNNNhh',
+    'hHNkNNkNHh',
+    'hHNNNNNNHh',
+    'hHNckkcNHh',
+    'hhNccccNhh',
+    '.hNccccNh.',
+    '...NrrN...',
+    '....rr....',
+  ],
+  // headset with RGB ear cups
+  niche_gamers: [
+    '..AAAAAA..',
+    '.AeeeeeeA.',
+    'Ae......eA',
+    'A........A',
+    'xxx....xxx',
+    'xrx....xBx',
+    'xyx....xGx',
+    'xGx....xyx',
+    'xBx....xrx',
+    '.xxxxk....',
+  ],
+  // bucket hat, shades, one earbud
+  niche_genz: [
+    '..vvvvvv..',
+    '.vVVVVyVv.',
+    '.vvvvvvvv.',
+    'uuuuuuuuuu',
+    '.SSSSSSSS.',
+    '.kkkSSkkk.',
+    'wSSSSSSSS.',
+    '.SSSkkSSS.',
+    '..SSSSSS..',
+  ],
+  // cardboard box with two eyes in the slot
+  niche_introverts: [
+    '...JJJJ...',
+    '..JJJJJJ..',
+    '.JJJJJJJJ.',
+    'JJJJJJJJJJ',
+    'cccccccccc',
+    'cKKKKKcHHc',
+    'cKwKwKchhc',
+    'cKKKKKcHYc',
+    'cccccccHHc',
+    'qqqqqqqqqq',
+  ],
+  // gavel on its block
+  niche_lawyers: [
+    '.....NY...',
+    '...NNnYY..',
+    '..NNnnnO..',
+    '.Ynnnhh...',
+    '..YnhhN...',
+    '..OO.nN...',
+    '......nN..',
+    '......nn..',
+    'qqqqqq.n..',
+    'hhhhhh....',
+  ],
+  // stroller with a very tired parent's coffee on the handle
+  niche_parents: [
+    '....pp....',
+    '...pppp...',
+    '..wwwwww..',
+    '..sBBBBb..',
+    '..wBBBBb..',
+    '..sNNNNb..',
+    '..wNhhNb..',
+    '..sNNNNb..',
+    '..shhhhb..',
+    '...bbbb...',
+  ],
+  // wrench and a leaking pipe
+  niche_plumbers: [
+    'AAA....AA.',
+    '..AeeeAxxA',
+    '..AAAAAxxA',
+    'AAA....AA.',
+    '..........',
+    'YYYYYYYYYY',
+    'OdOOOOOOdO',
+    'oooooooooo',
+    '....s.....',
+    '....B.....',
+  ],
+  // an upvote arrow with a tiny orange face
+  niche_redditors: [
+    '....OO....',
+    '...YOOO...',
+    '..YOOOOO..',
+    '.YOOOOOOO.',
+    'OOOwOOwOOO',
+    'OOOkOOkOOO',
+    '...kOOk...',
+    '...OkkO...',
+    '...oooo...',
+  ],
+  // a graded paper, red A+, and an apple
+  niche_teachers: [
+    'wwwwwwww..',
+    'wllllwww..',
+    'wwwrwwww..',
+    'wwrwrwww..',
+    'wwrrrwww..',
+    'wwrwrwwwhG',
+    'wwrwrwprrr',
+    'wwwwwwrrrR',
+    'wllllwrrRR',
+    '.......RR.',
+  ],
+
+  // a smug broccoli with a halo
+  niche_vegans: [
+    '...yyyy...',
+    '..yYYYYy..',
+    '...yyyy...',
+    '..gGGGGg..',
+    'gGGGgGGGGg',
+    'gGgGGGgGGg',
+    '.ggGGGGgg.',
+    '..mmmmmm..',
+    '..mkmmkm..',
+    '...mkkm...',
+  ],
+};
