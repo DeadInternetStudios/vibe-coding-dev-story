@@ -24,27 +24,27 @@ const SPECIALS = ['duck', 'ghost', 'cat', 'hacker', 'tenx', 'agi'];
 
 export const ACHIEVEMENTS: Achievement[] = [
   /* shipping */
-  { id: 'first-ship', name: 'Hello, World', desc: 'Ship your first app. It is live. It is yours. It has a bug.', when: atLeast('apps_shipped', 1) },
-  { id: 'ship-5', name: 'Five Apps Deep', desc: 'Ship five apps. None are finished. All are live.', when: atLeast('apps_shipped', 5) },
-  { id: 'ship-10', name: 'Portfolio Of Regrets', desc: 'Ship ten apps. Three are still online. Nobody knows which.', when: atLeast('apps_shipped', 10) },
+  { id: 'first-ship', name: 'Hello, World', desc: 'Ship your first app. It is live. It is yours. It has a bug.', hint: 'Put something live. A bug comes free.', when: atLeast('apps_shipped', 1) },
+  { id: 'ship-5', name: 'Five Apps Deep', desc: 'Ship five apps. None are finished. All are live.', hint: 'Five apps are live. Zero are finished.', when: atLeast('apps_shipped', 5) },
+  { id: 'ship-10', name: 'Portfolio Of Regrets', desc: 'Ship ten apps. Three are still online. Nobody knows which.', hint: 'Ten apps. Try naming them all.', when: atLeast('apps_shipped', 10) },
   /* the thread */
-  { id: 'rating-20', name: 'Mid', desc: 'Reach a Reddit Score of 20. The internet shrugged in unison.', when: atLeast('best_rating', 20) },
-  { id: 'rating-30', name: 'Not Bad For A Prompt', desc: 'Reach a Reddit Score of 30. Someone asked if you wrote it yourself.', when: atLeast('best_rating', 30) },
-  { id: 'rating-36', name: 'Front Page Material', desc: 'Reach a Reddit Score of 36. Someone said: please open source this.', when: atLeast('best_rating', 36) },
+  { id: 'rating-20', name: 'Mid', desc: 'Reach a Reddit Score of 20. The internet shrugged in unison.', hint: 'Be okay on the thread. Just okay.', when: atLeast('best_rating', 20) },
+  { id: 'rating-30', name: 'Not Bad For A Prompt', desc: 'Reach a Reddit Score of 30. Someone asked if you wrote it yourself.', hint: 'Thread score thirty. Blame the prompt.', when: atLeast('best_rating', 30) },
+  { id: 'rating-36', name: 'Front Page Material', desc: 'Reach a Reddit Score of 36. Someone said: please open source this.', hint: 'Thread score 36. Strangers ask for the repo.', when: atLeast('best_rating', 36) },
   {
-    id: 'perfect', name: 'Perfect Forty', desc: 'Score a perfect 40 out of 40. A moderator checked for fraud.',
+    id: 'perfect', name: 'Perfect Forty', desc: 'Score a perfect 40 out of 40. A moderator checked for fraud.', hint: 'A full score. A mod will want a word.',
     when: (k) => count(k, 'perfect_scores') >= 1 || count(k, 'best_rating') >= 40,
   },
-  { id: 'viral', name: 'Main Character', desc: 'Become a meme on r/ProgrammerHumor. Not the good kind.', when: atLeast('viral', 1) },
-  { id: 'karma-1k', name: 'Internet Famous', desc: 'Reach a thousand karma. A stranger knows your username.', when: (k) => k.company.karma >= 1000 },
-  { id: 'karma-9k', name: 'Over Nine Thousand', desc: 'Reach nine thousand karma. The announcer needs a minute.', when: (k) => k.company.karma >= 9001 },
+  { id: 'viral', name: 'Main Character', desc: 'Become a meme on r/ProgrammerHumor. Not the good kind.', hint: 'Become the joke on r/ProgrammerHumor.', when: atLeast('viral', 1) },
+  { id: 'karma-1k', name: 'Internet Famous', desc: 'Reach a thousand karma. A stranger knows your username.', hint: 'Collect karma until strangers know you.', when: (k) => k.company.karma >= 1000 },
+  { id: 'karma-9k', name: 'Over Nine Thousand', desc: 'Reach nine thousand karma. The announcer needs a minute.', hint: 'Karma past a famous number. You know it.', when: (k) => k.company.karma >= 9001 },
 
   /* the calendar */
-  { id: 'friday-1', name: 'Living Dangerously', desc: 'Deploy on a Friday. Nothing happened. Yet.', when: atLeast('friday_deploys', 1) },
-  { id: 'friday-5', name: 'Pager Duty Legend', desc: 'Deploy on five Fridays. Your senior developer stopped asking why.', when: atLeast('friday_deploys', 5) },
-  { id: 'year-1', name: 'Year One Down', desc: 'Survive twelve months. The first year is the easy one. This is a lie.', when: atLeast('months_survived', 12) },
-  { id: 'year-2', name: 'Still Here', desc: 'Survive twenty four months. Investors start saying the word traction.', when: atLeast('months_survived', 24) },
-  { id: 'year-3', name: 'The Long Haul', desc: 'Survive all thirty six months. Write a thread about it. Include a lesson.', when: atLeast('months_survived', 36) },
+  { id: 'friday-1', name: 'Living Dangerously', desc: 'Deploy on a Friday. Nothing happened. Yet.', hint: 'Ship it on the one day you should not.', when: atLeast('friday_deploys', 1) },
+  { id: 'friday-5', name: 'Pager Duty Legend', desc: 'Deploy on five Fridays. Your senior developer stopped asking why.', hint: 'Friday deploys. Five. Nobody learns.', when: atLeast('friday_deploys', 5) },
+  { id: 'year-1', name: 'Year One Down', desc: 'Survive twelve months. The first year is the easy one. This is a lie.', hint: 'Stay alive one full trip around the sun.', when: atLeast('months_survived', 12) },
+  { id: 'year-2', name: 'Still Here', desc: 'Survive twenty four months. Investors start saying the word traction.', hint: 'Year two. Someone will say traction.', when: atLeast('months_survived', 24) },
+  { id: 'year-3', name: 'The Long Haul', desc: 'Survive all thirty six months. Write a thread about it. Include a lesson.', hint: 'Reach the end. Then post a thread.', when: atLeast('months_survived', 36) },
 
   /* money */
   { id: 'scare', name: 'Overdrawn But Optimistic', desc: 'Dip below zero dollars. Do not do it twice.', when: atLeast('bankrupt_scares', 1) },

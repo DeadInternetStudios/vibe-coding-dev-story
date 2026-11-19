@@ -43,7 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   seen: [],
 };
 
-function read<T>(key: string): T | null {
+export function readJson<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
@@ -52,7 +52,7 @@ function read<T>(key: string): T | null {
   }
 }
 
-function write(key: string, value: unknown): boolean {
+export function writeJson(key: string, value: unknown): boolean {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
@@ -62,22 +62,22 @@ function write(key: string, value: unknown): boolean {
 }
 
 export function loadSettings(): Settings {
-  const saved = read<Partial<Settings>>(SETTINGS_KEY);
+  const saved = readJson<Partial<Settings>>(SETTINGS_KEY);
   return { ...DEFAULT_SETTINGS, ...(saved ?? {}), seen: saved?.seen ?? [] };
 }
 
 export function saveSettings(s: Settings): void {
-  write(SETTINGS_KEY, s);
+  writeJson(SETTINGS_KEY, s);
 }
 
 export function loadSave(): GameState | null {
-  const s = read<GameState>(SAVE_KEY);
+  const s = readJson<GameState>(SAVE_KEY);
   if (!s || s.v !== SAVE_VERSION) return null;
   return s;
 }
 
 export function writeSave(state: GameState): boolean {
-  return write(SAVE_KEY, state);
+  return writeJson(SAVE_KEY, state);
 }
 
 export function clearSave(): void {
@@ -103,11 +103,11 @@ export interface HallEntry {
 }
 
 export function loadHall(): HallEntry[] {
-  return read<HallEntry[]>(HALL_KEY) ?? [];
+  return readJson<HallEntry[]>(HALL_KEY) ?? [];
 }
 
 export function pushHall(e: HallEntry): HallEntry[] {
   const list = [e, ...loadHall()].sort((a, b) => b.score - a.score).slice(0, 20);
-  write(HALL_KEY, list);
+  writeJson(HALL_KEY, list);
   return list;
 }
