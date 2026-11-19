@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { hasIcon } from '../art/sprites/icons';
 import { app } from '../core/app';
 import { audio } from '../core/audio';
 import { bakeBox as bakeBoxKey, bakePortrait } from '../core/bake';
@@ -238,7 +239,8 @@ function cardPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'card' }>, done: Done): 
     const rare = card.rarity === 'rare';
     const face = scene.add.nineslice(0, 0, bakeBoxKey(scene, rare ? 'btnOrange' : 'btnCream'), undefined, cardW, h - 36, 4, 4, 4, 4).setOrigin(0, 0);
     const ink = rare ? C.white : C.ink1;
-    const icon = iconImg(scene, card.icon, Math.floor(cardW / 2) - 12, 5, 3);
+    const big = hasIcon(`card_${card.icon}`);
+    const icon = big ? iconImg(scene, `card_${card.icon}`, Math.floor(cardW / 2) - 12, 5, 2) : iconImg(scene, card.icon, Math.floor(cardW / 2) - 12, 5, 3);
     const name = label(scene, cardW / 2, 33, card.name.toUpperCase(), { font: F.caps, tint: ink, maxWidth: cardW - 6, origin: [0.5, 0], align: 'center' });
     const blurb = label(scene, 4, 33 + name.height + 3, card.blurb, { font: F.body, tint: rare ? C.cream : C.ink3, maxWidth: cardW - 8 });
     c.add([face, icon, name, blurb]);
@@ -289,7 +291,10 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   const niche = c.niche(p.niche);
   const lw = wide ? 140 : w - 12;
   // product card
-  m.add(label(scene, 6, 21, p.name, { font: F.caps, tint: C.orange1, maxWidth: lw }));
+  const badges = [`kind_${p.kind}`, `niche_${p.niche}`].filter(hasIcon);
+  badges.forEach((name, i) => m.add(iconImg(scene, name, lw - 13 * (badges.length - i), 19)));
+  const nameW = lw - (badges.length ? 13 * badges.length + 4 : 0);
+  m.add(label(scene, 6, 21, p.name, { font: F.caps, tint: C.orange1, maxWidth: nameW }));
   m.add(label(scene, 6, 31, `${kind.name} for ${niche.plural}`, { font: F.body, tint: C.ink3, maxWidth: lw }));
   m.add(label(scene, 6, 40, `"${p.tagline}"`, { font: F.body, tint: C.ink2, maxWidth: lw }));
   let sy = wide ? 66 : 62;
@@ -340,9 +345,12 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     m.add(b);
     rows.push({ id: ch.id, btn: b, ok });
     const dark = ok && ch.id !== selected;
-    const t1 = label(scene, cx + 4, cy + 2, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : C.ink4 });
+    const art = hasIcon(`chan_${ch.id}`) && rowH >= 15;
+    if (art) m.add(iconImg(scene, `chan_${ch.id}`, cx + 3, cy + Math.floor((rowH - 1 - 12) / 2)).setAlpha(ok ? 1 : 0.4));
+    const tx = cx + (art ? 18 : 4);
+    const t1 = label(scene, tx, cy + 2, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : C.ink4 });
     const sub = ok ? `hype +${ch.hype}${ch.roast > 0.5 ? '  spicy' : ''}` : ch.unlock.karma ? `needs ${ch.unlock.karma} karma` : `year ${ch.unlock.year ?? 2}`;
-    const t2 = label(scene, cx + 4, cy + 10, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
+    const t2 = label(scene, tx, cy + 10, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
     const price = label(scene, cx + cw - 4, cy + 3, cost > 0 ? shortMoney(cost) : 'FREE', { font: F.caps, tint: ok ? (dark ? C.green1 : C.mint) : C.ink3, origin: [1, 0] });
     m.add(t1);
     m.add(t2);

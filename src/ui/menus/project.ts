@@ -1,4 +1,5 @@
-import { bakePerson } from '../../core/bake';
+import { hasIcon } from '../../art/sprites/icons';
+import { bakeIcon, bakePerson } from '../../core/bake';
 import { C, F } from '../../core/theme';
 import { STAT_KEYS, type StatKey } from '../../content/types';
 import { SCOPES, type Scope } from '../../sim/config';
@@ -51,13 +52,16 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const rw = wide ? w - rx - 6 : w - 12;
 
   // ------------------------------------------------------------ cyclers
-  const cycler = (y: number, title: string, text: () => string, sub: () => string, subTint: () => number, step: (d: number) => void) => {
+  const cycler = (y: number, title: string, text: () => string, sub: () => string, subTint: () => number, step: (d: number) => void, icon: () => string) => {
     m.add(label(scene, 6, y, title, { font: F.caps, tint: C.ink3 }));
     m.add(button(scene, 6, y + 9, 13, 15, '<', () => step(-1), { kind: 'plum' }));
     m.add(button(scene, lw - 7, y + 9, 13, 15, '>', () => step(1), { kind: 'plum' }));
     const face = panel(scene, 21, y + 9, lw - 30, 15, 'paperDim', false);
     m.add(face);
-    const t = label(scene, 21 + (lw - 30) / 2, y + 12, '', { font: F.caps, tint: C.ink1, origin: [0.5, 0] });
+    // a 12 x 12 picture sits at the left edge of the face, the words center in what is left
+    const pic = scene.add.image(24, y + 10, bakeIcon(scene, 'lock')).setOrigin(0, 0);
+    m.add(pic);
+    const t = label(scene, 21 + 14 + (lw - 30 - 14) / 2, y + 12, '', { font: F.caps, tint: C.ink1, origin: [0.5, 0] });
     m.add(t);
     const sb = label(scene, 21, y + 26, '', { font: F.body, tint: C.ink3, maxWidth: lw - 16 });
     m.add(sb);
@@ -66,6 +70,10 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
         t.setText(text());
         sb.setText(sub());
         sb.setTint(subTint());
+        const name = icon();
+        const big = hasIcon(name) && name.includes('_');
+        pic.setTexture(bakeIcon(scene, hasIcon(name) ? name : 'lock'));
+        pic.setPosition(big ? 24 : 26, y + (big ? 10 : 12));
       },
     };
   };
@@ -89,6 +97,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       st.nameSeed = Math.floor(Math.random() * 1e9);
       repaint();
     },
+    () => (unlocked(game, c.kinds[st.kind]!.unlock) ? `kind_${c.kinds[st.kind]!.id}` : 'lock'),
   );
   const nicheRow = cycler(
     63,
@@ -118,6 +127,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       st.nameSeed = Math.floor(Math.random() * 1e9);
       repaint();
     },
+    () => (unlocked(game, c.niches[st.niche]!.unlock) ? `niche_${c.niches[st.niche]!.id}` : 'lock'),
   );
   const toolRow = cycler(
     106,
@@ -133,6 +143,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       st.tool = wrap(st.tool + d, Math.max(1, ownedTools.length));
       repaint();
     },
+    () => `tool_${ownedTools[st.tool]?.id ?? ''}`,
   );
 
   // ------------------------------------------------------------ scope
