@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import { dailyTag } from '../../core/daily';
+import { feature } from '../../core/features';
 import { HALL_SIZE, loadHall, type HallEntry } from '../../core/save';
 import { C, F } from '../../core/theme';
 import { shortMoney } from '../../sim/format';
@@ -50,14 +51,14 @@ function emptyRow(scene: Scene, place: number, rw: number): ScrollRow {
   return { h: ROW_H, node: scene.add.container(0, 0, [panel(scene, 0, 0, rw, ROW_H, 'plum', false), mark, name, sub]) };
 }
 
-function drawScores(scene: Scene, content: Phaser.GameObjects.Container, w: number, h: number): void {
+function drawScores(scene: Scene, content: Phaser.GameObjects.Container, w: number, h: number, top = LIST_TOP): void {
   const hall = loadHall();
   const rw = rowWidth(w - 12);
   const rows = [
     ...hall.map((e, i) => scoreRow(scene, e, i + 1, rw)),
     ...Array.from({ length: Math.max(0, HALL_SIZE - hall.length) }, (_, i) => emptyRow(scene, hall.length + i + 1, rw)),
   ];
-  content.add(scrollList(scene, { x: 6, y: LIST_TOP, w: w - 12, h: h - LIST_TOP - 7, rows, gap: 2 }));
+  content.add(scrollList(scene, { x: 6, y: top, w: w - 12, h: h - top - 7, rows, gap: 2 }));
 }
 
 /** Past runs, best first, and every trophy. */
@@ -66,6 +67,12 @@ export function openHall(scene: Phaser.Scene, o: HallOpts = {}): Modal {
   const w = Math.min(L.W - 8, 286);
   const h = Math.min(L.H - 12, L.portrait ? 470 : 252);
   const m = new Modal(scene, { w, h, title: 'HALL OF FAME', closable: true, hold: o.hold });
+  if (!feature('trophies')) {
+    const content = scene.add.container(0, 0);
+    m.add(content);
+    drawScores(scene, content, w, h, TABS_Y);
+    return m;
+  }
   const draw = (i: number, content: Phaser.GameObjects.Container) => (i === 0 ? drawScores(scene, content, w, h) : drawTrophies(scene, content, w, h, o.run ?? []));
   tabs(m, 6, TABS_Y, w - 12, ['SCORES', 'TROPHIES'], draw, o.tab === 'trophies' ? 1 : 0, { h: TAB_H, below: true });
   return m;

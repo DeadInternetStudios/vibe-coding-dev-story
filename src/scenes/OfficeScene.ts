@@ -382,7 +382,7 @@ export class OfficeScene extends Phaser.Scene {
         this.ctx.shake(0.003);
         break;
       case 'achievement': {
-        recordTrophies([n.id]);
+        if (feature('trophies')) recordTrophies([n.id]);
         const a = app.content.achievements.find((x) => x.id === n.id);
         if (a) {
           this.banner('ACHIEVEMENT!', a.name, 'wow');

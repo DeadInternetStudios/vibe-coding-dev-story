@@ -81,7 +81,7 @@ export class EndingScene extends Phaser.Scene {
   /** Save the run once and clear the save, a finished game cannot be continued. */
   private record(): void {
     const s = current().s;
-    recordTrophies(s.achievements);
+    if (feature('trophies')) recordTrophies(s.achievements);
     this.dailyResult = null;
     const end = s.ending;
     if (!end) return;

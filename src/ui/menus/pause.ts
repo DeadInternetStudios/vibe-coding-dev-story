@@ -1,4 +1,5 @@
 import { audio } from '../../core/audio';
+import { feature } from '../../core/features';
 import { C, F } from '../../core/theme';
 import { dateLabel, money } from '../../sim/format';
 import { button, label, type ButtonKind } from '../kit';
@@ -14,7 +15,8 @@ export function openPause(ctx: UiCtx, onClose: () => void): Modal {
   const s = ctx.session.s;
   const w = 190;
   const keys = window.matchMedia?.('(pointer: fine)').matches ?? false;
-  const h = keys ? 208 : 194;
+  const trophies = feature('trophies');
+  const h = (keys ? 208 : 194) - (trophies ? 0 : 28);
   const m = new Modal(scene, { w, h, title: 'PAUSED', style: 'paper', closable: true, hold: ctx.hold, onClose });
   m.add(label(scene, w / 2, 21, s.company.name.toUpperCase(), { font: F.caps, tint: C.orange1, origin: [0.5, 0], maxWidth: w - 16 }));
   m.add(label(scene, w / 2, 31, `${dateLabel(s.day)}   ${money(s.company.cash)}   ${s.shipped.length} shipped`, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 12 }));
@@ -25,9 +27,11 @@ export function openPause(ctx: UiCtx, onClose: () => void): Modal {
     y += 28;
   };
   add('RESUME', 'orange', () => m.close());
-  add('TROPHIES', 'cream', () => {
-    openHall(scene, { hold: ctx.hold, tab: 'trophies', run: s.achievements });
-  });
+  if (trophies) {
+    add('TROPHIES', 'cream', () => {
+      openHall(scene, { hold: ctx.hold, tab: 'trophies', run: s.achievements });
+    });
+  }
   add('SETTINGS', 'plum', () => {
     openSettings(scene, ctx.hold);
   });

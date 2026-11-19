@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { app } from '../core/app';
 import { bake } from '../core/bake';
 import { dailyKey } from '../core/daily';
+import { feature } from '../core/features';
 import { loadHall, loadSave } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
 import { nightCity } from '../art/sprites/scenery';
@@ -95,7 +96,7 @@ export class TitleScene extends Phaser.Scene {
     add('HALL OF FAME', 'cream', () => openHall(this), 'trophy');
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
     // in the gap under the last button, so nothing above it moves
-    label(this, L.cx, y - 3, `daily: ${dailyKey()}`, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
+    if (feature('daily')) label(this, L.cx, y - 3, `daily: ${dailyKey()}`, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     this.buildDrifters(L, { half: Math.max(logoHalf, bw / 2), menuBottom: y, stripH });
 
     // ticker
