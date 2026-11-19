@@ -23,7 +23,8 @@ export function dialogue(ctx: UiCtx, steps: DialogueStep[], onDone: () => void, 
   const w = Math.min(L.W - 8, 330);
   const h = L.portrait ? 74 : 62;
   const x = Math.floor((L.W - w) / 2);
-  const y = L.H - h - (L.portrait ? 128 : 66);
+  // portrait: sit over the repo and revenue panels so the staff stay in view while they talk
+  const y = L.portrait ? Math.max(6, Math.round(ctx.room.root.y - h - 6)) : L.H - h - 66;
   const box = panel(scene, x, y, w, h, 'paper');
   root.add(box);
   const face = scene.add.image(x + 8, y + 8, bakePortrait(scene, 'system')).setOrigin(0, 0).setScale(2);

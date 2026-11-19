@@ -156,13 +156,25 @@ export function finalScore(ctx: Ctx): number {
  * Cut points set from bot runs: a careful bot lands near 28M, a sloppy one near 26M, a
  * reckless one near 34M with luck, a button masher under 1M. S needs a better run than any bot's median.
  */
+export const RANK_CUTS: readonly { rank: EndingResult['rank']; min: number }[] = [
+  { rank: 'S', min: 36_000_000 },
+  { rank: 'A', min: 26_000_000 },
+  { rank: 'B', min: 14_000_000 },
+  { rank: 'C', min: 4_000_000 },
+  { rank: 'D', min: 800_000 },
+  { rank: 'F', min: 0 },
+];
+
 export function rankFor(score: number): EndingResult['rank'] {
-  if (score >= 36_000_000) return 'S';
-  if (score >= 26_000_000) return 'A';
-  if (score >= 14_000_000) return 'B';
-  if (score >= 4_000_000) return 'C';
-  if (score >= 800_000) return 'D';
-  return 'F';
+  return (RANK_CUTS.find((c) => score >= c.min) ?? RANK_CUTS[RANK_CUTS.length - 1]!).rank;
+}
+
+/** The rank one step up from this score, the score it takes, and where the current rank starts. Null at the top. */
+export function nextRank(score: number): { rank: EndingResult['rank']; min: number; from: number } | null {
+  const i = RANK_CUTS.findIndex((c) => score >= c.min);
+  const here = i < 0 ? RANK_CUTS.length - 1 : i;
+  if (here === 0) return null;
+  return { rank: RANK_CUTS[here - 1]!.rank, min: RANK_CUTS[here - 1]!.min, from: RANK_CUTS[here]!.min };
 }
 
 /** Which of the endings for a rank. Two ranks have two: a famous A needs karma, an F with a founder still in the building becomes a podcast. */

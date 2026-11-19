@@ -2,9 +2,11 @@ import Phaser from 'phaser';
 import { app } from '../core/app';
 import { C, DEPTH, F } from '../core/theme';
 import type { Session } from '../game/session';
+import { nextRank, rankFor } from '../sim/economy';
 import { shortMoney } from '../sim/format';
-import { fit, label, panel, rect } from './kit';
+import { bar, fit, label, panel, rect } from './kit';
 import type { Layout } from './layout';
+import { RANK_COLOR } from './ranks';
 
 export type TermKind = 'commit' | 'cmd' | 'warn' | 'ok';
 export interface TermLine {
@@ -21,6 +23,7 @@ export interface Box {
 }
 
 const KEEP = 60;
+const SCORE_STRIP = 32;
 const HEAD_W = 34;
 const HEAD: Record<TermKind, number> = { commit: C.yellow, cmd: C.mint, warn: C.pink, ok: C.green2 };
 const TEXT: Record<TermKind, number> = { commit: C.cream, cmd: C.sky, warn: C.pink, ok: C.mint };
@@ -118,7 +121,8 @@ class RevenuePanel {
     const months = s.company.monthlyRevenue.slice(-(n - 1));
     const now = Math.round(s.tally.revenue);
     const apps = s.shipped.slice(-8).reverse();
-    const sig = [burn, now, months.map(Math.round).join(','), apps.map((a) => shortMoney(a.earned)).join(',')].join('|');
+    const score = this.session.game.scoreNow();
+    const sig = [burn, now, months.map(Math.round).join(','), apps.map((a) => shortMoney(a.earned)).join(','), rankFor(score), Math.round(score / 20_000)].join('|');
     if (sig === this.seen) return;
     this.seen = sig;
     this.body.removeAll(true);
@@ -135,6 +139,9 @@ class RevenuePanel {
       const tint = v <= 0 ? C.ink3 : v >= burn ? C.green2 : C.pink;
       this.body.add(rect(this.scene, x0 + i * 9, base - bh, 6, bh, tint, live ? 0.55 : 1));
     });
+    if (series.every((v) => v <= 0)) {
+      this.body.add(label(this.scene, Math.round(w / 2), top + Math.round(chartH / 2) - 4, 'no revenue yet. vibes only.', { font: F.body, tint: C.ink3, origin: [0.5, 0.5], align: 'center', maxWidth: w - 12 }));
+    }
     const by = base - Math.min(chartH, Math.round((burn / scale) * chartH));
     for (let x = 4; x < w - 4; x += 6) this.body.add(rect(this.scene, x, by, 3, 1, C.yellow, 0.9));
     this.body.add(rect(this.scene, 3, base, w - 6, 1, C.ink2, 1));
@@ -144,16 +151,36 @@ class RevenuePanel {
     y += 9;
     this.body.add(label(this.scene, 5, y, `This month ${shortMoney(now)}`, { font: F.body, tint: now >= burn ? C.green2 : C.cream }));
     y += 12;
-    if (y + 20 > h || apps.length === 0) return;
+    const strip = h >= 96 ? SCORE_STRIP : 0;
+    if (strip) this.scoreStrip(score, h - strip);
+    if (y + 20 > h - strip || apps.length === 0) return;
     this.body.add(label(this.scene, 5, y, 'YOUR APPS', { font: F.body, tint: C.ink4 }));
     this.body.add(rect(this.scene, 3, y + 9, w - 6, 1, C.ink2, 1));
     y += 12;
     for (const a of apps) {
-      if (y + 9 > h - 3) break;
+      if (y + 9 > h - 3 - strip) break;
       this.body.add(label(this.scene, 5, y, fit(a.name, Math.floor((w - 44) / 5)), { font: F.body, tint: C.cream }));
       this.body.add(label(this.scene, w - 5, y, shortMoney(a.earned), { font: F.body, tint: C.green2, origin: [1, 0] }));
       y += 9;
     }
+  }
+
+  /** The rank this run would get if it ended today, and how far the next one is. */
+  private scoreStrip(score: number, y: number): void {
+    const { w } = this.box;
+    const rank = rankFor(score);
+    const next = nextRank(score);
+    this.body.add(rect(this.scene, 3, y, w - 6, 1, C.ink2, 1));
+    this.body.add(label(this.scene, 5, y + 4, 'IF YOU QUIT NOW', { font: F.body, tint: C.ink4 }));
+    this.body.add(rect(this.scene, 5, y + 13, 12, 12, C.ink0, 1));
+    this.body.add(rect(this.scene, 6, y + 14, 10, 10, RANK_COLOR[rank] ?? C.cream, 1));
+    this.body.add(label(this.scene, 11, y + 16, rank, { font: F.capsBold, tint: C.ink0, origin: [0.5, 0] }));
+    this.body.add(label(this.scene, 21, y + 16, shortMoney(score), { font: F.body, tint: C.cream }));
+    if (!next) return;
+    const track = bar(this.scene, w - 5 - 30, y + 14, 30, 5, RANK_COLOR[next.rank] ?? C.cream, 0);
+    track.set(Math.max(0, Math.min(1, (score - next.from) / (next.min - next.from))), false);
+    this.body.add(track);
+    this.body.add(label(this.scene, w - 5, y + 21, `${next.rank} at ${shortMoney(next.min)}`, { font: F.body, tint: C.ink4, origin: [1, 0] }));
   }
 
   destroy(): void {

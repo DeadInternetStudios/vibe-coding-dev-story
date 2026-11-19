@@ -234,7 +234,7 @@ export class Hud {
     this.project.add(this.progressBar);
     // quality and the crunch switch sit on the right, clear of the stat grid
     const rx = x + w - 6;
-    this.qualityText = label(s, rx, y + 3, 'Q 0', { font: F.head, tint: C.mint, origin: [1, 0] });
+    this.qualityText = label(s, rx, y + 3, 'Q 0', { font: F.read, tint: C.mint, origin: [1, 0] });
     this.project.add(this.qualityText);
     this.crunchBtn = button(s, rx - 44, pipY - 1, 44, 13, 'CRUNCH', () => this.onCrunch(), { kind: this.session.s.company.crunch ? 'berry' : 'plum', font: F.body });
     this.project.add(this.crunchBtn);

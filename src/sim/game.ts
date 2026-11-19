@@ -8,7 +8,7 @@ import type { Content } from './content';
 import { addCash, addSpaghetti, bump, cashScale, sound, toast, type Ctx } from './ctx';
 import { devStep, forecast as forecastImpl, pickCard as pickCardImpl, startProject, tapIdea, type Forecast, type ProjectPlan } from './dev';
 import { resolveEvent as resolveEventImpl, rollDaily } from './events';
-import { fundingOffers, isBankrupt, monthlyBurn, pickEnding, runPayday, takeFunding as takeFundingImpl, valuation, FUNDING_TARGETS } from './economy';
+import { finalScore, fundingOffers, isBankrupt, monthlyBurn, pickEnding, runPayday, takeFunding as takeFundingImpl, valuation, FUNDING_TARGETS } from './economy';
 import { removeStaff } from './effects';
 import { clamp, dowOf, isFriday, isMonthStart, isPayday, isWorkday, isYearEnd, yearOf } from './format';
 import { dailyIncome, launchProject } from './launch';
@@ -413,6 +413,11 @@ export class Game {
   }
 
   /* --------------------------------------------------------------- staff */
+
+  /** What the run would score if it ended today. */
+  scoreNow(): number {
+    return finalScore(this.ctx);
+  }
 
   monthlyBurn(): number {
     return monthlyBurn(this.ctx);

@@ -8,10 +8,9 @@ import { dateLabel, shortMoney, shortNumber } from '../sim/format';
 import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { openHall } from '../ui/modals/hall';
+import { RANK_COLOR, RANK_NAME } from '../ui/ranks';
 import { Speech } from '../ui/speech';
 
-const RANK_COLOR: Record<string, number> = { S: C.yellow, A: C.green2, B: C.orange2, C: C.blue2, D: C.violet2, F: C.pink };
-const RANK_NAME: Record<string, string> = { S: 'UNICORN', A: 'SUCCESS', B: 'SURVIVED', C: 'MEH', D: 'ZOMBIE', F: 'RAN OUT' };
 const SKY: Record<string, [number, number, number]> = {
   S: [0x2a1650, 0x7a4ad1, 0xff8a30],
   A: [0x23356e, 0x3f6bd1, 0x72aaf5],

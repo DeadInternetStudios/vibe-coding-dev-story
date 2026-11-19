@@ -29,6 +29,9 @@ import { beat, showIntro } from '../ui/story';
 import { fadeTo } from '../ui/layout';
 import { shortMoney } from '../sim/format';
 
+/** Height kept free under the room on a tall screen for the office chatter box. */
+const CHATTER_LANE = 36;
+
 /** The main screen: the office, the bars, and everything that pops up over them. */
 export class OfficeScene extends Phaser.Scene {
   session!: Session;
@@ -43,6 +46,8 @@ export class OfficeScene extends Phaser.Scene {
   private dragX = 0;
   private bannerObj: Phaser.GameObjects.Container | null = null;
   private introDone = false;
+  /** a brand new company waits, clock stopped, until the first project starts */
+  private firstProjectWait = false;
   private launching = false;
   private chatter!: Chatter;
   private ticker?: Ticker;
@@ -80,6 +85,8 @@ export class OfficeScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(C.ink0);
     this.cameras.main.fadeIn(260, 18, 15, 36);
     this.introDone = !data?.intro;
+    this.firstProjectWait = !!data?.intro;
+    if (data?.intro) session.paused = true;
     this.launching = false;
     this.menuModal = null;
     this.promptOpen = false;
@@ -157,6 +164,7 @@ export class OfficeScene extends Phaser.Scene {
     this.room.onStaff = (id) => this.openStaff(id);
     this.room.onItem = (id) => this.itemQuip(id);
     this.room.onBulb = () => this.tapIdea();
+    this.bootLog();
     this.placeRoom();
     this.setupPan();
     const s = this.session.s;
@@ -171,7 +179,9 @@ export class OfficeScene extends Phaser.Scene {
     const rw = this.room.w;
     const rh = this.room.h;
     const x = rw <= L.W ? Math.floor((L.W - rw) / 2) : Math.min(0, Math.max(L.W - rw, Math.floor((L.W - rw) / 2)));
-    const y = top + Math.max(0, Math.floor((bottom - top - rh) / 2));
+    // portrait: the room rides low so the repo log and the revenue list get the tall space above it,
+    // with one chatter line of height left underneath
+    const y = L.portrait ? Math.max(top, bottom - CHATTER_LANE - rh) : top + Math.max(0, Math.floor((bottom - top - rh) / 2));
     this.room.root.setPosition(x, y);
     // a plum floor plate under the room so the edge reads
     if (rw <= L.W) rect(this, x - 3, y - 3, rw + 6, rh + 6, C.ink1, 1).setDepth(DEPTH.room - 1);
@@ -413,6 +423,34 @@ export class OfficeScene extends Phaser.Scene {
 
   /* ------------------------------------------------------------ the repo */
 
+  /** The terminal never starts empty: a new company boots, a loaded one resumes. */
+  private bootLog(): void {
+    if (this.termLog.length > 0) return;
+    const s = this.session.s;
+    const fresh = s.day <= 1 && s.shipped.length === 0;
+    const lines: TermLine[] = fresh
+      ? [
+          { kind: 'cmd', head: '$', text: 'cd ~/garage' },
+          { kind: 'cmd', head: '$', text: 'git init' },
+          { kind: 'ok', head: 'ok', text: 'initialized empty repository' },
+          { kind: 'cmd', head: '$', text: 'cat plan.txt' },
+          { kind: 'warn', head: 'err', text: 'plan.txt: no such file' },
+          { kind: 'cmd', head: '$', text: 'echo "ship it" > plan.txt' },
+          { kind: 'ok', head: 'ok', text: 'plan written (1 line)' },
+          { kind: 'cmd', head: '$', text: 'vibe init' },
+          { kind: 'warn', head: 'warn', text: 'runway is finite. optimism is not' },
+        ]
+      : [
+          { kind: 'cmd', head: '$', text: 'cd ~/garage' },
+          { kind: 'cmd', head: '$', text: 'git pull' },
+          { kind: 'warn', head: 'warn', text: 'merge conflict. nobody knows why' },
+          { kind: 'cmd', head: '$', text: 'vibe resume' },
+          { kind: 'ok', head: 'ok', text: `welcome back. day ${s.day}` },
+          { kind: 'warn', head: 'warn', text: '3 unread messages, all from Mom' },
+        ];
+    for (const l of lines) addLine(this.termLog, l);
+  }
+
   private logLine(kind: TermKind, head: string, text: string): void {
     addLine(this.termLog, { kind, head, text });
     this.dash?.push();
@@ -456,6 +494,11 @@ export class OfficeScene extends Phaser.Scene {
 
   update(_time: number, dt: number): void {
     if (!this.session) return;
+    if (this.firstProjectWait && this.session.s.project) {
+      this.firstProjectWait = false;
+      this.session.paused = false;
+      this.toasts.push('Clock started. The runway is not a metaphor.', 'info', 'star');
+    }
     const days = this.session.update(dt);
     for (const n of this.session.takeNotices()) this.handle(n);
     if (days > 0) {
