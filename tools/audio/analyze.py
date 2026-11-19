@@ -38,6 +38,8 @@ FFMPEG = "/opt/homebrew/bin/ffmpeg"
 
 CEILING_DBFS = 20 * math.log10(0.708)  # the engine's hard limiter ceiling, about -3.0
 MUSIC_TARGET_LUFS = -18.0
+# Win and lose play once and interrupt the bed music, so they sit 2 LU hotter than the loops.
+STINGER_TARGET_LUFS = MUSIC_TARGET_LUFS + 2.0
 SFX_TARGET_LUFS = -14.0
 SILENCE_DBFS = -60.0
 
@@ -275,6 +277,8 @@ def relative_key(k: str) -> str | None:
 # so a key finder cannot be strict. The declared key must still rank in the better third of the 24
 # candidates; a wrong key or a transposition lands far below that. The data tests check the notes themselves.
 KEY_RANK_OK = 8
+# A non looping song shorter than this is a stinger: tempo and key are not measured.
+SHORT_STINGER_SEC = 8.0
 # the seam step may be at most this many times the 99th percentile step of the loop itself
 SEAM_CLICK_MAX = 1.5
 
@@ -392,6 +396,31 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
 # --------------------------------------------------------------------- basics
 
 
+DROPOUT_SOUND_DBFS = -60.0
+DROPOUT_SILENCE_DBFS = -80.0
+GAP_MAX_MS = 150.0
+
+
+def longest_dropout_ms(mono: np.ndarray, sr: int) -> float:
+    """Longest stretch of near digital silence between the first and the last sound, in ms.
+
+    A full mix has a note, a hat or a decaying tail sounding at every moment, so a long
+    hole in it is a render that lost audio (a missed scheduler pump), not a rest.
+    """
+    hop = max(int(0.01 * sr), 1)
+    n = len(mono) // hop * hop
+    if n == 0:
+        return 0.0
+    frames = np.sqrt((mono[:n].reshape(-1, hop) ** 2).mean(axis=1))
+    sound = np.flatnonzero(frames > 10 ** (DROPOUT_SOUND_DBFS / 20))
+    if len(sound) < 2:
+        return 0.0
+    inner = frames[sound[0] : sound[-1] + 1] >= 10 ** (DROPOUT_SILENCE_DBFS / 20)
+    # distance between consecutive sounding frames, with sentinels at both ends
+    marks = np.flatnonzero(np.concatenate(([True], inner, [True])))
+    return float((np.diff(marks).max() - 1) * hop / sr * 1000)
+
+
 def basic_metrics(data: np.ndarray, sr: int) -> dict:
     mono = data.mean(axis=1)
     peak = float(np.abs(data).max())
@@ -409,6 +438,7 @@ def basic_metrics(data: np.ndarray, sr: int) -> dict:
     fr = np.sqrt((mono[:n].reshape(-1, hop) ** 2).mean(axis=1)) if n else np.array([0.0])
     silent_frac = float((fr < thr).mean())
     return {
+        "max_gap_ms": longest_dropout_ms(mono, sr),
         "duration": len(mono) / sr,
         "finite": finite,
         "peak_db": db(peak),
@@ -539,10 +569,14 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
         res["key_match"] = key_match(str(meta.get("key")), key) if meta.get("key") else "none"
         res["key_rank"] = key_rank(str(meta.get("key")), key) if meta.get("key") else None
         res["key_score"] = key["score"]
+        if not meta.get("loop") and len(mono) / sr < SHORT_STINGER_SEC:
+            # a few notes have no tempo or key worth measuring
+            res["tempo_match"] = "short"
+            res["key_match"] = "short"
         seam = loop_seam(mono, sr, meta)
         if seam:
             res.update(seam)
-        res["lufs_target"] = MUSIC_TARGET_LUFS
+        res["lufs_target"] = MUSIC_TARGET_LUFS if meta.get("loop") else STINGER_TARGET_LUFS
         # music loudness is judged on one whole loop once it has settled: loop 2, or loop 1 if only one was rendered
         loop = float(meta.get("loopSeconds") or 0)
         total = len(mono) / sr
@@ -598,6 +632,8 @@ def flags_for(r: dict) -> list[str]:
             fl.append("KEY")
         if r.get("seam_click_ratio", 0) > SEAM_CLICK_MAX:
             fl.append("SEAM")
+        if "@" not in r["name"] and r.get("max_gap_ms", 0) > GAP_MAX_MS:
+            fl.append(f"GAP {r['max_gap_ms']:.0f}ms")
         if r.get("loop_env_corr") is not None and r["loop_env_corr"] < 0.9:
             fl.append("LOOP")
     elif r["group"] == "sfx":

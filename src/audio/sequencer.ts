@@ -23,6 +23,8 @@ export interface NoteEvent {
   readonly tune?: number;
   /** Semitone offsets cycled quickly through (tracker style chord arpeggio). */
   readonly arp?: readonly number[];
+  /** Semitones the pitch glides over the note's length: negative falls, positive scoops. Steady when absent. */
+  readonly bend?: number;
 }
 
 export interface Track {

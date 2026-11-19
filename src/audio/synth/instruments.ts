@@ -124,6 +124,15 @@ export const INSTRUMENTS = {
     gate: 0.96,
     vib: { rate: 5.2, depth: 12, delay: 0.2 },
   },
+  // a slow wobbling brass: every note starts dark and opens up, "wah"
+  trombone: {
+    layers: [{ wave: 'saw' }, { wave: 'saw', detune: 7, vol: 0.8 }],
+    env: { a: 0.03, d: 0.12, s: 0.8, r: 0.18 },
+    vol: 0.2,
+    gate: 0.97,
+    vib: { rate: 5.4, depth: 22, delay: 0.18 },
+    filter: { type: 'lowpass', f0: 380, f1: 1900, time: 0.16, q: 1.1 },
+  },
 } as const satisfies Record<string, InstrumentDef>;
 
 export type InstrumentId = keyof typeof INSTRUMENTS;
@@ -134,7 +143,10 @@ export function getInstrument(id: InstrumentId): InstrumentDef {
   return INSTRUMENTS[id];
 }
 
-/** Turn an instrument and a note into a voice. */
+/**
+ * Turn an instrument and a note into a voice. A `bend` (semitones, negative falls)
+ * glides the pitch over the whole gated note.
+ */
 export function noteVoice(
   inst: InstrumentDef,
   freq: number,
@@ -142,16 +154,20 @@ export function noteVoice(
   dur: number,
   vel: number,
   arp?: readonly number[],
+  bend?: number,
 ): VoiceSpec {
+  const gated = dur * (inst.gate ?? 0.92);
   return {
     layers: inst.layers,
     t,
-    dur: dur * (inst.gate ?? 0.92),
+    dur: gated,
     freq,
     vol: inst.vol * vel,
     env: inst.env,
     vib: inst.vib,
     filter: inst.filter,
     arp: arp && arp.length > 1 ? { semis: arp, rate: inst.arpRate ?? 30 } : undefined,
+    slideTo: bend ? freq * 2 ** (bend / 12) : undefined,
+    slideTime: bend ? gated : undefined,
   };
 }

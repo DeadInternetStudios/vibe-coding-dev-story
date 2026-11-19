@@ -8,6 +8,7 @@ import {
   type Adsr,
   type EnvPoint,
 } from './synth/envelope';
+import { INSTRUMENTS, noteVoice } from './synth/instruments';
 import { CEILING, GUARD_KNEE, GUARD_MAX, KNEE, PEAK_LIMIT, guardCurve, softClipCurve, volumeToGain } from './synth/master';
 import {
   centsToRatio,
@@ -339,5 +340,21 @@ describe('VoicePool', () => {
     expect(pool.tryAdd(0.5, 0.5, 2, false)).toBe(false);
     expect(pool.tryAdd(1.5, 1.5, 2, false)).toBe(true);
     expect(pool.size).toBe(1);
+  });
+});
+
+describe('noteVoice', () => {
+  it('a steady note has no slide', () => {
+    const v = noteVoice(INSTRUMENTS.lead, 440, 1, 0.5, 0.8);
+    expect(v.slideTo).toBeUndefined();
+    expect(v.slideTime).toBeUndefined();
+  });
+
+  it('a bend glides over the whole gated note, by that many semitones', () => {
+    const fall = noteVoice(INSTRUMENTS.trombone, 440, 1, 1, 0.8, undefined, -12);
+    expect(fall.slideTo).toBeCloseTo(220, 6);
+    expect(fall.slideTime).toBeCloseTo(fall.dur, 9);
+    const scoop = noteVoice(INSTRUMENTS.lead, 440, 1, 1, 0.8, undefined, 7);
+    expect(scoop.slideTo).toBeCloseTo(440 * 2 ** (7 / 12), 6);
   });
 });
