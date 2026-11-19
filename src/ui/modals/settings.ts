@@ -13,7 +13,7 @@ import { layoutOf } from '../layout';
 export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClose?: () => void): Modal {
   const L = layoutOf(scene);
   const w = Math.min(L.W - 8, 250);
-  const h = Math.min(L.H - 8, feature('save') ? 190 : 170);
+  const h = Math.min(L.H - 8, feature('save') ? 210 : 190);
   const m = new Modal(scene, { w, h, title: 'SETTINGS', closable: true, hold, onClose });
   const s = app.settings;
   const commit = () => {
@@ -71,7 +71,6 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
     app.refreshViewport?.();
   }, { kind: 'cream' });
   m.add(sizeBtn);
-  m.add(button(scene, 58, y, 54, 14, 'ABOUT', () => openAbout(scene, hold), { kind: 'cream' }));
   y += 20;
   // the save as one line of text: copy it here, paste it on another device
   const FOOT = 'tap anywhere outside to close';
@@ -85,7 +84,10 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
     m.add(label(scene, 10, y + 4, 'SAVE CODE', { font: F.caps, tint: C.ink1 }));
     m.add(button(scene, w - 124, y, 54, 14, 'COPY', () => void copySave(scene).then(say), { kind: 'cream' }));
     m.add(button(scene, w - 66, y, 56, 14, 'LOAD', () => void loadSaveCode().then(say), { kind: 'cream' }));
+    y += 20;
   }
+  // about has a row of its own: next to UI SIZE it read as one of the sizes
+  m.add(button(scene, 10, y, w - 20, 14, 'ABOUT THIS GAME', () => openAbout(scene, hold), { kind: 'plum' }));
   return m;
 }
 
