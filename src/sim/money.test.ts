@@ -96,6 +96,19 @@ describe('the money', () => {
     }
   });
 
+  it('catches a dollar that leaves the cash box without a word', () => {
+    const realTick = Game.prototype.tick;
+    Game.prototype.tick = function (this: Game) {
+      realTick.call(this);
+      if (this.s.day === 5) this.s.company.cash -= 1;
+    };
+    try {
+      expect(() => audit('smart', 1, 'normal')).toThrow(/cash box .* but the books say/);
+    } finally {
+      Game.prototype.tick = realTick;
+    }
+  });
+
   it('ends every game inside the three years, and a bankruptcy leaves the company in debt', () => {
     for (const g of games) {
       const end = g.game.s.ending;
