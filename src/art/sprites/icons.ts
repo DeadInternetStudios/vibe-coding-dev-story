@@ -3,9 +3,19 @@
  * with an ink outline so it reads on light paper and on dark plum alike.
  */
 import { Px, type Legend } from '../pixel';
+import { BIG_ART } from './bigIcons';
 import { THREAD_ART } from './threadIcons';
 
 export const ICON_LEGEND: Legend = {
+  // dark and rare tones, added for the 12 x 12 icons
+  H: 'wood0',
+  Z: 'teal0',
+  C: 'skin4',
+  D: 'skin1',
+  E: 'skin0',
+  I: 'brick0',
+  J: 'brick1',
+  M: 'brick2',
   '.': 'clear',
   k: 'ink0',
   K: 'ink1',
@@ -587,12 +597,16 @@ const ART: Record<string, string[]> = {
 
 const cache = new Map<string, Px>();
 
-export const ICON_NAMES = Object.keys(ART);
+/** The small icons, 8 x 8 (and the 5 x 3 bubble tail). */
+export const ICON_NAMES = [...Object.keys(ART), ...Object.keys(THREAD_ART)];
+
+/** The 12 x 12 icons, in the order they were drawn. */
+export const BIG_ICON_NAMES = Object.keys(BIG_ART);
 
 export function iconPx(name: string): Px | null {
   const hit = cache.get(name);
   if (hit) return hit;
-  const rows = ART[name] ?? THREAD_ART[name];
+  const rows = ART[name] ?? THREAD_ART[name] ?? BIG_ART[name];
   if (!rows) return null;
   const p = Px.fromRows(rows, ICON_LEGEND);
   cache.set(name, p);
@@ -600,5 +614,5 @@ export function iconPx(name: string): Px | null {
 }
 
 export function hasIcon(name: string): boolean {
-  return name in ART || name in THREAD_ART;
+  return name in ART || name in THREAD_ART || name in BIG_ART;
 }
