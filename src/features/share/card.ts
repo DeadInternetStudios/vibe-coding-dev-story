@@ -15,6 +15,9 @@ import { fit, iconImg, label, panel, rect } from '../../ui/kit';
 
 export const CARD_W = 240;
 export const CARD_H = 126;
+/** the dark bar along the bottom with the poster's name and the address, and how far its words stand in from the edges */
+const FOOT_H = 10;
+const FOOT_INSET = 6;
 
 export interface CardFacts {
   company: string;
@@ -57,7 +60,7 @@ function layout(scene: Phaser.Scene, f: CardFacts): Phaser.GameObjects.Container
 
   // the panel with the verdict
   const py = 55;
-  c.add(panel(scene, 6, py, CARD_W - 12, 62, 'plum'));
+  c.add(panel(scene, 6, py, CARD_W - 12, CARD_H - FOOT_H - py, 'plum'));
   c.add(rect(scene, 12, py + 7, 46, 46, C.ink0, 1));
   c.add(rect(scene, 13, py + 8, 44, 44, col, 1));
   const letter = label(scene, 35, py + 12, f.rank, { font: F.title, tint: C.ink0, origin: [0.5, 0] });
@@ -82,10 +85,10 @@ function layout(scene: Phaser.Scene, f: CardFacts): Phaser.GameObjects.Container
   });
   c.add(label(scene, tx, py + 50, f.best ? fit(`BEST: ${f.best.name}  ${f.best.score}/40`, 44) : 'NO APPS SHIPPED. BOLD.', { font: F.body, tint: C.ink4, maxWidth: tw }));
 
-  // footer
-  c.add(rect(scene, 0, CARD_H - 8, CARD_W, 8, C.ink0, 0.85));
-  c.add(label(scene, 4, CARD_H - 7, `u/${f.founder.replace(/[^A-Za-z0-9]+/g, '')}`, { font: F.body, tint: C.orange2 }));
-  c.add(label(scene, CARD_W - 4, CARD_H - 7, f.where, { font: F.body, tint: C.cream, origin: [1, 0] }));
+  // footer: the poster's name and where to play. The words have 2 clear pixels above and below in a bar 10 high, so nothing touches the edge
+  c.add(rect(scene, 0, CARD_H - FOOT_H, CARD_W, FOOT_H, C.ink0, 0.85));
+  c.add(label(scene, FOOT_INSET, CARD_H - FOOT_H, `u/${f.founder.replace(/[^A-Za-z0-9]+/g, '')}`, { font: F.body, tint: C.orange2 }));
+  c.add(label(scene, CARD_W - FOOT_INSET, CARD_H - FOOT_H, fit(f.where, 44), { font: F.body, tint: C.cream, origin: [1, 0] }));
   return c;
 }
 
