@@ -3,7 +3,7 @@
  * same depth order) so decor and room art can be judged in place, in Node,
  * with no browser.
  *
- *   npx tsx tools/art/room.ts <tier 0-3> [--items all|none|id,id] [--staff 4] [--zoom 3] [--out name]
+ *   npx tsx tools/art/room.ts <tier 0-3> [--items all|none|id,id] [--staff 4] [--zoom 3] [--crop x,y,w,h] [--out name]
  *
  * Writes tools/art/out/room<tier>.png. `--items all` buys the whole shop, in
  * shop order, so you see what happens when the office is full.
@@ -125,11 +125,12 @@ for (const l of order) {
     }
 }
 
-const png = new PNG({ width: W * zoom, height: H * zoom });
-for (let y = 0; y < H * zoom; y++)
-  for (let x = 0; x < W * zoom; x++) {
-    const s = (Math.floor(y / zoom) * W + Math.floor(x / zoom)) * 4;
-    const o = (y * W * zoom + x) * 4;
+const [cx, cy, cw, ch] = flag('crop', `0,0,${W},${H}`).split(',').map(Number) as [number, number, number, number];
+const png = new PNG({ width: cw * zoom, height: ch * zoom });
+for (let y = 0; y < ch * zoom; y++)
+  for (let x = 0; x < cw * zoom; x++) {
+    const s = ((cy + Math.floor(y / zoom)) * W + cx + Math.floor(x / zoom)) * 4;
+    const o = (y * cw * zoom + x) * 4;
     png.data[o] = rgba[s]!;
     png.data[o + 1] = rgba[s + 1]!;
     png.data[o + 2] = rgba[s + 2]!;

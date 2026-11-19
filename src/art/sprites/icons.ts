@@ -613,12 +613,22 @@ export const ICON_NAMES = [...Object.keys(ART), ...Object.keys(THREAD_ART)];
 /** The 12 x 12 icons, in the order they were drawn. */
 export const BIG_ICON_NAMES = Object.keys(BIG_ART);
 
+/** BIG_ART holds the picture without its outline, at most 10 x 10. This adds the ink0 outline and centers it in 12 x 12. */
+function bigPx(rows: readonly string[]): Px {
+  const p = Px.fromRows(rows, ICON_LEGEND).outline('ink0');
+  if (p.w > 12 || p.h > 12) throw new Error(`big icon is ${p.w}x${p.h} with its outline, the limit is 12x12`);
+  const l = Math.floor((12 - p.w) / 2);
+  const t = Math.floor((12 - p.h) / 2);
+  return p.pad(l, t, 12 - p.w - l, 12 - p.h - t);
+}
+
 export function iconPx(name: string): Px | null {
   const hit = cache.get(name);
   if (hit) return hit;
-  const rows = ART[name] ?? THREAD_ART[name] ?? BIG_ART[name];
-  if (!rows) return null;
-  const p = Px.fromRows(rows, ICON_LEGEND);
+  const small = ART[name] ?? THREAD_ART[name];
+  const big = BIG_ART[name];
+  if (!small && !big) return null;
+  const p = small ? Px.fromRows(small, ICON_LEGEND) : bigPx(big!);
   cache.set(name, p);
   return p;
 }

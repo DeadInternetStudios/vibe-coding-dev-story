@@ -188,16 +188,15 @@ export function mug(): Px {
   ], { o: 'orange2' }).halo('ink0');
 }
 
-/** A rubber duck, 7 x 7 and 9 x 9 with its outline. */
+/** A rubber duck, 6 x 6 and 8 x 8 with its outline. */
 export function duck(): Px {
   return px([
-    '...yy..',
-    '..yyyy.',
-    '..ykyyy',
-    '.rryyy.',
-    'yyyyyYy',
-    '.yyyyY.',
-    '..YYY..',
+    '..yy..',
+    '.ykyy.',
+    'rryyy.',
+    'yyyyyy',
+    'yyyyYy',
+    '.YYYY.',
   ], { y: 'yellow', r: 'orange2', K: 'ink1', Y: 'orange3' }).outline('ink0');
 }
 
