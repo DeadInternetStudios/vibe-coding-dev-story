@@ -13,6 +13,7 @@ import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
+import { STAT_WORD_7 } from '../text';
 
 const COLORS: Record<StatKey, number> = { vibes: C.pink, features: C.sky, polish: C.yellow, stability: C.mint, security: C.violet2 };
 
@@ -204,8 +205,8 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   STAT_KEYS.forEach((k, i) => {
     const y = fy + 14 + i * 11;
     m.add(iconImg(scene, k, fx, y - 1));
-    m.add(label(scene, fx + 11, y, k.toUpperCase().slice(0, 4), { font: F.body, tint: C.ink3 }));
-    const b = bar(scene, fx + 38, y, rw - 60, 6, COLORS[k], 0);
+    m.add(label(scene, fx + 11, y, STAT_WORD_7[k], { font: F.body, tint: C.ink3 }));
+    const b = bar(scene, fx + 49, y, rw - 71, 6, COLORS[k], 0);
     m.add(b);
     statBars.set(k, b);
   });
@@ -265,6 +266,13 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       return;
     }
     game.startProject(p);
+    // the very first build runs at 4x, so the first launch (the fun part) is seconds away; the player's own speed comes back after it
+    const seen = ctx.session.s.tutorial;
+    if (ctx.session.s.shipped.length === 0 && !seen.includes('fast-first') && ctx.session.speedIdx < 2) {
+      seen.push('fast-first');
+      ctx.session.setSpeed(2);
+      ctx.toast('The first build runs at 4x so you see a launch fast. The speed buttons are up top.', 'info');
+    }
     ctx.sfx('confirm');
     m.close();
     ctx.refresh();

@@ -6,6 +6,7 @@ import { audio } from '../core/audio';
 import { bakeBox as bakeBoxKey, bakePortrait } from '../core/bake';
 import { C, F } from '../core/theme';
 import { STAT_KEYS, type StatKey } from '../content/types';
+import { STAT_WORD, STAT_WORD_7 } from './text';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { PHASES, SCOPES } from '../sim/config';
 import { cardById, type Card } from '../sim/cards';
@@ -338,8 +339,8 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   const colors: Record<StatKey, number> = { vibes: C.pink, features: C.sky, polish: C.yellow, stability: C.mint, security: C.violet2 };
   for (const k of STAT_KEYS) {
     m.add(iconImg(scene, k, 6, sy - 1));
-    m.add(label(scene, 17, sy, k.toUpperCase().slice(0, 4), { font: F.body, tint: C.ink3 }));
-    m.add(bar(scene, 44, sy, lw - 70, 5, colors[k], view.stats[k] / 100));
+    m.add(label(scene, 17, sy, (wide ? STAT_WORD_7 : STAT_WORD)[k], { font: F.body, tint: C.ink3 }));
+    m.add(bar(scene, wide ? 56 : 66, sy, lw - (wide ? 56 : 66) - 26, 5, colors[k], view.stats[k] / 100));
     m.add(label(scene, lw - 6, sy - 1, `${view.stats[k]}`, { font: F.body, tint: C.ink1, origin: [1, 0] }));
     sy += 9;
   }
@@ -347,7 +348,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   m.add(label(scene, lw - 6, sy, `${view.quality}`, { font: F.head, tint: C.teal1, origin: [1, 0] }));
   sy += 14;
   m.add(label(scene, 6, sy, 'HYPE', { font: F.caps, tint: C.ink1 }));
-  m.add(bar(scene, 44, sy + 1, lw - 70, 5, C.pink, Math.min(1, p.hype / 100)));
+  m.add(bar(scene, wide ? 56 : 66, sy + 1, lw - (wide ? 56 : 66) - 26, 5, C.pink, Math.min(1, p.hype / 100)));
   m.add(label(scene, lw - 6, sy, `${Math.round(p.hype)}`, { font: F.body, tint: C.ink1, origin: [1, 0] }));
   sy += 12;
   m.add(label(scene, 6, sy, `Scope: ${SCOPES[p.scope].label}`, { font: F.body, tint: C.ink3 }));

@@ -94,6 +94,12 @@ export class OfficeScene extends Phaser.Scene {
     }
     this.session = session;
     session.clearHolds();
+    // the first build ran at 4x so the first launch came fast; after it the speed is the player's own again
+    const seen = session.s.tutorial;
+    if (session.s.shipped.length > 0 && seen.includes('fast-first') && !seen.includes('fast-first-done')) {
+      seen.push('fast-first-done');
+      session.setSpeed(app.settings.speed);
+    }
     this.cameras.main.setBackgroundColor(C.ink0);
     wipeIn(this);
     this.introDone = !data?.intro;

@@ -61,9 +61,10 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
     m.add(ring);
     m.add(rect(scene, x + 1, y + 1, tile - 2, tile - 2, C.cream, 1));
     const key = bakeDecor(scene, it.art) ?? bakeIcon(scene, 'shop');
-    const img = scene.add.image(x + tile / 2, y + tile / 2 - 2, key).setOrigin(0.5, 0.5);
-    const sc = Math.max(1, Math.floor(Math.min((tile - 8) / img.width, (tile - 14) / img.height)));
-    img.setScale(sc);
+    // the art stands on the line above the price and never reaches into it; tall things are shown at half size
+    const img = scene.add.image(x + tile / 2, y + tile - 11, key).setOrigin(0.5, 1);
+    const room = Math.min((tile - 6) / img.width, (tile - 13) / img.height);
+    img.setScale(room >= 1 ? Math.floor(room) : room >= 0.5 ? 0.5 : 0.25);
     const st = state(it);
     if (st === 'locked' || st === 'tier') img.setTint(LOCKED_TINT);
     m.add(img);
@@ -124,11 +125,17 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
     const top = y + quip.height + 6;
     const room = dy + dh - (st === 'locked' ? 42 : 30) - top;
     if (room >= 40) {
-      const cw = Math.min(dw - 10, 150);
+      const maxW = Math.min(dw - 10, 190);
+      const big = scene.add.image(0, 0, key).setOrigin(0.5, 1);
+      const sc = Phaser.Math.Clamp(Math.floor(Math.min((maxW - 20) / big.width, (room - 22) / big.height)), 1, 8);
+      big.setScale(sc);
+      // the case is only as big as the thing in it, centred in the free space
+      const cw = Math.min(maxW, Math.max(84, Math.round(big.width * sc) + 40));
+      const ch = Math.min(room, Math.round(big.height * sc) + 26);
       const cx0 = px + Math.floor((dw - 10 - cw) / 2);
-      detail.add([rect(scene, cx0, top, cw, room, C.ink0, 1), rect(scene, cx0 + 1, top + 1, cw - 2, room - 2, C.ink1, 1), rect(scene, cx0 + 1, top + room - 9, cw - 2, 8, C.ink2, 1)]);
-      const big = scene.add.image(cx0 + Math.floor(cw / 2), top + room - 6, key).setOrigin(0.5, 1);
-      big.setScale(Phaser.Math.Clamp(Math.floor(Math.min((cw - 14) / big.width, (room - 14) / big.height)), 1, 6));
+      const cy0 = top + Math.floor((room - ch) / 2);
+      detail.add([rect(scene, cx0, cy0, cw, ch, C.ink0, 1), rect(scene, cx0 + 1, cy0 + 1, cw - 2, ch - 2, C.ink1, 1), rect(scene, cx0 + 1, cy0 + ch - 11, cw - 2, 10, C.ink2, 1)]);
+      big.setPosition(cx0 + Math.floor(cw / 2), cy0 + ch - 8);
       if (st === 'locked' || st === 'tier') big.setTint(LOCKED_TINT);
       detail.add(big);
     }

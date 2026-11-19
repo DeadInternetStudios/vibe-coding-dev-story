@@ -16,6 +16,7 @@ import { openSettings } from '../ui/modals/settings';
 import { openHall } from '../ui/modals/hall';
 import { Session } from '../game/session';
 import { Speech } from '../ui/speech';
+import { bandEnds, ScrollText } from '../ui/scrollText';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { Rng } from '../sim/rng';
 
@@ -35,9 +36,11 @@ export class TitleScene extends Phaser.Scene {
   private logo: { img: Phaser.GameObjects.Image; y: number } | null = null;
   private twinkles: Phaser.GameObjects.Image[] = [];
   private drifters: Drifter[] = [];
-  private ticker: Phaser.GameObjects.BitmapText | null = null;
-  private tickerW = 0;
+  private ticker: ScrollText | null = null;
   private tickerX = 0;
+  /** 1 when the floating comments may show, 0 while a greeting has the stage: one voice at a time */
+  private chatter = 1;
+  private chatterTo = 1;
   private clock = 0;
   private woke = false;
   private greeted = false;
@@ -108,21 +111,23 @@ export class TitleScene extends Phaser.Scene {
     // in the gap under the last button, so nothing above it moves
     if (feature('daily')) label(this, L.cx, y - 3, `daily: ${dailyKey()}`, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     const menuBottom = y;
+    const menuTop = subY + 16;
     this.buildDrifters(L, { half: bw / 2, top: subY + 14, menuBottom, stripH });
 
-    // ticker
+    // ticker: letters come out of the dark on the right and sink into the NEWS badge, whole
+    const NEWS_W = 34;
     rect(this, 0, H - stripH, W, stripH, C.ink0, 0.92).setDepth(DEPTH.hud);
     rect(this, 0, H - stripH, W, 1, C.orange2, 1).setDepth(DEPTH.hud);
-    label(this, 4, H - stripH + 3, 'NEWS', { font: F.caps, tint: C.orange2, depth: DEPTH.hud + 1 });
     const heads = app.content.headlines.length ? app.content.headlines : ['AI writes the code. Reddit reads the reviews.'];
     const rng = new Rng(Date.now() & 0xffff);
     const text = rng.shuffle(heads).slice(0, 8).join('      +++      ');
-    this.ticker = label(this, W, H - stripH + 3, text, { font: F.body, tint: C.cream, depth: DEPTH.hud + 1 });
-    this.tickerW = this.ticker.width;
+    this.ticker = new ScrollText(this, H - stripH + 3, NEWS_W, W, { font: F.body, tint: C.cream, depth: DEPTH.hud + 1 });
+    this.ticker.setRun(text);
     this.tickerX = W;
-    const mask = this.make.graphics({ x: 0, y: 0 });
-    mask.fillStyle(0xffffff).fillRect(34, H - stripH, W - 34, stripH);
-    this.ticker.setMask(mask.createGeometryMask());
+    this.ticker.place(this.tickerX);
+    bandEnds(this, NEWS_W, W, H - stripH + 1, stripH - 1, C.ink0, DEPTH.hud + 2);
+    rect(this, 0, H - stripH + 1, NEWS_W, stripH - 1, C.ink0, 1).setDepth(DEPTH.hud + 3);
+    label(this, 4, H - stripH + 3, 'NEWS', { font: F.caps, tint: C.orange2, depth: DEPTH.hud + 4 });
 
     // hall of fame teaser: best rank so far
     const hall = loadHall();
@@ -154,7 +159,7 @@ export class TitleScene extends Phaser.Scene {
         this.woke = true;
         hint.destroy();
         // a tap on empty sky: the first voice of the game says hello. A tap on a button just gets on with it.
-        if (over.length === 0) this.greet(W, H, stripH, menuBottom);
+        if (over.length === 0) this.greet(L, stripH, menuTop, menuBottom);
       };
       this.input.once('pointerdown', (_p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => wake(over));
       this.input.keyboard?.once('keydown', () => wake([]));
@@ -196,32 +201,55 @@ export class TitleScene extends Phaser.Scene {
     this.time.delayedCall(1600, fire);
   }
 
-  /** The first tap on empty sky wakes the sound and one of the voices of the game says hello over the skyline. */
-  private greet(W: number, H: number, stripH: number, menuBottom: number): void {
+  /**
+   * The first tap on empty sky wakes the sound and one of the voices of the game says hello. The box stands in the
+   * free lane beside the buttons when the screen is wide, under the buttons when it is narrow, and never over them.
+   */
+  private greet(L: ReturnType<typeof layoutOf>, stripH: number, menuTop: number, menuBottom: number): void {
     const lines = app.content.titleQuips;
     if (this.greeted || lines.length === 0) return;
     this.greeted = true;
+    const { W, H } = L;
     const line = lines[Math.floor(Math.random() * lines.length)]!;
-    const w = Math.min(W - 12, 224);
     const faceW = 40;
+    const boxH = 54;
+    // beside the buttons (a button column is 128 wide, 8 clear on each side)
+    const laneL = { x: 4, w: L.cx - 64 - 8 - 4 };
+    const laneR = { x: L.cx + 64 + 8, w: W - 4 - (L.cx + 64 + 8) };
+    const lane = laneR.w >= 124 ? laneR : laneL.w >= 124 ? laneL : null;
+    let w: number;
+    let x: number;
+    let y: number;
+    if (lane) {
+      w = Math.min(176, lane.w);
+      x = lane.x;
+      y = menuTop + 6;
+    } else {
+      w = Math.min(W - 12, 224);
+      x = Math.floor((W - w) / 2);
+      y = menuBottom + 10;
+      if (y + boxH > H - stripH - 4) y = H - stripH - 4 - boxH;
+    }
     const text = label(this, faceW + 12, 15, '', { font: F.body, tint: C.cream, maxWidth: w - faceW - 20 });
     const root = this.add.container(0, 0).setDepth(DEPTH.hud + 6);
     const name = label(this, faceW + 12, 4, `${VOICE_NAMES[line.voice] ?? line.voice}`.toUpperCase(), { font: F.caps, tint: C.orange2 });
-    root.add([panel(this, 0, 0, w, 54, 'night'), rect(this, 5, 5, faceW - 4, faceW - 4, C.ink2, 1), this.add.image(5 + (faceW - 4) / 2, 5 + faceW - 5, bakePortrait(this, line.voice)).setOrigin(0.5, 1).setScale(2), name, text]);
-    const x = Math.floor((W - w) / 2);
-    // low on the skyline, but never over the buttons or the daily line
-    const y = Math.min(H - stripH - 56, Math.max(menuBottom + 8, H - stripH - 60));
+    root.add([panel(this, 0, 0, w, boxH, 'night'), rect(this, 5, 5, faceW - 4, faceW - 4, C.ink2, 1), this.add.image(5 + (faceW - 4) / 2, 5 + faceW - 5, bakePortrait(this, line.voice)).setOrigin(0.5, 1).setScale(2), name, text]);
     root.setPosition(x, y);
     if (!app.settings.reducedMotion) {
       root.setAlpha(0);
       root.y += 8;
       this.tweens.add({ targets: root, alpha: 1, y, duration: 180, ease: 'Back.easeOut' });
     }
+    // one voice at a time: the floating comments step aside while this one talks
+    this.chatterTo = 0;
     const speech = new Speech(this, text);
     this.greeting = speech;
     void speech.say(line.text, line).then(() => speech.done).then(() => {
       this.greeting = null;
-      this.time.delayedCall(1300, () => this.tweens.add({ targets: root, alpha: 0, duration: 300, onComplete: () => root.destroy() }));
+      this.time.delayedCall(1300, () => {
+        this.chatterTo = 1;
+        this.tweens.add({ targets: root, alpha: 0, duration: 300, onComplete: () => root.destroy() });
+      });
     });
     this.events.once('shutdown', () => speech.stop());
   }
@@ -299,19 +327,19 @@ export class TitleScene extends Phaser.Scene {
     this.clock += dt / 1000;
     const reduce = app.settings.reducedMotion;
     if (this.logo) this.logo.img.y = this.logo.y + (reduce ? 0 : Math.round(Math.sin(this.clock * 2.2) * 2 - (this.greeting?.level ?? 0) * 3));
+    this.chatter += Math.sign(this.chatterTo - this.chatter) * Math.min(Math.abs(this.chatterTo - this.chatter), dt / 400);
     for (const d of this.drifters) {
       d.y -= (dt / 1000) * d.speed;
       if (d.y + d.h < d.y0) d.y = d.y1;
       d.c.y = Math.round(d.y);
       // a bubble is only seen whole: it fades in once all of it is above the news strip and is gone before its top reaches the buttons
       const fade = Math.min(1, Math.max(0, Math.min(d.y - d.y0, d.y1 - (d.y + d.h)) / 12));
-      d.c.setAlpha(0.9 * fade);
+      d.c.setAlpha(0.9 * fade * this.chatter);
     }
     if (this.ticker) {
       this.tickerX -= (dt / 1000) * 28;
-      if (this.tickerX < 36 - this.tickerW) this.tickerX = this.scale.width;
-      this.ticker.x = Math.round(this.tickerX);
+      if (this.tickerX + this.ticker.width < 34) this.tickerX = this.scale.width;
+      this.ticker.place(this.tickerX);
     }
   }
 }
-

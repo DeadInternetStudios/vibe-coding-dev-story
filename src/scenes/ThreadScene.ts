@@ -11,6 +11,7 @@ import type { ShippedApp } from '../sim/types';
 import { confettiBurst, gild } from '../ui/fx';
 import { BUZZ, buzz } from '../core/haptics';
 import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
+import { fit } from '../ui/text';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
 import { REMOVED_BELOW, SOLID_FROM, VIRAL_FROM } from '../sim/config';
@@ -50,23 +51,13 @@ const JUDGE_NAME: Record<StatKey | 'overall' | 'hype', string> = {
   hype: 'HYPE',
 };
 
-const JUDGE_SHORT: Record<StatKey | 'overall' | 'hype', string> = {
-  vibes: 'VIBE',
-  features: 'FEAT',
-  polish: 'POLI',
-  stability: 'STAB',
-  security: 'SECU',
-  overall: 'ALL',
-  hype: 'HYPE',
-};
-
 /** The 2nd, 3rd and 4th "overall" rating get their own names, so the tiles never read as one copied tile. */
 const OVERALL_AGAIN = ['GUT', 'SELL', 'WOW'];
 
-function judgeShort(judges: StatKey | 'overall' | 'hype', nth: number): string {
-  if (nth === 0) return JUDGE_SHORT[judges];
-  if (judges === 'overall') return OVERALL_AGAIN[nth - 1] ?? 'ALL';
-  return `${JUDGE_SHORT[judges].slice(0, 3)}${nth + 1}`;
+function judgeName(judges: StatKey | 'overall' | 'hype', nth: number): string {
+  if (nth === 0) return JUDGE_NAME[judges];
+  if (judges === 'overall') return OVERALL_AGAIN[nth - 1] ?? 'OVERALL';
+  return `${JUDGE_NAME[judges]} ${nth + 1}`;
 }
 
 /** What the address bar says for each place the app can be posted. Every thread is drawn as Reddit, the URL keeps the joke honest. */
@@ -537,7 +528,8 @@ export class ThreadScene extends Phaser.Scene {
     const g = this.add.container(0, 0);
     this.feed.add(g);
     const w = this.cw;
-    for (let i = 0; i < 4; i++) {
+    // one card on the way, not a screenful: the feed should look busy, not stalled
+    for (let i = 0; i < 1; i++) {
       const y = i * 46;
       g.add(panel(this, this.x0, y, w, 40, 'plum', false));
       g.add(rect(this, this.x0 + 5, y + 5, 20, 21, C.ink2, 0.8));
@@ -885,26 +877,34 @@ export class ThreadScene extends Phaser.Scene {
     const col = score >= 28 ? C.green1 : score >= 18 ? C.orange1 : C.berry1;
     const verdict = score >= 34 ? 'FRONT PAGE' : score >= 28 ? 'HOT' : score >= 22 ? 'DECENT' : score >= 16 ? 'MID' : score >= REMOVED_BELOW ? 'RATIOED' : 'REMOVED BY MODS';
     const lx = 8;
-    card.add(label(this, lx, 20, 'REDDIT SCORE', { font: F.caps, tint: C.ink3 }));
+    card.add(label(this, lx, 20, 'THREAD SCORE', { font: F.caps, tint: C.ink3 }));
     const big = label(this, lx, 29, '0', { font: F.title, tint: col });
     big.setScale(wide ? 3 : 2.5);
     card.add(big);
-    card.add(label(this, lx + (wide ? 66 : 60), wide ? 56 : 52, '/40', { font: F.head, tint: C.ink3 }));
-    const verdictT = label(this, lx, wide ? 78 : 72, '', { font: F.head, tint: col });
+    // the "/40" sits right after the number it belongs to
+    big.setText(`${score}`);
+    const bigW = Math.round(big.displayWidth);
+    big.setText('0');
+    card.add(label(this, lx + bigW + 3, wide ? 56 : 52, '/40', { font: F.head, tint: C.ink2 }));
+    // the verdict is a word you can read from across the room; the long one gets the smaller face
+    const vFont = verdict.length > 10 ? F.head : F.title;
+    const verdictT = label(this, lx, vFont === F.title ? (wide ? 75 : 71) : wide ? 79 : 75, '', { font: vFont, tint: col });
     card.add(verdictT);
-    // the ratings
+    // the four ratings the thread handed out, in words
     const rec2 = this.rec.thread.vignettes;
     const seen = new Map<string, number>();
+    const cellW = wide ? 66 : Math.min(100, Math.floor((w - 16 - 4) / 2));
     rec2.forEach((v, i) => {
       const nth = seen.get(v.judges) ?? 0;
       seen.set(v.judges, nth + 1);
-      const bx = lx + i * 24;
-      const by = wide ? 98 : 90;
+      const bx = lx + (i % 2) * (cellW + 4);
+      const by = (wide ? 99 : 95) + Math.floor(i / 2) * 17;
       const rc = v.rating >= 7 ? C.green2 : v.rating >= 4 ? C.yellow : C.pink;
-      card.add(rect(this, bx, by, 22, 18, C.ink0, 1));
-      card.add(rect(this, bx + 1, by + 1, 20, 16, rc, 1));
-      card.add(label(this, bx + 11, by + 2, `${v.rating}`, { font: F.head, tint: C.ink0, origin: [0.5, 0] }));
-      card.add(label(this, bx + 11, by + 19, judgeShort(v.judges as StatKey | 'overall' | 'hype', nth), { font: F.body, tint: C.ink3, origin: [0.5, 0] }));
+      card.add(rect(this, bx, by, cellW, 15, C.ink0, 1));
+      card.add(rect(this, bx + 1, by + 1, cellW - 2, 13, C.ink1, 1));
+      card.add(label(this, bx + 4, by + 4, fit(judgeName(v.judges as StatKey | 'overall' | 'hype', nth), Math.floor((cellW - 26) / 5)), { font: F.body, tint: C.cream }));
+      card.add(rect(this, bx + cellW - 17, by + 1, 16, 13, rc, 1));
+      card.add(label(this, bx + cellW - 9, by + 4, `${v.rating}`, { font: F.capsBold, tint: C.ink0, origin: [0.5, 0] }));
     });
 
     // right side: karma, money, the app store
@@ -926,7 +926,7 @@ export class ThreadScene extends Phaser.Scene {
     const stars = rec.review?.stars ?? Math.max(1, Math.round(score / 8));
     for (let i = 0; i < 5; i++) {
       const st = iconImg(this, 'star', rx + rw - 5 - (5 - i) * 9, ry2 + 3);
-      if (i >= stars) st.setTint(C.ink4);
+      if (i >= stars) st.setTint(0xd6cdb9).setTintMode(Phaser.TintModes.FILL);
       card.add(st);
     }
     card.add(label(this, rx + 4, ry2 + 14, reviewText, { font: F.read, tint: C.ink1, maxWidth: rw - 8 }));

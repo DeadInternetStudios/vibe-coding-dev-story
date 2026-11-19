@@ -22,7 +22,14 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   const dim = rect(scene, 0, 0, L.W, L.H, C.ink0, 0.35).setInteractive();
   root.add(dim);
   const w = Math.min(L.W - 8, 330);
-  const h = L.portrait ? 74 : 62;
+  // the box grows to fit the longest line of the scene, so no sentence runs out of the bottom
+  const tallest = steps.reduce((most, step) => {
+    const probe = label(scene, 0, 0, step.line.text, { font: F.read, maxWidth: w - 58 });
+    const height = probe.getTextBounds(true).global.height;
+    probe.destroy();
+    return Math.max(most, height);
+  }, 0);
+  const h = Math.max(L.portrait ? 74 : 62, Math.ceil(17 + tallest + 16));
   const x = Math.floor((L.W - w) / 2);
   // portrait: sit over the repo and revenue panels so the staff stay in view while they talk
   const roomTop = ctx.room?.root.y;
