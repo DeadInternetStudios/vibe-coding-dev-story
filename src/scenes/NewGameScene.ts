@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
 import { bakePerson } from '../core/bake';
+import { dailyKey, dailyRun, dailyTag, loadDailyBest } from '../core/daily';
 import { C, DEPTH, F } from '../core/theme';
 import { ACCESSORIES, HAIR } from '../art/sprites/people';
 import { CLOTH_RAMPS, HAIR_RAMPS, SKIN_RAMPS } from '../art/palette';
-import { DIFFICULTIES, FOUNDER_ORIGINS, type DifficultyId, type FounderOriginId } from '../sim/config';
+import { DIFFICULTIES, FOUNDER_ORIGINS, type FounderOriginId } from '../sim/config';
 import { Rng } from '../sim/rng';
 import type { Look } from '../sim/types';
 import { Session } from '../game/session';
@@ -21,6 +22,9 @@ const LOOK_ROWS: { key: keyof Look; name: string; count: () => number }[] = [
   { key: 'outfit', name: 'OUTFIT', count: () => CLOTH_RAMPS.length },
   { key: 'accessory', name: 'EXTRA', count: () => ACCESSORIES.length },
 ];
+
+/** height of the two lines that explain the daily challenge, above its button */
+const DAILY_NOTE = 23;
 
 const ORIGIN_SKILL_NAMES: Record<string, string> = { prompt: 'PROMPT', taste: 'TASTE', debug: 'DEBUG', paranoia: 'PARANOIA', hustle: 'HUSTLE' };
 
@@ -179,11 +183,19 @@ export class NewGameScene extends Phaser.Scene {
     const blurb = label(this, rightX, ry, DIFFICULTIES[f.difficulty]!.blurb, { font: F.body, tint: C.cream, maxWidth: rightW });
     ry += 12;
 
-    // ------------------------------------------------------ start
-    const startY = wide ? L.H - 30 : Math.max(ry + 6, L.H - 34);
+    // ------------------------------------------------------ start, and the daily challenge beside it
+    // wide screens keep the daily in the empty corner under the avatar, narrow ones stack it above the start
+    const startY = wide ? L.H - 30 : Math.max(ry + 6 + DAILY_NOTE + 24 + 4, L.H - 34);
     const startW = wide ? rightW : cw;
     const start = button(this, rightX, startY, startW, 24, "LET'S VIBE", () => this.start(), { kind: 'orange', icon: 'bolt' });
     this.tweens.add({ targets: start, y: start.y - 1, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const dailyY = wide ? startY : startY - 24 - 4;
+    const dailyW = wide ? leftW : cw;
+    const today = dailyKey();
+    const best = loadDailyBest(today);
+    label(this, x0, dailyY - DAILY_NOTE, dailyTag(today), { font: F.caps, tint: C.yellow });
+    label(this, x0, dailyY - 12, best ? `Normal difficulty. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'Normal difficulty. Same chaos for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: dailyW });
+    button(this, x0, dailyY, dailyW, 24, 'DAILY CHALLENGE', () => this.start(true), { kind: 'violet', icon: 'calendar' });
     const back = button(this, 4, 4, 30, 14, 'BACK', () => fadeTo(this, 'Title'), { kind: 'plum' });
     void back;
     void cards;
@@ -195,18 +207,18 @@ export class NewGameScene extends Phaser.Scene {
     this.build();
   }
 
-  private start(): void {
+  /** A normal start follows the form. The daily challenge keeps the names and the past, but takes its seed and difficulty from the date. */
+  private start(daily = false): void {
     const f = this.form;
     const origin = FOUNDER_ORIGINS[f.origin]!;
-    const diff = DIFFICULTIES[f.difficulty]!;
+    const run = daily ? dailyRun(dailyKey()) : { seed: this.seed, difficulty: DIFFICULTIES[f.difficulty]!.id };
     app.session = Session.fresh(
       app.content,
       {
-        seed: this.seed,
+        ...run,
         company: f.company,
         founderName: f.founder,
         origin: origin.id as FounderOriginId,
-        difficulty: diff.id as DifficultyId,
         look: f.look,
       },
       app.settings.speed,

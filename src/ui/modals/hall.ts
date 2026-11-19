@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { dailyTag } from '../../core/daily';
 import { HALL_SIZE, loadHall, type HallEntry } from '../../core/save';
 import { C, F } from '../../core/theme';
 import { shortMoney } from '../../sim/format';
@@ -34,8 +35,11 @@ function scoreRow(scene: Scene, e: HallEntry, place: number, rw: number): Scroll
   const rank = label(scene, 7, 5, e.rank, { font: F.head, tint: e.rank === 'S' ? C.orange1 : e.bankrupt ? C.berry1 : C.ink1 });
   const name = label(scene, 22, 4, fit(e.company, 22), { font: F.caps, tint: C.ink1 });
   const score = label(scene, rw - 6, 4, shortMoney(e.score), { font: F.caps, tint: C.green1, origin: [1, 0] });
-  const sub = label(scene, 22, 14, fit(`#${place} - ${e.founder} - ${e.apps} apps - ${e.difficulty}`, 44), { font: F.body, tint: C.ink3 });
-  return { h: ROW_H, node: scene.add.container(0, 0, [panel(scene, 0, 0, rw, ROW_H, 'chipLight', false), rank, name, score, sub]) };
+  const parts = [`#${place}`, e.founder, `${e.apps} ${e.apps === 1 ? 'app' : 'apps'}`];
+  // a daily run is always on normal difficulty, so its tag takes the place of the difficulty
+  const sub = label(scene, 22, 14, e.daily ? fit(parts.join(' - '), 32) : fit([...parts, e.difficulty].join(' - '), 44), { font: F.body, tint: C.ink3 });
+  const tag = e.daily ? [label(scene, rw - 6, 14, dailyTag(e.daily), { font: F.body, tint: C.violet1, origin: [1, 0] })] : [];
+  return { h: ROW_H, node: scene.add.container(0, 0, [panel(scene, 0, 0, rw, ROW_H, 'chipLight', false), rank, name, score, sub, ...tag]) };
 }
 
 /** A place on the board nobody has earned yet. */

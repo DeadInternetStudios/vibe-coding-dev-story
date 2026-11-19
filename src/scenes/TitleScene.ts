@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { app } from '../core/app';
 import { bake } from '../core/bake';
+import { dailyKey } from '../core/daily';
 import { loadHall, loadSave } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
 import { moon, nightSky, skyline, stars } from '../art/sprites/scenery';
@@ -95,11 +96,13 @@ export class TitleScene extends Phaser.Scene {
     if (save) {
       const month = Math.floor(save.day / 28) + 1;
       add('CONTINUE', 'teal', () => this.continueGame(), 'play');
-      label(this, L.cx, y - 3, `${save.company.name}  -  month ${month}`, { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
+      label(this, L.cx, y - 3, `${save.company.name}  -  month ${month}${save.daily ? '  -  daily' : ''}`, { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
       y += 9;
     }
     add('HALL OF FAME', 'cream', () => openHall(this), 'trophy');
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
+    // in the gap under the last button, so nothing above it moves
+    label(this, L.cx, y - 3, `daily: ${dailyKey()}`, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     this.buildDrifters(L, { half: Math.max(logoHalf, bw / 2), menuBottom: y, stripH });
 
     // ticker

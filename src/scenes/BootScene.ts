@@ -24,6 +24,8 @@ export class BootScene extends Phaser.Scene {
             const demo = buildDemo(app.content, demoName, Number(q.get('seed') ?? 11));
             if (!demo) throw new Error(`no demo moment called ${demoName}`);
             if (q.get('notut')) demo.state.tutorial = Object.keys(app.content.story.tutorial);
+            const daily = q.get('daily');
+            if (daily) demo.state.daily = daily;
             app.session = Session.resume(app.content, demo.state, app.settings.speed);
             if (q.get('paused')) app.session.paused = true;
             this.scene.start(demo.scene, demo.data);

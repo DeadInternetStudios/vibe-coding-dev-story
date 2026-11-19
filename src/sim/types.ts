@@ -196,6 +196,8 @@ export interface GameState {
   seed: number;
   rng: number;
   difficulty: string;
+  /** the UTC date (2026-11-19) of the daily challenge this run is, absent for a normal run */
+  daily?: string;
   day: number;
   nextId: number;
   company: {

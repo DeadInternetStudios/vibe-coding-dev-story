@@ -100,6 +100,8 @@ export interface HallEntry {
   difficulty: string;
   bankrupt: boolean;
   when: number;
+  /** the UTC date of the daily challenge, absent for a normal run */
+  daily?: string;
 }
 
 export function loadHall(): HallEntry[] {
