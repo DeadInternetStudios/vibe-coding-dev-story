@@ -7,7 +7,7 @@ import { projectView } from '../sim/views';
 import type { Session } from '../game/session';
 import { hasIcon } from '../art/sprites/icons';
 import { bar, button, fit, iconImg, label, panel, rect, type BarObj, type ButtonObj } from './kit';
-import type { Layout } from './layout';
+import { hudTopH, type Layout } from './layout';
 import { STAT_WORD_7 } from './text';
 
 export type MenuId = 'hire' | 'team' | 'shop' | 'tools' | 'room' | 'menu' | 'apps' | 'project' | 'launch';
@@ -87,7 +87,7 @@ export class Hud {
     this.projectKey = '';
     const s = this.scene;
     const portrait = L.portrait;
-    this.topH = portrait ? 30 : 17;
+    this.topH = hudTopH(portrait);
     this.bottomH = portrait ? 118 : 62;
 
     // ------------------------------------------------------------ top bar

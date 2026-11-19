@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { MAX_CONTENT_W } from '../core/viewport';
 import { wipeOut } from './wipe';
 
+export { hudTopH, popupH } from './popupSize';
+
 export interface Layout {
   /** logical canvas size in art pixels */
   W: number;
@@ -20,11 +22,6 @@ export function layoutOf(scene: Phaser.Scene): Layout {
   const H = scene.scale.height;
   const cw = Math.min(W, MAX_CONTENT_W);
   return { W, H, portrait: H > W * 1.02, cw, x0: Math.floor((W - cw) / 2), cx: Math.floor(W / 2) };
-}
-
-/** Height for a popup that wants `want`: on a short screen it keeps a margin so the page behind still frames it. */
-export function popupH(L: Layout, want: number): number {
-  return Math.min(L.H - (L.H < 270 ? 14 : 4), want);
 }
 
 /** Run `build` now and again whenever the canvas size changes. `build` must make everything fresh. */
