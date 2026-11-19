@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Layout } from './layout';
-import { hudTopH, popupH } from './popupSize';
+import { HUD_TOP_H, popupH } from './popupSize';
 
 const screen = (W: number, H: number): Layout => ({ W, H, portrait: H > W * 1.02, cw: W, x0: 0, cx: Math.floor(W / 2) });
 
@@ -13,7 +13,7 @@ describe('how tall a card is on each screen', () => {
 
   it('a card that leaves the whole status strip showing keeps its own height', () => {
     const L = screen(240, 427);
-    const room = L.H - 4 - 2 * (hudTopH(true) + 1);
+    const room = L.H - 4 - 2 * (HUD_TOP_H + 1);
     expect(popupH(L, 350)).toBe(350);
     expect(popupH(L, room)).toBe(room);
     expect(popupH(L, room + 1)).toBe(423);
@@ -28,9 +28,10 @@ describe('how tall a card is on each screen', () => {
     expect(popupH(screen(507, 234), 258)).toBe(220);
   });
 
-  it('a laptop keeps its cards', () => {
-    expect(popupH(screen(480, 300), 246)).toBe(246);
-    expect(popupH(screen(480, 300), 258)).toBe(258);
+  it('a laptop takes the whole height for a card that would cut into the two rows of the strip, and keeps a short one', () => {
+    expect(popupH(screen(480, 300), 246)).toBe(296);
+    expect(popupH(screen(480, 300), 258)).toBe(296);
+    expect(popupH(screen(480, 300), 230)).toBe(230);
   });
 
   it('never taller than the screen allows', () => {

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { MAX_CONTENT_W } from '../core/viewport';
 import { wipeOut } from './wipe';
 
-export { hudTopH, popupH } from './popupSize';
+export { HUD_TOP_H, popupH } from './popupSize';
 
 export interface Layout {
   /** logical canvas size in art pixels */

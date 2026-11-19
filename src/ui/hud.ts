@@ -7,7 +7,8 @@ import { projectView } from '../sim/views';
 import type { Session } from '../game/session';
 import { hasIcon } from '../art/sprites/icons';
 import { bar, button, fit, iconImg, label, panel, rect, type BarObj, type ButtonObj } from './kit';
-import { hudTopH, type Layout } from './layout';
+import { HUD_TOP_H, type Layout } from './layout';
+import { gaugeRow, karmaText } from './hudLayout';
 import { STAT_WORD_7 } from './text';
 
 export type MenuId = 'hire' | 'team' | 'shop' | 'tools' | 'room' | 'menu' | 'apps' | 'project' | 'launch';
@@ -19,6 +20,10 @@ const STAT_COLORS: Record<StatKey, number> = {
   stability: C.mint,
   security: C.violet2,
 };
+
+/** the second row of the top bar: the icon of a gauge sits here, its name eight pixels over it */
+const GAUGE_Y = 20;
+const SPEED_W = 15;
 
 interface Meter {
   icon: Phaser.GameObjects.Image;
@@ -87,21 +92,23 @@ export class Hud {
     this.projectKey = '';
     const s = this.scene;
     const portrait = L.portrait;
-    this.topH = hudTopH(portrait);
+    this.topH = HUD_TOP_H;
     this.bottomH = portrait ? 118 : 62;
 
     // ------------------------------------------------------------ top bar
+    // first row: the money on the left, the date on the right.
+    // second row: karma, tokens and spaghetti, each with its name over it, and the speed buttons on the right
     const top = rect(s, 0, 0, L.W, this.topH, C.ink0, 1).setDepth(DEPTH.hud);
     const topEdge = rect(s, 0, this.topH, L.W, 1, C.ink2, 1).setDepth(DEPTH.hud);
     this.add(top);
     this.add(topEdge);
-    const meter = (x: number, y: number, icon: string, withBar = false, barW = 28): Meter => {
+    const meter = (x: number, y: number, icon: string, barW = 0): Meter => {
       const ic = iconImg(s, icon, x, y).setDepth(DEPTH.hud + 1);
       this.add(ic);
       const text = label(s, x + 10, y + 1, '', { font: F.caps, tint: C.cream, depth: DEPTH.hud + 1 });
       this.add(text);
       const m: Meter = { icon: ic, text };
-      if (withBar) {
+      if (barW > 0) {
         m.bar = bar(s, x + 10, y + 1, barW, 6, C.orange2, 0);
         m.bar.setDepth(DEPTH.hud + 1);
         this.add(m.bar);
@@ -109,28 +116,31 @@ export class Hud {
       }
       return m;
     };
+    const gauge = (x: number, word: string, tint: number, icon: string, barW = 0): Meter => {
+      this.add(label(s, x, GAUGE_Y - 8, word, { font: F.body, tint, depth: DEPTH.hud + 1 }));
+      return meter(x, GAUGE_Y, icon, barW);
+    };
     const x0 = L.x0 + 4;
-    const row2 = portrait ? 16 : 4;
-    this.cash = meter(x0, 4, 'cash');
-    this.cashPos = { x: x0 + 12, y: 4 };
-    this.karma = meter(portrait ? x0 + 78 : x0 + 70, 4, 'karma');
-    this.tokens = meter(portrait ? x0 : x0 + 130, row2, 'token', true, 26);
-    this.spag = meter(portrait ? x0 + 78 : x0 + 214, row2, 'spaghetti', true, 26);
-    this.date = label(s, L.x0 + L.cw - 4, portrait ? 4 : 5, '', { font: F.caps, tint: C.yellow, origin: [1, 0], depth: DEPTH.hud + 1 });
+    const sx = L.x0 + L.cw - 4 - (SPEEDS.length + 1) * (SPEED_W + 1) + 1;
+    const g = gaugeRow(x0, sx - 4);
+    this.cash = meter(x0, 3, 'cash');
+    this.cashPos = { x: x0 + 12, y: 3 };
+    this.date = label(s, L.x0 + L.cw - 4, 4, '', { font: F.caps, tint: C.yellow, origin: [1, 0], depth: DEPTH.hud + 1 });
     this.add(this.date);
+    this.karma = gauge(g.karma, 'KARMA', C.orange2, 'karma');
+    this.tokens = gauge(g.tokens, 'TOKENS', C.violet2, 'token', g.bar);
+    this.spag = gauge(g.spaghetti, 'SPAGHETTI', C.yellow, 'spaghetti', g.bar);
 
     // speed buttons
     this.speedBtns = [];
     const names = ['1x', '2x', '4x', '8x'];
-    const bw = 15;
-    const sx = L.x0 + L.cw - 4 - (SPEEDS.length + 1) * (bw + 1) + 1;
-    const sy = portrait ? 15 : 2;
-    const pause = button(s, sx, sy, bw, 13, '', () => this.onSpeed(-1), { kind: 'plum', icon: 'pause', silent: false });
+    const sy = 16;
+    const pause = button(s, sx, sy, SPEED_W, 13, '', () => this.onSpeed(-1), { kind: 'plum', icon: 'pause', silent: false });
     pause.setDepth(DEPTH.hud + 2);
     this.add(pause);
     this.speedBtns.push(pause);
     SPEEDS.forEach((_, i) => {
-      const b = button(s, sx + (i + 1) * (bw + 1), sy, bw, 13, names[i]!, () => this.onSpeed(i), { kind: 'plum', font: F.body });
+      const b = button(s, sx + (i + 1) * (SPEED_W + 1), sy, SPEED_W, 13, names[i]!, () => this.onSpeed(i), { kind: 'plum', font: F.body });
       b.setDepth(DEPTH.hud + 2);
       this.add(b);
       this.speedBtns.push(b);
@@ -292,7 +302,7 @@ export class Hud {
     const cashStr = money(this.shownCash);
     this.setText('cash', this.cash.text, cashStr);
     this.cash.text.setTint(this.shownCash < 0 ? C.pink : Math.abs(diff) > 0.5 ? (diff > 0 ? C.green2 : C.pink) : C.cream);
-    this.setText('karma', this.karma.text, `${Math.round(co.karma)}`);
+    this.setText('karma', this.karma.text, karmaText(co.karma));
     const tokCap = this.tokenCap();
     this.tokens.bar?.set(Math.min(1, co.tokens / tokCap), true);
     this.setText('tokens', this.tokens.text, co.tokens >= 1000 ? `${(co.tokens / 1000).toFixed(1)}M` : `${Math.round(co.tokens)}K`);

@@ -123,7 +123,7 @@ export class ThreadScene extends Phaser.Scene {
   private portrait = false;
   private cur: Speech | null = null;
   private nudge: (() => void) | null = null;
-  private slots: { text: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Image }[] = [];
+  private slots: { text: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Image; star: Phaser.GameObjects.Image }[] = [];
   private skipBtn!: Phaser.GameObjects.Container;
   private tapHint: Phaser.GameObjects.Container | null = null;
   private resultsOpen = false;
@@ -257,13 +257,14 @@ export class ThreadScene extends Phaser.Scene {
     panel(this, kx, 3, pillW, 11, 'well', false).setDepth(DEPTH.panel + 1);
     this.karmaIcon = iconImg(this, 'karma', kx + 3, 4).setOrigin(0.5, 0.5).setPosition(kx + 7, 9).setDepth(DEPTH.panel + 2);
     this.karmaT = label(this, kx + 14, 5, '+0', { font: F.caps, tint: C.orange2, depth: DEPTH.panel + 2 });
-    // rating slots, they fill in as the root comments land
+    // rating slots: a dim star each, and the star gives way to the rating as the root comments land
     this.slots = [];
     for (let i = 0; i < n; i++) {
       const x = W - slotsW - 2 + i * (slotW + 1);
       const box = rect(this, x, 3, slotW, 11, C.ink0, 1).setDepth(DEPTH.panel + 1);
-      const text = label(this, x + slotW / 2, 5, '?', { font: F.body, tint: C.ink3, origin: [0.5, 0], depth: DEPTH.panel + 2 });
-      this.slots.push({ box, text });
+      const star = iconImg(this, 'star', x + 2, 4).setTint(C.ink3).setDepth(DEPTH.panel + 2);
+      const text = label(this, x + slotW / 2, 5, '', { font: F.body, tint: C.ink0, origin: [0.5, 0], depth: DEPTH.panel + 2 });
+      this.slots.push({ box, text, star });
     }
     // skip
     const L = layoutOf(this);
@@ -831,6 +832,7 @@ export class ThreadScene extends Phaser.Scene {
     const paint = () => {
       if (!slot) return;
       slot.box.setTint(col);
+      slot.star.setVisible(false);
       slot.text.setText(`${rating}`);
       slot.text.setTint(C.ink0);
     };
@@ -844,7 +846,8 @@ export class ThreadScene extends Phaser.Scene {
     audio.sfx(rating >= 7 ? 'praise' : rating <= 4 ? 'roast' : 'select');
     this.time.delayedCall(app.settings.reducedMotion ? 0 : 300, () => {
       paint();
-      if (slot) this.tweens.add({ targets: slot.box, scaleY: { from: 1.5, to: 1 }, duration: 160 });
+      // the box pops a little taller and settles back to its own height (it is a stretched one pixel picture, so its scale is not 1)
+      if (slot && !app.settings.reducedMotion) this.tweens.add({ targets: slot.box, scaleY: { from: slot.box.scaleY * 1.5, to: slot.box.scaleY }, duration: 160 });
     });
   }
 
