@@ -39,7 +39,13 @@ export function responsive(scene: Phaser.Scene, build: () => void, teardown?: ()
   build();
 }
 
+const leaving = new WeakSet<Phaser.Scene>();
+
+/** Fade out, then start another scene. A second tap during the fade is ignored; Phaser would restart the fade each time and never finish. */
 export function fadeTo(scene: Phaser.Scene, key: string, data?: object, ms = 220): void {
+  if (leaving.has(scene)) return;
+  leaving.add(scene);
+  scene.events.once('shutdown', () => leaving.delete(scene));
   const cam = scene.cameras.main;
   cam.fadeOut(ms, 18, 15, 36);
   cam.once('camerafadeoutcomplete', () => scene.scene.start(key, data));

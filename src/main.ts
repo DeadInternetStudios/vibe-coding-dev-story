@@ -20,6 +20,7 @@ import { EndingScene } from './scenes/EndingScene';
 import { app } from './core/app';
 import { audio } from './core/audio';
 import { uiEvents } from './ui/kit';
+import { installDriver } from './game/driver';
 
 const parent = document.getElementById('game')!;
 
@@ -65,3 +66,5 @@ uiEvents.on('open', () => audio.sfx('open'));
 uiEvents.on('settings', () => audio.applySettings());
 
 (window as unknown as { __game: Phaser.Game }).__game = game;
+
+if (import.meta.env.DEV || location.search.includes('debug')) installDriver(game);

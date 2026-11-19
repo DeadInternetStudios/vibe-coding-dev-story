@@ -14,7 +14,7 @@ export interface ModalOpts {
   closable?: boolean;
   onClose?: () => void;
   /** pause the game clock while this is open */
-  hold?: () => () => void;
+  hold?: (tag?: string) => () => void;
   /** stack above other modals */
   depth?: number;
   /** pin to the bottom of the screen instead of the middle, good for dialogue */
@@ -51,7 +51,7 @@ export class Modal {
     const anchor = opts.anchor ?? 'center';
     this.x = Math.floor((L.W - this.w) / 2);
     this.y = anchor === 'center' ? Math.floor((L.H - this.h) / 2) : anchor === 'bottom' ? L.H - this.h - 4 : 4;
-    this.release = opts.hold ? opts.hold() : null;
+    this.release = opts.hold ? opts.hold(opts.title ?? 'modal') : null;
     const depth = opts.depth ?? DEPTH.modal;
     this.root = scene.add.container(0, 0).setDepth(depth);
     const dim = rect(scene, 0, 0, L.W, L.H, C.ink0, opts.dim ?? 0.62).setInteractive();
@@ -93,16 +93,27 @@ export class Modal {
     return !this.closed;
   }
 
-  close(): void {
+  /** A modal that is fading out must not take a second tap: everything in it stops listening. The dim, the first thing in the root, keeps blocking what is behind. */
+  private freeze(): void {
+    const walk = (o: Phaser.GameObjects.GameObject) => {
+      if (o.input) o.disableInteractive();
+      if (o.type === 'Container') (o as Phaser.GameObjects.Container).list.forEach(walk);
+    };
+    this.root.list.slice(1).forEach(walk);
+  }
+
+  /** `instant` skips the fade, for a modal that something else is about to replace */
+  close(instant = false): void {
     if (this.closed) return;
     this.closed = true;
     this.release?.();
     this.release = null;
+    this.freeze();
     const done = () => {
       this.root.destroy();
       this.opts.onClose?.();
     };
-    if (app.settings.reducedMotion) {
+    if (instant || app.settings.reducedMotion) {
       done();
       return;
     }

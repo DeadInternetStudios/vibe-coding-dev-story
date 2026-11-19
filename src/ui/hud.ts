@@ -2,8 +2,7 @@ import Phaser from 'phaser';
 import { C, DEPTH, F } from '../core/theme';
 import { STAT_KEYS, type StatKey } from '../content/types';
 import { PHASES, SPEEDS, TOKEN_PLANS, phaseAt } from '../sim/config';
-import { dateLabel } from '../sim/format';
-import { shortMoney } from '../sim/format';
+import { dateLabel, money, shortMoney } from '../sim/format';
 import { projectView } from '../sim/views';
 import type { Session } from '../game/session';
 import { bar, button, iconImg, label, panel, rect, type BarObj, type ButtonObj } from './kit';
@@ -278,7 +277,7 @@ export class Hud {
       const step = Math.sign(diff) * Math.max(1, Math.abs(diff) * Math.min(1, dtMs / 140));
       this.shownCash = Math.abs(step) >= Math.abs(diff) ? this.cashTarget : this.shownCash + step;
     }
-    const cashStr = `$${Math.round(this.shownCash).toLocaleString('en-US')}`;
+    const cashStr = money(this.shownCash);
     this.setText('cash', this.cash.text, cashStr);
     this.cash.text.setTint(this.shownCash < 0 ? C.pink : Math.abs(diff) > 0.5 ? (diff > 0 ? C.green2 : C.pink) : C.cream);
     this.setText('karma', this.karma.text, `${Math.round(co.karma)}`);

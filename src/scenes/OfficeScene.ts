@@ -47,6 +47,7 @@ export class OfficeScene extends Phaser.Scene {
       return;
     }
     this.session = session;
+    session.clearHolds();
     this.cameras.main.setBackgroundColor(C.ink0);
     this.cameras.main.fadeIn(260, 18, 15, 36);
     this.introDone = !data?.intro;
@@ -65,6 +66,7 @@ export class OfficeScene extends Phaser.Scene {
   }
 
   private teardown(): void {
+    this.session.clearHolds();
     this.hud?.destroy();
     this.room?.destroy();
     this.menuModal = null;
@@ -80,7 +82,7 @@ export class OfficeScene extends Phaser.Scene {
       get room() {
         return self.room;
       },
-      hold: () => this.session.hold(),
+      hold: (tag?: string) => this.session.hold(tag),
       toast: (text: string, tone: Tone = 'info', icon?: string) => this.toasts?.push(text, tone, icon),
       refresh: () => {
         this.room?.sync();
@@ -188,9 +190,10 @@ export class OfficeScene extends Phaser.Scene {
 
   private openMenuById(id: MenuId | string, arg?: string): void {
     if (this.promptOpen) return;
-    if (this.menuModal?.open) this.menuModal.close();
-    const m = openMenu(this.ctx, id, arg, () => {
-      this.menuModal = null;
+    if (this.menuModal?.open) this.menuModal.close(true);
+    const m: Modal | null = openMenu(this.ctx, id, arg, () => {
+      // a modal that fades out can finish after the next one has opened; only forget this one
+      if (this.menuModal === m) this.menuModal = null;
       this.hud?.update(0, false);
     });
     this.menuModal = m;
@@ -312,8 +315,11 @@ export class OfficeScene extends Phaser.Scene {
     if (!this.promptOpen && !this.launching && this.introDone && this.session.game.pending) {
       const p = this.session.game.pending;
       this.promptOpen = true;
-      if (this.menuModal?.open) this.menuModal.close();
+      if (this.menuModal?.open) this.menuModal.close(true);
+      let finished = false;
       openPrompt(this.ctx, p, (next) => {
+        if (finished) return;
+        finished = true;
         this.promptOpen = false;
         this.room.sync();
         this.hud.update(0, true);

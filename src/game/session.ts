@@ -9,12 +9,14 @@ import { SPEEDS } from '../sim/config';
 import { clearSave, writeSave } from '../core/save';
 
 export class Session {
+  /** a multiplier on the clock, only the test driver sets it */
+  static turbo = 1;
   game: Game;
   /** index into SPEEDS */
   speedIdx: number;
   paused = false;
-  /** how many UI layers want the clock stopped (open menus, popups) */
-  private holds = 0;
+  /** the UI layers that want the clock stopped (open menus, dialogues), by token, with a name for debugging */
+  private holds = new Map<symbol, string>();
   private acc = 0;
   private notices: Notice[] = [];
   private lastSaveDay = -999;
@@ -44,23 +46,31 @@ export class Session {
     return SPEEDS[this.speedIdx] ?? 1;
   }
 
-  /** Stop the clock while a layer is open. Returns the release function. */
-  hold(): () => void {
-    this.holds += 1;
-    let released = false;
+  /** Stop the clock while a layer is open. Returns the release function, which is safe to call twice or after `clearHolds`. */
+  hold(tag = ''): () => void {
+    const token = Symbol(tag);
+    this.holds.set(token, tag);
     return () => {
-      if (released) return;
-      released = true;
-      this.holds = Math.max(0, this.holds - 1);
+      this.holds.delete(token);
     };
   }
 
   get held(): boolean {
-    return this.holds > 0;
+    return this.holds.size > 0;
+  }
+
+  /** Who is holding the clock right now. */
+  get holders(): string[] {
+    return [...this.holds.values()];
+  }
+
+  /** Every layer that held the clock has been destroyed (a scene change or a rebuild), so none of them will release it. */
+  clearHolds(): void {
+    this.holds.clear();
   }
 
   get ticking(): boolean {
-    return !this.paused && this.holds === 0 && this.game.running && !this.game.pending;
+    return !this.paused && this.holds.size === 0 && this.game.running && !this.game.pending;
   }
 
   /** Advance by real milliseconds. Returns the number of days that passed. */
@@ -70,9 +80,9 @@ export class Session {
       this.acc = 0;
       return 0;
     }
-    this.acc += (dtMs / 1000) * this.speed;
+    this.acc += (dtMs / 1000) * this.speed * Session.turbo;
     let days = 0;
-    while (this.acc >= 1 && this.ticking && days < 6) {
+    while (this.acc >= 1 && this.ticking && days < 6 * Session.turbo) {
       this.acc -= 1;
       this.game.tick();
       days += 1;

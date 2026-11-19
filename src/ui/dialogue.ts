@@ -16,8 +16,8 @@ import type { UiCtx } from './ctx';
 export function dialogue(ctx: UiCtx, steps: DialogueStep[], onDone: () => void, opts: { title?: string; skippable?: boolean } = {}): void {
   const scene = ctx.scene;
   const L = layoutOf(scene);
-  const release = ctx.hold();
-  const root = scene.add.container(0, 0).setDepth(DEPTH.modal + 20);
+  const release = ctx.hold('dialogue');
+  const root = scene.add.container(0, 0).setDepth(DEPTH.modal + 20).setName('dialogue');
   const dim = rect(scene, 0, 0, L.W, L.H, C.ink0, 0.35).setInteractive();
   root.add(dim);
   const w = Math.min(L.W - 8, 330);

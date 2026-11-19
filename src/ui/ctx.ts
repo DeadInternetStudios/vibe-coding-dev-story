@@ -16,7 +16,7 @@ export interface UiCtx {
   content: Content;
   room: Room;
   /** stop the clock while something is open, call the result to let it run again */
-  hold(): () => void;
+  hold(tag?: string): () => void;
   toast(text: string, tone?: Tone, icon?: string): void;
   /** call after any change to the game so the room and bars catch up now */
   refresh(): void;
