@@ -10,7 +10,7 @@ import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import { SKILL_WORD } from '../text';
-import { teamGrid } from './teamGrid';
+import { teamGrid } from './tileFit';
 import type { UiCtx } from '../ctx';
 
 const SKILL_COLORS: Record<SkillKey, number> = { prompt: C.sky, taste: C.pink, debug: C.mint, paranoia: C.violet2, hustle: C.yellow };

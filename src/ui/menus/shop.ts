@@ -8,6 +8,7 @@ import { unlocked } from '../../sim/game';
 import { button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
+import { shopGrid } from './tileFit';
 import type { UiCtx } from '../ctx';
 
 const shortPrice = (n: number) => shortMoney(n);
@@ -37,8 +38,7 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
   const h = popupH(L, wide ? 246 : 350);
   const m = new Modal(scene, { w, h, title: 'OFFICE SHOP', style: 'paper', closable: true, hold: ctx.hold, onClose });
 
-  const cols = wide ? 5 : 6;
-  const tile = wide ? 36 : 36;
+  const { cols, tile } = shopGrid(w, wide);
   const gx = 6;
   const gy = 21;
   const gridH = Math.ceil(SHOP.length / cols) * (tile + 2);
