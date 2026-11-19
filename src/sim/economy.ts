@@ -134,22 +134,27 @@ export function takeFunding(ctx: Ctx, offerId: string): string {
   if (offerId === 'vc') {
     s.flags.push(`vc${year}`);
     for (const m of s.staff) m.mood = clamp(m.mood - 6, 0, 100);
-    return `Wire received: $${offer.cash.toLocaleString('en-US')}. The board meeting is on Monday.`;
+    return `Wire received: $${offer.cash.toLocaleString('en-US')}. The board meeting is on Monday. You keep ${Math.round(founderShare(ctx) * 100)}% of how this ends.`;
   }
   if (offerId === 'angel') {
     s.flags.push(`angel${year}`);
-    return `Wire received: $${offer.cash.toLocaleString('en-US')}. The dentist wants a ping pong table.`;
+    return `Wire received: $${offer.cash.toLocaleString('en-US')}. The dentist wants a ping pong table. You keep ${Math.round(founderShare(ctx) * 100)}% of how this ends.`;
   }
   for (const m of s.staff) m.mood = clamp(m.mood + 8, 0, 100);
   s.company.karma += 120;
   return 'You declined. The team loves it. The accountant does not.';
 }
 
+/** The share of the ending the founder still owns after the outside money taken so far. */
+export function founderShare(ctx: Ctx): number {
+  const dilution = ctx.s.flags.reduce((n, f) => n + (/^vc\d+$/.test(f) ? DILUTION.vc : /^angel\d+$/.test(f) ? DILUTION.angel : 0), 0);
+  return Math.max(0.35, 1 - dilution);
+}
+
 export function finalScore(ctx: Ctx): number {
   const { s } = ctx;
-  const dilution = s.flags.reduce((n, f) => n + (/^vc\d+$/.test(f) ? DILUTION.vc : /^angel\d+$/.test(f) ? DILUTION.angel : 0), 0);
   const raw = valuation(ctx) + s.company.karma * 30 + s.achievements.length * 2500 + s.company.totalRevenue * 0.15;
-  return Math.round(raw * Math.max(0.35, 1 - dilution));
+  return Math.round(raw * founderShare(ctx));
 }
 
 /**

@@ -126,7 +126,8 @@ export class TitleScene extends Phaser.Scene {
     const text = rng.shuffle(heads).slice(0, 8).join('      +++      ');
     this.ticker = new ScrollText(this, H - stripH + 3, NEWS_W, W, { font: F.body, tint: C.cream, depth: DEPTH.hud + 1 });
     this.ticker.setRun(text);
-    this.tickerX = W;
+    // the first headline is already in the strip when the title opens, so the strip never starts as a lone label
+    this.tickerX = Math.round(W * 0.4);
     this.ticker.place(this.tickerX);
     bandEnds(this, NEWS_W, W, H - stripH + 1, stripH - 1, C.ink0, DEPTH.hud + 2);
     rect(this, 0, H - stripH + 1, NEWS_W, stripH - 1, C.ink0, 1).setDepth(DEPTH.hud + 3);

@@ -345,7 +345,7 @@ export class ThreadScene extends Phaser.Scene {
         if (!beat(sctx, 'thread', () => res(true))) res(false);
       });
     }
-    await this.wait(narrated ? 400 : 120);
+    if (narrated) await this.wait(400);
     const groups = this.items();
     for (const group of groups) {
       let card: Card | null = null;
@@ -438,7 +438,13 @@ export class ThreadScene extends Phaser.Scene {
     const y = 4;
     const head = label(this, x + left, y + 5, '', { font: F.caps, tint: C.cream });
     head.setText(ch?.where ?? 'r/SideProject');
-    const meta = label(this, x + left + head.width + 5, y + 5, `Posted by ${this.handle(author)}  2h`, { font: F.body, tint: C.ink4 });
+    const metaX = x + left + head.width + 5;
+    const meta = label(this, metaX, y + 5, '', { font: F.body, tint: C.ink4 });
+    // the long handle has to stay on the card: the plain form gives up its words before it gives up its name
+    for (const text of [`Posted by ${this.handle(author)}  2h`, `by ${this.handle(author)}  2h`, `${this.handle(author)}  2h`, this.handle(author)]) {
+      meta.setText(text);
+      if (metaX + meta.width <= x + w - pad) break;
+    }
     const title = label(this, x + left, y + 17, rec.thread.title, { font: F.head, tint: C.white, maxWidth: tw });
     const titleH = title.height;
     const body = label(this, x + left, y + 20 + titleH, rec.thread.body, { font: F.read, tint: C.ink5, maxWidth: tw });
@@ -471,9 +477,8 @@ export class ThreadScene extends Phaser.Scene {
     card.setAlpha(0);
     [badge, head, meta, title, body, up, votes, down, foot].forEach((o) => o.setAlpha(0));
     this.tweens.add({ targets: [card, badge, head, meta, title, body, up, votes, down, foot], alpha: 1, duration: 260 });
-    // the first reply's outline is up with the post, so the page is never a post over an empty void
+    // the outline of the replies is up with the post and the first reply starts at once: a post over an empty page looks crashed
     this.buildGhosts();
-    await this.wait(320);
     this.tickNumber(votes, rec.thread.opVotes, 1100, true);
     this.bumpKarma(rec.thread.opVotes);
   }
@@ -543,14 +548,15 @@ export class ThreadScene extends Phaser.Scene {
     const g = this.add.container(0, 0);
     this.feed.add(g);
     const w = this.cw;
-    // one card on the way, not a screenful: the feed should look busy, not stalled
-    for (let i = 0; i < 1; i++) {
+    // three outlines, each fainter than the last: the replies are on their way and the page is never an empty void
+    for (let i = 0; i < 3; i++) {
       const y = i * 46;
-      g.add(panel(this, this.x0, y, w, 40, 'plum', false));
-      g.add(rect(this, this.x0 + 5, y + 5, 20, 21, C.ink2, 0.8));
-      g.add(rect(this, this.x0 + 30, y + 6, 36 + ((i * 17) % 34), 4, C.ink3, 0.7));
-      g.add(rect(this, this.x0 + 30, y + 15, w - 42 - ((i * 23) % 44), 5, C.ink2, 0.9));
-      g.add(rect(this, this.x0 + 30, y + 24, w - 74 - ((i * 31) % 52), 5, C.ink2, 0.9));
+      const fade = 1 - i * 0.3;
+      g.add(panel(this, this.x0, y, w, 40, 'plum', false).setAlpha(fade));
+      g.add(rect(this, this.x0 + 5, y + 5, 20, 21, C.ink2, 0.8 * fade));
+      g.add(rect(this, this.x0 + 30, y + 6, 36 + ((i * 17) % 34), 4, C.ink3, 0.7 * fade));
+      g.add(rect(this, this.x0 + 30, y + 15, w - 42 - ((i * 23) % 44), 5, C.ink2, 0.9 * fade));
+      g.add(rect(this, this.x0 + 30, y + 24, w - 74 - ((i * 31) % 52), 5, C.ink2, 0.9 * fade));
     }
     this.ghosts = g;
     this.moveGhosts(this.cursor);
@@ -960,7 +966,9 @@ export class ThreadScene extends Phaser.Scene {
       card.add(label(this, 14, qy + 14, `"${quote}"`, { font: F.read, tint: C.ink5, maxWidth: w - 28 }));
     }
     const cont = button(this, Math.floor(w / 2) - 60, h - 24, 120, 18, this.replay ? 'BACK' : 'KEEP SHIPPING', () => this.leave(), { kind: 'orange', icon: 'ship' });
+    // the way out is there while the number still counts: nobody waits for a stamp to leave
     cont.setAlpha(0);
+    this.tweens.add({ targets: cont, alpha: 1, delay: app.settings.reducedMotion || this.instant ? 0 : 450, duration: 180 });
     card.add(cont);
 
     // animate in
@@ -968,11 +976,11 @@ export class ThreadScene extends Phaser.Scene {
     card.y = y + 10;
     this.tweens.add({ targets: card, alpha: 1, y, duration: 220, ease: 'Cubic.easeOut' });
     audio.music('launch', { fadeMs: 300 });
-    this.tickScore(big, verdictT, score, verdict, cont, { x: x + w / 2, y: y + 24 });
+    this.tickScore(big, verdictT, score, verdict, { x: x + w / 2, y: y + 24 });
     void s;
   }
 
-  private tickScore(big: Phaser.GameObjects.BitmapText, verdictT: Phaser.GameObjects.BitmapText, score: number, verdict: string, cont: Phaser.GameObjects.Container, burstAt: { x: number; y: number }): void {
+  private tickScore(big: Phaser.GameObjects.BitmapText, verdictT: Phaser.GameObjects.BitmapText, score: number, verdict: string, burstAt: { x: number; y: number }): void {
     const done = () => {
       big.setText(`${score}`);
       verdictT.setText(verdict);
@@ -981,7 +989,6 @@ export class ThreadScene extends Phaser.Scene {
         verdictT.setScale(1.9).setAlpha(0.2);
         this.tweens.add({ targets: verdictT, scale: 1, alpha: 1, duration: 200, ease: 'Back.easeOut' });
       }
-      this.tweens.add({ targets: cont, alpha: 1, duration: 180 });
       audio.sfx(score >= 34 ? 'victory' : score >= 28 ? 'fanfare_big' : score >= 18 ? 'fanfare_small' : score >= 10 ? 'deny' : 'game_over');
       if (score >= 28) this.cameras.main.shake(160, 0.004);
       if (score >= 28) buzz(BUZZ.win);
