@@ -21,6 +21,7 @@ type When = (c: EventCtx) => boolean;
 const always: When = () => true;
 const has = (id: string): When => (c) => c.company.hasArchetype(id);
 const hasProject: When = (c) => c.project !== null;
+const all = (...ps: When[]): When => (c) => ps.every((p) => p(c));
 const karmaOver = (n: number): When => (c) => c.company.karma >= n;
 const shippedOver = (n: number): When => (c) => c.company.appsShipped >= n;
 
@@ -96,7 +97,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     ],
   },
   {
-    id: 'rd-wrong-sub', stage: 'dev', when: always, weight: 0.9,
+    id: 'rd-wrong-sub', stage: 'dev', when: hasProject, weight: 0.9,
     title: 'Posted To The Wrong Sub',
     body: 'Chad posted the teaser to a support group for people who miss dial up modems. It is the best thread of the year. Nobody has clicked the link.',
     speaker: 'chad',
@@ -114,7 +115,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     ],
   },
   {
-    id: 'rd-four-thousand-words', stage: 'dev', when: shippedOver(1), weight: 1,
+    id: 'rd-four-thousand-words', stage: 'dev', when: all(hasProject, shippedOver(1)), weight: 1,
     title: 'The 4,000 Word Review',
     body: 'A user posted a four thousand word review of your last app. The title is Unacceptable. It is mostly right. Chad has drafted a reply. It is five thousand words.',
     speaker: 'karen',

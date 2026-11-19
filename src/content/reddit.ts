@@ -40,7 +40,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-edit-grandma', topic: 'edit', tone: 'praise', judges: 'overall', weight: 2, when: quality(45),
     comments: [
       { user: 'u/GrandmaDoesCode', depth: 0, votes: [600, 3400], awards: ['wholesome', 'gold'],
-        line: vo('grandma', 'Edit: thanks for the gold, kind stranger. Edit: who is he? Edit: my grandson says not to talk to him. Edit: too late, he is lovely.') },
+        line: vo('grandma', 'Edit: thank you for the gold, dear stranger. Edit: who is he? Edit: my grandson says not to talk to him. Edit: too late, he is lovely.') },
       { user: 'u/GameMakerKid10', depth: 1, votes: [200, 1900],
         line: vo('kid', 'Never take gold from strangers! That is rule one of the internet! Also rule two!') },
     ] },
@@ -105,7 +105,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
       { user: 'u/AcceptAllChanges', flair: 'Intern', depth: 0, votes: [100, 1100],
         line: vo('jenny', 'I never read the changes. I just press the green button. Green means good, right?') },
       { user: 'u/WellActuallyGuy', flair: 'Actually', depth: 1, votes: [300, 2400],
-        line: vo('pedant', 'Username checks out.') },
+        line: vo('pedant', 'Well, actually, that username is not a joke. It is a mission statement. It is also a confession.') },
       { user: 'u/AcceptAllChanges', flair: 'Intern', depth: 2, votes: [100, 1200],
         line: vo('jenny', 'Oh no. Did I just accept that? I think I accepted that. Sorry!', 'anxious, fast') },
     ] },
@@ -117,6 +117,8 @@ export const REDDIT_VIGNETTES: Vignette[] = [
         line: vo('doomer', "Sir. This is a Wendy's.", 'flat') },
       { user: 'u/GrandmaDoesCode', depth: 2, votes: [150, 1500], awards: ['wholesome'],
         line: vo('grandma', 'Is there a Frosty? Your grandfather loved the Frosty. Can somebody get me a Frosty, dear?') },
+      { user: 'u/RubberDuck_Prod', flair: 'Duck', depth: 2, votes: [200, 1700],
+        line: vo('duck', 'Quack. Quack quack. Quack.', 'ordering at the drive through') },
     ] },
   { id: 'rd-not-reading', topic: 'wall', tone: 'roast', judges: 'overall', weight: 2, when: some(messy(25), fullScope),
     comments: [
@@ -159,7 +161,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
       { user: 'u/WholesomeWendy', depth: 1, votes: [900, 5000], awards: ['gold', 'wholesome'],
         line: vo('wholesome', 'Underrated comment!') },
       { user: 'u/ArchBTW_2012', flair: 'Arch User', depth: 2, votes: [500, 3000],
-        line: vo('arch', 'Edit: thanks for the gold, kind stranger! Edit two: it was for the other guy. Edit three: I am so happy for him.', 'strained, forced cheer') },
+        line: vo('arch', 'Edit: wow, gold! Edit two: it was meant for the other guy. Edit three: he deserved it. He is a good man.', 'strained, forced cheer') },
     ] },
   { id: 'rd-joke-or-serious', topic: 'poe', tone: 'chaos', judges: 'overall', weight: 3, when: some(cursed, kind('os', 'dapp', 'wrapper'), quality(0, 35)),
     comments: [
@@ -232,9 +234,9 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-spelled', topic: 'spelling', tone: 'roast', judges: 'polish', weight: 2.4, when: low('polish', 55),
     comments: [
       { user: 'u/WellActuallyGuy', flair: 'Actually', depth: 0, votes: [200, 1700],
-        line: vo('pedant', 'Well, actually, it is spelled separate. The settings page says seperate. Four times. It is committed to the bit.') },
+        line: vo('pedant', 'Well, actually, it is spelled S-E-P-A-R-A-T-E. The settings page says S-E-P-E-R-A-T-E. Four times. It is committed.') },
       { user: 'u/ClodFan99', depth: 1, votes: [100, 1100],
-        line: vo('clod', 'Great catch! I have fixed it! It now says seperete. It is consistent!') },
+        line: vo('clod', 'Great catch! I fixed it! It is now spelled S-E-P-E-R-E-T-E. At least it is consistent!') },
       { user: 'u/WholesomeWendy', depth: 2, votes: [120, 1200], awards: ['wholesome'],
         line: vo('wholesome', 'Be kind! A typo is just a word that is still finding itself.') },
     ] },
@@ -288,7 +290,7 @@ export const REDDIT_VIGNETTES: Vignette[] = [
       { user: 'u/ArchBTW_2012', flair: 'Arch User', depth: 0, votes: [3000, 9000], awards: ['gold'],
         line: vo('arch', 'Unpopular opinion: software should work.') },
       { user: 'u/WellActuallyGuy', flair: 'Actually', depth: 1, votes: [400, 3000],
-        line: vo('pedant', 'Well, actually, that is the most upvoted comment here. It is the opposite of unpopular. It is also untrue.') },
+        line: vo('pedant', 'Well, actually, it has nine thousand upvotes. That is not an unpopular opinion. That is a demand.') },
       { user: 'u/ClodFan99', depth: 2, votes: [100, 1100],
         line: vo('clod', 'Great opinion! I have made your software work! It now says that it works!') },
     ] },
@@ -386,12 +388,12 @@ export const REDDIT_VIGNETTES: Vignette[] = [
       { user: 'u/ShipItChad', flair: 'Founder', depth: 1, votes: [100, 1100],
         line: vo('chad', 'I love the new title. Is it still revolutionary?') },
       { user: 'u/HN_Moderator', flair: 'Mod', depth: 2, votes: [300, 2400], awards: ['gold'],
-        line: vo('automod', 'No. It is a to-do list.', 'flat') },
+        line: vo('automod', 'No. It is a list of chores with a logo.', 'flat') },
     ] },
   { id: 'rd-hn-previously', topic: 'channel', tone: 'roast', judges: 'overall', weight: 4, when: channel('hn'),
     comments: [
       { user: 'u/WellActuallyGuy', flair: 'Actually', depth: 0, votes: [300, 2400],
-        line: vo('pedant', 'Previously discussed: two thousand fourteen, four hundred comments. Two thousand nineteen, nine comments. Two thousand twenty three, flagged.') },
+        line: vo('pedant', 'Previously discussed: two thousand fourteen, four hundred comments. Two thousand nineteen, nine comments. Twenty twenty three, flagged.') },
       { user: 'u/InternOnDay1', flair: 'Intern', depth: 1, votes: [60, 800],
         line: vo('jenny', 'Flagged? Do we get to keep the flag? Is it a nice flag?') },
       { user: 'u/RootedYourBox', flair: 'Hooded', depth: 2, votes: [200, 1700],
@@ -411,11 +413,11 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-ph-integrations', topic: 'channel', tone: 'neutral', judges: 'features', weight: 4, when: channel('ph'),
     comments: [
       { user: 'u/WholesomeWendy', depth: 0, votes: [100, 1100], awards: ['wholesome'],
-        line: vo('wholesome', 'Huge congrats on the launch! Does it integrate with Slack?') },
+        line: vo('wholesome', 'Congrats on the launch! Does it integrate with Slack?') },
       { user: 'u/TenXBro', flair: 'Maker', depth: 1, votes: [60, 800],
         line: vo('bro', 'Does it integrate with Zapier? With the thing that integrates with Zapier? Bro. Bro.') },
       { user: 'u/DoomScrollDev', depth: 2, votes: [250, 2000],
-        line: vo('doomer', 'Does it integrate with my will to live? Asking for a friend. The friend is me.', 'flat') },
+        line: vo('doomer', 'Does it integrate with my will to live? I think that integration was deprecated.', 'flat') },
     ] },
   { id: 'rd-ph-product-of-day', topic: 'channel', tone: 'neutral', judges: 'hype', weight: 4, when: channel('ph'),
     comments: [
@@ -447,20 +449,20 @@ export const REDDIT_VIGNETTES: Vignette[] = [
   { id: 'rd-humor-nobody', topic: 'channel', tone: 'chaos', judges: 'stability', weight: 4, when: channel('humor'),
     comments: [
       { user: 'u/TenXBro', flair: '10x', depth: 0, votes: [500, 3500],
-        line: vo('bro', 'Nobody. Absolutely nobody. The founder at four fifty nine on a Friday: one more feature.') },
+        line: vo('bro', 'Nobody. Absolutely nobody. The founder at three in the morning: what if the button was a slightly different blue.') },
       { user: 'u/InTheWildDevs', flair: 'Narrator', depth: 1, votes: [700, 4200], awards: ['gold'],
-        line: vo('narrator', 'At five oh one, the pager joined the chat. It had been waiting all week.') },
+        line: vo('narrator', 'The button became a slightly different blue. It was tested for eleven days. Nobody could tell. The founder could, and that is the problem.') },
     ] },
 
   /* ================================================== LinkedIn */
   { id: 'rd-li-recursive', topic: 'channel', tone: 'roast', judges: 'hype', weight: 4, when: channel('linkedin'),
     comments: [
       { user: 'u/ThrilledAndHumbled', flair: 'Thought Leader', depth: 0, votes: [3000, 14000], awards: ['wholesome'],
-        line: vo('linkedin', 'I am humbled and thrilled to announce that I am thrilled and humbled. That is the whole announcement. Thoughts?', 'breathy, sincere') },
+        line: vo('linkedin', 'Thrilled and humbled to announce that I am humbled and thrilled. That is the whole announcement. Thoughts?', 'breathy, sincere') },
       { user: 'u/WellActuallyGuy', flair: 'Actually', depth: 1, votes: [800, 4000],
         line: vo('pedant', 'Well, actually, that is a loop with no exit condition. He will be thrilled forever.') },
       { user: 'u/DoomScrollDev', depth: 2, votes: [1000, 5000],
-        line: vo('doomer', 'It has nine thousand likes. Nobody checked what it says. We are all in the loop.', 'flat') },
+        line: vo('kid', 'Nine thousand people liked it! I read it twice! It goes round and round! That is my new favorite book!') },
     ] },
   { id: 'rd-li-janitor', topic: 'channel', tone: 'roast', judges: 'hype', weight: 4, when: channel('linkedin'),
     comments: [
@@ -511,8 +513,8 @@ export const REDDIT_VIGNETTES: Vignette[] = [
     comments: [
       { user: 'u/CommentForTheAlgo', flair: 'Sponsored', depth: 0, votes: [50, 600],
         line: vo('bro', 'Commenting for the algorithm. Hello, algorithm. I am a good comment. Please do not show me to my boss.') },
-      { user: 'u/DoomScrollDev', depth: 1, votes: [250, 2000],
-        line: vo('doomer', 'It will not remember you. It has no memory. It has only engagement.', 'flat') },
+      { user: 'u/GrandmaDoesCode', depth: 1, votes: [250, 2000], awards: ['wholesome'],
+        line: vo('grandma', 'The algorithm does not remember me either, dear. I asked it nicely. It showed me a recliner.') },
     ] },
 
   /* ================================================== Big ad campaign */
@@ -549,30 +551,30 @@ export const REDDIT_VIGNETTES: Vignette[] = [
  */
 export const OP_EDITS: Record<'viral' | 'solid' | 'flop', VoiceLine[]> = {
   viral: [
-    vo('chad', 'Edit: thanks for the gold, kind stranger! Edit two: my inbox is on fire.', 'breathless, thrilled'),
+    vo('chad', 'Edit: thank you for the gold, whoever you are! Edit two: it was my mother. She says hello.', 'breathless, thrilled'),
     vo('chad', 'Edit: wow, this blew up. Edit two: I did not plan this. I planned everything.', 'breathless, thrilled'),
     vo('chad', 'Edit: to everyone asking, yes, it is open source. Edit two: I am looking for the source.'),
     vo('chad', 'Edit: thanks for the front page. Edit two: what is the front page? Is it good?', 'giddy'),
     vo('chad', 'Edit: wow. Edit two: thank you all for coming to my TED talk.', 'humbly, then not humbly'),
     vo('chad', 'Edit: a recruiter just offered me a job. Edit two: I own the company. I am considering it.'),
     vo('chad', 'Edit: I am getting messages from people named Brandon. Edit two: they all have an exciting opportunity.'),
-    vo('chad', 'Edit: my first gold! Edit two: my second gold! Edit three: please stop, I am just a visionary.', 'giddy'),
-    vo('chad', 'Edit: RIP my inbox. Edit two: RIP my phone. Edit three: RIP my mother, she is fine, she just texted.'),
-    vo('chad', 'Edit: to the man who said he could build this in a weekend: please do. I will wait. Edit two: it has been a month.'),
+    vo('chad', 'Edit: my first gold! Edit two: my second gold! Please stop, I am only a visionary.', 'giddy'),
+    vo('chad', 'Edit: my phone is too hot to hold. Edit two: I am typing this with oven mitts and joy.'),
+    vo('chad', 'Edit: to the man who said it takes a weekend: please do it. I will wait. Edit two: it has been a month.'),
   ],
   solid: [
     vo('chad', 'Edit: formatting.', 'flat, relieved'),
     vo('chad', 'Edit: typo, and also the bug.'),
     vo('chad', 'Edit: thanks for the feedback. Edit two: I read it twice. I understood it on the second time.'),
     vo('chad', 'Edit: sorry for the formatting, I am on mobile. Edit two: I am not on mobile. I am in a car.'),
-    vo('chad', 'Edit: it is a Tuesday, so I have decided this was a success.', 'calm, rehearsed'),
+    vo('chad', 'Edit: nobody has asked for a refund. Edit two: I am calling that a success.', 'calm, rehearsed'),
     vo('chad', 'Edit: thanks to the person who found a bug. Edit two: it was in the login. Which is the app.'),
-    vo('chad', 'Edit: a nice stranger sent me a thank you. Edit two: it was my mom. It is still true.'),
+    vo('chad', 'Edit: fixed the typo. Edit two: the typo was in the word typo.'),
     vo('chad', 'Edit: I added a roadmap. Edit two: the roadmap is also on the roadmap.'),
   ],
   flop: [
     vo('chad', 'Edit: why the downvotes? Edit two: ok, I get it.', 'quiet, wounded'),
-    vo('chad', 'Edit: it is a feature. Edit two: it is not a feature.', 'quiet, wounded'),
+    vo('chad', 'Edit: it is not a bug, it is a feature. Edit two: it is a bug.', 'quiet, wounded'),
     vo('chad', 'Edit: I have read the comments. Edit two: I need to lie down.'),
     vo('chad', 'Edit: this was a test. Edit two: the test failed. Please do not tell the investors.'),
     vo('chad', 'Edit: I am deleting this post. Edit two: it says I cannot. It is forever.', 'defeated'),
@@ -589,7 +591,7 @@ export const OP_EDITS: Record<'viral' | 'solid' | 'flop', VoiceLine[]> = {
  */
 export const MOD_NOTICES: VoiceLine[] = [
   vo('automod', 'Your post was removed for violating rule three, no self promotion. This action was performed automatically. I am a bot.', 'flat, reading a notice'),
-  vo('automod', 'Your submission has been removed. Reason: low effort. Please try again with effort. Effort is not a flair.', 'flat, reading a notice'),
+  vo('automod', 'Your post was removed. Reason: it was already posted. Nobody remembers where. Please do not search for it.', 'flat, reading a notice'),
   vo('automod', 'Your post was removed for being a product. This sub is for memes. If it was a joke, explaining it is also a violation.', 'flat, reading a notice'),
   vo('automod', 'Your post was removed by the moderators. They asked me to say they are sorry. They are not sorry. They are asleep.', 'flat, reading a notice'),
   vo('automod', 'Your account is too new to post here. It is four minutes old. Please come back when it is four hours old.', 'flat, reading a notice'),
@@ -597,7 +599,7 @@ export const MOD_NOTICES: VoiceLine[] = [
   vo('automod', 'Removed for violating rule eleven. We are still writing rule eleven. We will tell you when it is done.', 'flat, reading a notice'),
   vo('automod', 'Your post was removed for containing a link. Links are not allowed. Neither are posts. Please contact no one.', 'flat, reading a notice'),
   vo('automod', 'Please message the moderators about this removal. The moderators have been messaged four thousand times. You are number four thousand one.', 'flat, reading a notice'),
-  vo('automod', 'This action was performed automatically. If you disagree, please contact the moderators. The moderators are also a bot.', 'flat, a little proud'),
+  vo('automod', 'Disagree with this removal? Please appeal to the moderators. The moderators are also a bot. It has read your appeal. It disagrees.', 'flat, a little proud'),
 ];
 
 /* ---------------------------------------------------------------- flavor lines */
