@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { app } from '../../core/app';
+import { feature } from '../../core/features';
 import { loadSave, saveSettings, writeSave } from '../../core/save';
 import { decodeSave, encodeSave } from '../../core/saveCode';
 import { C, F } from '../../core/theme';
@@ -11,7 +12,7 @@ import { layoutOf } from '../layout';
 export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClose?: () => void): Modal {
   const L = layoutOf(scene);
   const w = Math.min(L.W - 8, 250);
-  const h = Math.min(L.H - 8, 190);
+  const h = Math.min(L.H - 8, feature('save') ? 190 : 170);
   const m = new Modal(scene, { w, h, title: 'SETTINGS', closable: true, hold, onClose });
   const s = app.settings;
   const commit = () => {
@@ -78,9 +79,11 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
     foot.setText(text);
     scene.time.delayedCall(3200, () => foot.active && foot.setText(FOOT));
   };
-  m.add(label(scene, 10, y + 4, 'SAVE CODE', { font: F.caps, tint: C.ink1 }));
-  m.add(button(scene, w - 124, y, 54, 14, 'COPY', () => void copySave(scene).then(say), { kind: 'cream' }));
-  m.add(button(scene, w - 66, y, 56, 14, 'LOAD', () => void loadSaveCode().then(say), { kind: 'cream' }));
+  if (feature('save')) {
+    m.add(label(scene, 10, y + 4, 'SAVE CODE', { font: F.caps, tint: C.ink1 }));
+    m.add(button(scene, w - 124, y, 54, 14, 'COPY', () => void copySave(scene).then(say), { kind: 'cream' }));
+    m.add(button(scene, w - 66, y, 56, 14, 'LOAD', () => void loadSaveCode().then(say), { kind: 'cream' }));
+  }
   return m;
 }
 

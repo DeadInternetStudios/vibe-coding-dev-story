@@ -8,8 +8,9 @@
  *   buzz      phone vibration on shakes and wins
  *   trophies  the trophy case
  *   daily     the daily challenge
+ *   save      the SAVE CODE row in Settings (copy a run as text, load it on another device)
  */
-export type FeatureName = 'keys' | 'share' | 'install' | 'buzz' | 'trophies' | 'daily';
+export type FeatureName = 'keys' | 'share' | 'install' | 'buzz' | 'trophies' | 'daily' | 'save';
 
 const off = new Set(
   (typeof location === 'undefined' ? '' : (new URLSearchParams(location.search).get('off') ?? ''))
