@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# voice pipeline: local venv and scratch, never committed
+tools/tts/.venv/
+tools/tts/.cache/
+tools/tts/scratch/
+__pycache__/
+*.pyc
+
+# 100x run files stay local
+.100x/
