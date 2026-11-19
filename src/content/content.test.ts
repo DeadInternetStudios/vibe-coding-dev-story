@@ -255,7 +255,9 @@ describe.runIf(VOLUME)('content volume (CONTENT_VOLUME=1)', () => {
     for (const l of allVoiceLines as VoiceLine[]) per.set(l.voice, (per.get(l.voice) ?? 0) + 1);
     const thin = VOICES.filter((v) => (per.get(v) ?? 0) < 8);
     expect(thin, 'voices with fewer than 8 lines').toEqual([]);
-    expect(allVoiceLines.length).toBeLessThanOrEqual(760);
+    // 623 before the Reddit tropes pack, which adds 216 more. Raise this when a writer adds a batch,
+    // since every line is rendered offline by Qwen3-TTS at about five lines a minute.
+    expect(allVoiceLines.length).toBeLessThanOrEqual(900);
     expect(allVoiceLines.length).toBeGreaterThanOrEqual(420);
   });
 
