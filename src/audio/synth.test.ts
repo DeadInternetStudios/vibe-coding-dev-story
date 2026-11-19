@@ -8,7 +8,8 @@ import {
   type Adsr,
   type EnvPoint,
 } from './synth/envelope';
-import { CEILING, KNEE, PEAK_LIMIT, softClipCurve, volumeToGain } from './synth/master';
+import { INSTRUMENTS, noteVoice } from './synth/instruments';
+import { CEILING, GUARD_KNEE, GUARD_MAX, KNEE, PEAK_LIMIT, guardCurve, softClipCurve, volumeToGain } from './synth/master';
 import {
   centsToRatio,
   clamp,
@@ -26,9 +27,14 @@ import {
   PULSE_DUTY,
   WAVE_RMS,
   lfsrCycle,
+  normalizeRms,
   organTable,
   pulseTable,
+  sawTable,
   steppedTriangleSamples,
+  tablePeak,
+  tableToFourier,
+  unitPeak,
   warmTable,
   type FourierTable,
 } from './synth/waves';
@@ -225,6 +231,52 @@ describe('wave tables', () => {
     expect(Math.max(...s)).toBeCloseTo(1, 12);
     expect(Math.min(...s)).toBeCloseTo(-1, 12);
   });
+
+  it('the sawtooth rises through each half of the cycle, at the common level, with no DC', () => {
+    const t = sawTable();
+    const { rms, mean } = rmsOf(t);
+    expect(rms).toBeCloseTo(WAVE_RMS, 2);
+    expect(Math.abs(mean)).toBeLessThan(1e-3);
+    expect(evalTable(t, 0.25 * Math.PI)).toBeLessThan(evalTable(t, 0.75 * Math.PI));
+    expect(evalTable(t, 1.25 * Math.PI)).toBeLessThan(evalTable(t, 1.75 * Math.PI));
+    expect(evalTable(t, 0.5 * Math.PI)).toBeGreaterThan(0);
+    expect(evalTable(t, 1.5 * Math.PI)).toBeLessThan(0);
+  });
+});
+
+describe('unit peak tables', () => {
+  const tables: Record<string, FourierTable> = {
+    p12: pulseTable(0.125),
+    p25: pulseTable(0.25),
+    p50: pulseTable(0.5),
+    p75: pulseTable(0.75),
+    saw: sawTable(),
+    tri4: normalizeRms(tableToFourier(steppedTriangleSamples(), 16)),
+    warm: warmTable(),
+    organ: organTable(),
+  };
+
+  it('tablePeak finds the top of a sine and of a square (Gibbs overshoot included)', () => {
+    const sine: FourierTable = { real: new Float32Array(2), imag: Float32Array.of(0, 0.8) };
+    expect(tablePeak(sine)).toBeCloseTo(0.8, 3);
+    const sq = pulseTable(0.5);
+    const plateau = Math.abs(evalTable(sq, Math.PI / 2));
+    expect(tablePeak(sq)).toBeGreaterThan(plateau * 1.05); // the ripple at the edge is the peak
+    expect(tablePeak(sq)).toBeLessThan(plateau * 1.25);
+  });
+
+  it.each(Object.entries(tables))('%s: scaled to peak 1, and the reported peak restores its level', (_name, t) => {
+    const before = rmsOf(t).rms;
+    const { table, peak } = unitPeak(t);
+    expect(tablePeak(table)).toBeCloseTo(1, 3);
+    expect(rmsOf(table).rms * peak).toBeCloseTo(before, 3);
+    expect(peak).toBeGreaterThan(0);
+  });
+
+  it('a short duty pulse needs a boost and a square needs a cut to sit at the same level', () => {
+    expect(unitPeak(pulseTable(0.125)).peak).toBeGreaterThan(1.3);
+    expect(unitPeak(pulseTable(0.5)).peak).toBeLessThan(0.7);
+  });
 });
 
 describe('LFSR noise', () => {
@@ -282,6 +334,31 @@ describe('master limiter curve', () => {
     expect(CEILING).toBeLessThan(PEAK_LIMIT);
   });
 
+  describe('the guard stage after it', () => {
+    const g = guardCurve(8193);
+    const gat = (x: number) => g[Math.round(((x + 1) / 2) * (g.length - 1))]!;
+
+    it('is exactly transparent up to just above the limiter ceiling', () => {
+      expect(GUARD_KNEE).toBeGreaterThan(CEILING);
+      for (const x of [0, 0.2, 0.5, CEILING, GUARD_KNEE - 0.001, -CEILING, -0.3]) expect(gat(x)).toBeCloseTo(x, 3);
+    });
+
+    it('never outputs more than the promised peak, even for input far past full scale', () => {
+      expect(GUARD_MAX).toBeLessThan(PEAK_LIMIT);
+      expect(Math.max(...g)).toBeLessThanOrEqual(GUARD_MAX);
+      expect(Math.min(...g)).toBeGreaterThanOrEqual(-GUARD_MAX);
+      expect(gat(1)).toBeGreaterThan(GUARD_MAX - 0.001);
+    });
+
+    it('is odd, monotonic, and soaks up the limiter overshoot smoothly', () => {
+      for (let i = 0; i < g.length; i++) expect(g[i]).toBeCloseTo(-g[g.length - 1 - i]!, 6);
+      for (let i = 1; i < g.length; i++) expect(g[i]!).toBeGreaterThanOrEqual(g[i - 1]! - 1e-9);
+      // a +0.4 dB overshoot above the ceiling lands under the promise, a +1.6 dB one too
+      expect(gat(CEILING * 1.047)).toBeLessThan(GUARD_MAX);
+      expect(gat(CEILING * 1.2)).toBeLessThan(GUARD_MAX);
+    });
+  });
+
   it('slider volumes are squared, clamped and NaN safe', () => {
     expect(volumeToGain(1)).toBe(1);
     expect(volumeToGain(0.5)).toBe(0.25);
@@ -314,5 +391,21 @@ describe('VoicePool', () => {
     expect(pool.tryAdd(0.5, 0.5, 2, false)).toBe(false);
     expect(pool.tryAdd(1.5, 1.5, 2, false)).toBe(true);
     expect(pool.size).toBe(1);
+  });
+});
+
+describe('noteVoice', () => {
+  it('a steady note has no slide', () => {
+    const v = noteVoice(INSTRUMENTS.lead, 440, 1, 0.5, 0.8);
+    expect(v.slideTo).toBeUndefined();
+    expect(v.slideTime).toBeUndefined();
+  });
+
+  it('a bend glides over the whole gated note, by that many semitones', () => {
+    const fall = noteVoice(INSTRUMENTS.trombone, 440, 1, 1, 0.8, undefined, -12);
+    expect(fall.slideTo).toBeCloseTo(220, 6);
+    expect(fall.slideTime).toBeCloseTo(fall.dur, 9);
+    const scoop = noteVoice(INSTRUMENTS.lead, 440, 1, 1, 0.8, undefined, 7);
+    expect(scoop.slideTo).toBeCloseTo(440 * 2 ** (7 / 12), 6);
   });
 });

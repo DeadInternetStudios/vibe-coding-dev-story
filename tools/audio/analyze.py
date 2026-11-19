@@ -20,10 +20,11 @@ import math
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
-from scipy import signal
+from scipy import ndimage, signal
 from scipy.io import wavfile
 
 import matplotlib
@@ -37,6 +38,8 @@ FFMPEG = "/opt/homebrew/bin/ffmpeg"
 
 CEILING_DBFS = 20 * math.log10(0.708)  # the engine's hard limiter ceiling, about -3.0
 MUSIC_TARGET_LUFS = -18.0
+# Win and lose play once and interrupt the bed music, so they sit 2 LU hotter than the loops.
+STINGER_TARGET_LUFS = MUSIC_TARGET_LUFS + 2.0
 SFX_TARGET_LUFS = -14.0
 SILENCE_DBFS = -60.0
 
@@ -137,6 +140,14 @@ def ffmpeg_ebur128(path: Path) -> dict:
 # ------------------------------------------------------------------- spectrum
 
 
+def ebur128_of(data: np.ndarray, sr: int) -> float | None:
+    """Integrated loudness (LUFS) of an array, measured by ffmpeg like a file would be."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "segment.wav"
+        wavfile.write(path, sr, data.astype(np.float32))
+        return ffmpeg_ebur128(path).get("lufs_i")
+
+
 def stft_power(mono: np.ndarray, sr: int, nfft: int, hop: int):
     f, t, z = signal.stft(mono, fs=sr, nperseg=nfft, noverlap=nfft - hop, window="hann", boundary=None, padded=False)
     return f, t, np.abs(z)
@@ -206,27 +217,42 @@ def tempo_match(declared: float, detected: float | None) -> str:
     return "MISMATCH"
 
 
-def detect_key(mono: np.ndarray, sr: int) -> dict:
-    nfft, hop = 8192, 4096
+def pitch_chroma(mono: np.ndarray, sr: int, fmin: float = 130.0, fmax: float = 2100.0) -> np.ndarray:
+    """
+    A chroma vector (12 pitch classes, sums to 1) built to ignore drums and noise:
+    the spectrogram is split into a harmonic part (steady along time) and a percussive part
+    (steady along frequency) by median filtering, and only bins within 30 cents of a
+    semitone centre are counted, so spectral splatter between notes does not vote.
+    """
+    nfft, hop = 16384, 4096
     if len(mono) < nfft:
         mono = np.pad(mono, (0, nfft - len(mono)))
     f, _t, mag = stft_power(mono, sr, nfft, hop)
-    sel = (f >= 65) & (f <= 2100)
-    freqs = f[sel]
-    pc = (np.round(12 * np.log2(freqs / 440.0) + 69).astype(int)) % 12
-    power = (mag[sel] ** 2).sum(axis=1)
+    harm = ndimage.median_filter(mag, size=(1, 9))
+    perc = ndimage.median_filter(mag, size=(25, 1))
+    mask = harm**2 / (harm**2 + perc**2 + 1e-20)
+    tonal = mag * mask
+    sel = (f >= fmin) & (f <= fmax)
+    semis = 12 * np.log2(f[sel] / 440.0) + 69
+    near = np.abs(semis - np.round(semis)) < 0.3
+    pc = np.round(semis).astype(int) % 12
+    weights = np.sqrt(tonal[sel].sum(axis=1))  # square root: a few loud bins do not outvote the rest
     chroma = np.zeros(12)
-    np.add.at(chroma, pc, power)
+    np.add.at(chroma, pc[near], weights[near])
+    return chroma / chroma.sum() if chroma.sum() > 0 else chroma
+
+
+def detect_key(mono: np.ndarray, sr: int) -> dict:
+    chroma = pitch_chroma(mono, sr)
     if chroma.sum() <= 0:
-        return {"key": None, "score": 0.0, "top3": []}
-    chroma = chroma / chroma.sum()
+        return {"key": None, "score": 0.0, "top3": [], "ranked": []}
     scores = []
     for tonic in range(12):
         for mode, prof in (("major", KS_MAJOR), ("minor", KS_MINOR)):
             r = np.corrcoef(chroma, np.roll(prof, tonic))[0, 1]
             scores.append((float(r), f"{NOTE_NAMES[tonic]} {mode}"))
     scores.sort(reverse=True)
-    return {"key": scores[0][1], "score": scores[0][0], "top3": [s[1] for s in scores[:3]]}
+    return {"key": scores[0][1], "score": scores[0][0], "top3": [s[1] for s in scores[:3]], "ranked": [s[1] for s in scores]}
 
 
 def norm_key(k: str) -> str:
@@ -247,6 +273,22 @@ def relative_key(k: str) -> str | None:
     return f"{NOTE_NAMES[(i + 3) % 12]} major"
 
 
+# A pulse wave's upper partials smear a chroma, and loops like I vi ii V lean on the relative minor,
+# so a key finder cannot be strict. The declared key must still rank in the better third of the 24
+# candidates; a wrong key or a transposition lands far below that. The data tests check the notes themselves.
+KEY_RANK_OK = 8
+# A non looping song shorter than this is a stinger: tempo and key are not measured.
+SHORT_STINGER_SEC = 8.0
+# the seam step may be at most this many times the 99th percentile step of the loop itself
+SEAM_CLICK_MAX = 1.5
+
+
+def key_rank(declared: str, det: dict) -> int | None:
+    ranked = det.get("ranked") or []
+    d = norm_key(declared)
+    return ranked.index(d) + 1 if d in ranked else None
+
+
 def key_match(declared: str, det: dict) -> str:
     if not det.get("key"):
         return "none"
@@ -257,6 +299,9 @@ def key_match(declared: str, det: dict) -> str:
         return "top3"
     if det["key"] == relative_key(d):
         return "relative"
+    rank = key_rank(declared, det)
+    if rank is not None and rank <= KEY_RANK_OK:
+        return f"rank {rank}"
     return "MISMATCH"
 
 
@@ -290,9 +335,10 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
         return float(np.max(np.abs(np.diff(seg)))) if len(seg) > 1 else 0.0
 
     def jump_db(t: float) -> float:
+        # silence on one side is a jump of "a lot", not of infinity
         i = int(round(t * sr))
         a, b = rms(mono[max(i - h, 0) : i]), rms(mono[i : i + h])
-        return db(b) - db(a) if a > 1e-6 and b > 1e-6 else 0.0
+        return float(np.clip(db(b + 1e-5) - db(a + 1e-5), -60.0, 60.0))
 
     total = len(mono) / sr
     bars = []
@@ -302,13 +348,24 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
         if all(abs(t - s) > 0.01 for s in seams):
             bars.append(t)
         j += 1
-    bar_steps = [step(t) for t in bars] or [1e-9]
     bar_jumps = [jump_db(t) for t in bars] or [0.0]
     seam_steps = [step(t) for t in seams]
     seam_jumps = [jump_db(t) for t in seams]
 
+    # A click is a sample step bigger than anything the loop does anywhere else, so the
+    # yardstick is the 99th percentile of the largest step in every 4 ms window of one loop.
+    # (Bar lines themselves can be silent before a note, so they make a poor yardstick.)
+    second = start + loop
+    first_t = second if second + loop <= total + 0.05 else start
+    lo = int(round(first_t * sr))
+    one_loop = mono[lo : lo + int(round(loop * sr))]
+    win = max(int(0.004 * sr), 4)
+    n = len(one_loop) // win * win
+    window_steps = np.abs(np.diff(one_loop[:n].reshape(-1, win), axis=1)).max(axis=1) if n else np.array([1e-9])
+    typical_max = float(np.percentile(window_steps, 99)) + 1e-9
+
     out = {
-        "seam_click_ratio": max(seam_steps) / max(float(np.median(bar_steps)), 1e-9),
+        "seam_click_ratio": max(seam_steps) / typical_max,
         "seam_step_db": max(seam_jumps, key=abs),
         "bar_step_db_median": float(np.median(bar_jumps)),
         "bar_step_db_spread": float(np.std(bar_jumps)),
@@ -339,6 +396,31 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
 # --------------------------------------------------------------------- basics
 
 
+DROPOUT_SOUND_DBFS = -60.0
+DROPOUT_SILENCE_DBFS = -80.0
+GAP_MAX_MS = 150.0
+
+
+def longest_dropout_ms(mono: np.ndarray, sr: int) -> float:
+    """Longest stretch of near digital silence between the first and the last sound, in ms.
+
+    A full mix has a note, a hat or a decaying tail sounding at every moment, so a long
+    hole in it is a render that lost audio (a missed scheduler pump), not a rest.
+    """
+    hop = max(int(0.01 * sr), 1)
+    n = len(mono) // hop * hop
+    if n == 0:
+        return 0.0
+    frames = np.sqrt((mono[:n].reshape(-1, hop) ** 2).mean(axis=1))
+    sound = np.flatnonzero(frames > 10 ** (DROPOUT_SOUND_DBFS / 20))
+    if len(sound) < 2:
+        return 0.0
+    inner = frames[sound[0] : sound[-1] + 1] >= 10 ** (DROPOUT_SILENCE_DBFS / 20)
+    # distance between consecutive sounding frames, with sentinels at both ends
+    marks = np.flatnonzero(np.concatenate(([True], inner, [True])))
+    return float((np.diff(marks).max() - 1) * hop / sr * 1000)
+
+
 def basic_metrics(data: np.ndarray, sr: int) -> dict:
     mono = data.mean(axis=1)
     peak = float(np.abs(data).max())
@@ -356,6 +438,7 @@ def basic_metrics(data: np.ndarray, sr: int) -> dict:
     fr = np.sqrt((mono[:n].reshape(-1, hop) ** 2).mean(axis=1)) if n else np.array([0.0])
     silent_frac = float((fr < thr).mean())
     return {
+        "max_gap_ms": longest_dropout_ms(mono, sr),
         "duration": len(mono) / sr,
         "finite": finite,
         "peak_db": db(peak),
@@ -484,11 +567,16 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
         res["key_detected"] = key["key"]
         res["key_declared"] = meta.get("key")
         res["key_match"] = key_match(str(meta.get("key")), key) if meta.get("key") else "none"
+        res["key_rank"] = key_rank(str(meta.get("key")), key) if meta.get("key") else None
         res["key_score"] = key["score"]
+        if not meta.get("loop") and len(mono) / sr < SHORT_STINGER_SEC:
+            # a few notes have no tempo or key worth measuring
+            res["tempo_match"] = "short"
+            res["key_match"] = "short"
         seam = loop_seam(mono, sr, meta)
         if seam:
             res.update(seam)
-        res["lufs_target"] = MUSIC_TARGET_LUFS
+        res["lufs_target"] = MUSIC_TARGET_LUFS if meta.get("loop") else STINGER_TARGET_LUFS
         # music loudness is judged on one whole loop once it has settled: loop 2, or loop 1 if only one was rendered
         loop = float(meta.get("loopSeconds") or 0)
         total = len(mono) / sr
@@ -497,8 +585,14 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
                 t0 = 0.06 + k * loop
                 if t0 + loop <= total + 0.05:
                     a, b = int(t0 * sr), int(min((t0 + loop) * sr, len(mono)))
-                    res["lufs_loop"] = event_lufs(data[a:b], sr)[0]
-                    res["peak_loop_db"] = db(np.abs(data[a:b]).max())
+                    seg = data[a:b]
+                    res["lufs_loop"] = ebur128_of(seg, sr)
+                    res["peak_loop_db"] = db(np.abs(seg).max())
+                    # how often is the soft knee of the limiter (it starts at -6 dBFS) in play? 95% of 10 ms frames sit below this
+                    fr = max(int(0.01 * sr), 1)
+                    peaks = np.abs(seg).max(axis=1)
+                    nfr = len(peaks) // fr * fr
+                    res["peak_p95_db"] = db(float(np.percentile(peaks[:nfr].reshape(-1, fr).max(axis=1), 95)))
                     break
     else:
         lufs, act = event_lufs(data, sr)
@@ -524,18 +618,24 @@ def flags_for(r: dict) -> list[str]:
         fl.append("CLIP")
     if r["peak_db"] > CEILING_DBFS + 0.15:
         fl.append("PEAK>-3")
-    if r["dc"] > 0.002:
+    # A decaying sub 100 Hz thump never finishes its last cycle and averages to about
+    # 1% of its rms: residue, not DC. Real DC averages to tens of percent.
+    if r["dc"] > min(0.01, max(0.002, 0.02 * 10 ** (r["rms_db"] / 20))):
         fl.append("DC")
     if r["group"] == "music":
-        li = r.get("lufs_loop")
-        if li is not None and abs(li - MUSIC_TARGET_LUFS) > 2.0 and "@" not in r["name"]:
-            fl.append(f"LUFS {li - MUSIC_TARGET_LUFS:+.1f}")
+        # a loop is judged on one settled loop, a stinger (no loop) on the whole file, each against its own target
+        li = r.get("lufs_loop") if r.get("lufs_loop") is not None else r.get("lufs_i")
+        target = r.get("lufs_target", MUSIC_TARGET_LUFS)
+        if li is not None and abs(li - target) > 2.0 and "@" not in r["name"]:
+            fl.append(f"LUFS {li - target:+.1f}")
         if r.get("tempo_match") == "MISMATCH":
             fl.append("TEMPO")
         if r.get("key_match") in ("MISMATCH",):
             fl.append("KEY")
-        if r.get("seam_click_ratio", 0) > 2.5:
+        if r.get("seam_click_ratio", 0) > SEAM_CLICK_MAX:
             fl.append("SEAM")
+        if "@" not in r["name"] and r.get("max_gap_ms", 0) > GAP_MAX_MS:
+            fl.append(f"GAP {r['max_gap_ms']:.0f}ms")
         if r.get("loop_env_corr") is not None and r["loop_env_corr"] < 0.9:
             fl.append("LOOP")
     elif r["group"] == "sfx":
@@ -607,25 +707,45 @@ def sfx_table(rows: list[dict]) -> str:
 LAYER_TARGET_REL = {"lead": 0.0, "bass": -3.0, "kit": -4.0, "drums": -4.0, "chords": -6.0, "base": -6.0, "pad": -3.0, "extra": -9.0, "perc": -9.0}
 
 
-def layers_table(solo_rows: list[dict], mix_rows: list[dict]) -> str:
-    """Each layer's loudness alone, how far it is from where its role wants it, and the volume change that fixes it."""
-    mixes = {r["name"]: r for r in mix_rows}
-    by_song: dict[str, list[dict]] = {}
+def layer_balance(solo_rows: list[dict]) -> list[dict]:
+    """Per layer: loudness alone, distance from the lead, where its role wants it, and the volume factor that gets it there.
+
+    tools/audio/rebalance.ts applies `change` to the song source, so the targets live only here.
+    """
+    by_song: dict[str, list[tuple[str, dict]]] = {}
     for r in solo_rows:
-        song, layers = r["name"].split("#", 1)
-        by_song.setdefault(song, []).append({**r, "layers": layers})
-    head = "| Song | Layer alone | LUFS-I | Peak dBFS | vs lead dB | wanted vs lead | change vol by |\n|---|---|---|---|---|---|---|\n"
-    lines = []
+        song, layer = r["name"].split("#", 1)
+        by_song.setdefault(song, []).append((layer, r))
+    out: list[dict] = []
     for song, rows in sorted(by_song.items()):
-        ref = next((r for r in rows if r["layers"] == "lead"), None)
-        ref_lufs = ref["lufs_i"] if ref and ref.get("lufs_i") is not None else max((r.get("lufs_i") or -99.0) for r in rows)
-        for r in sorted(rows, key=lambda r: r["layers"]):
+        ref = next((r for layer, r in rows if layer == "lead"), None)
+        ref_lufs = ref["lufs_i"] if ref and ref.get("lufs_i") is not None else max((r.get("lufs_i") or -99.0) for _, r in rows)
+        for layer, r in sorted(rows, key=lambda x: x[0]):
             if r.get("lufs_i") is None:
                 continue
             rel = r["lufs_i"] - ref_lufs
-            want = LAYER_TARGET_REL.get(r["layers"])
-            fix = "" if want is None else f"x{10 ** ((want - rel) / 20):.2f}"
-            lines.append(f"| {song} | {r['layers']} | {fmt(r['lufs_i'])} | {fmt(r['peak_db'])} | {fmt(rel, '+.1f')} | {fmt(want, '+.1f')} | {fix} |")
+            want = LAYER_TARGET_REL.get(layer)
+            out.append(
+                {
+                    "song": song,
+                    "layer": layer,
+                    "lufs_i": r["lufs_i"],
+                    "peak_db": r["peak_db"],
+                    "rel": rel,
+                    "want": want,
+                    "change": None if want is None else 10 ** ((want - rel) / 20),
+                }
+            )
+    return out
+
+
+def layers_table(balance: list[dict]) -> str:
+    """The layer balance as a markdown table."""
+    head = "| Song | Layer alone | LUFS-I | Peak dBFS | vs lead dB | wanted vs lead | change vol by |\n|---|---|---|---|---|---|---|\n"
+    lines = []
+    for b in balance:
+        fix = "" if b["change"] is None else f"x{b['change']:.2f}"
+        lines.append(f"| {b['song']} | {b['layer']} | {fmt(b['lufs_i'])} | {fmt(b['peak_db'])} | {fmt(b['rel'], '+.1f')} | {fmt(b['want'], '+.1f')} | {fix} |")
     return head + "\n".join(lines) + "\n"
 
 
@@ -715,6 +835,10 @@ def main() -> int:
     if not args.no_png and any(r["group"] == "sfx" for r in results):
         family_images(sfx_rows, wav_root / "sfx", out / "png")
 
+    balance = layer_balance(solo_rows)
+    if balance:
+        (out / "balance.json").write_text(json.dumps(balance, indent=2))
+
     if not args.no_notes and (sfx_rows or music_rows):
         notes = Path(args.notes)
         text = notes.read_text() if notes.exists() else "# Audio notes\n"
@@ -723,7 +847,7 @@ def main() -> int:
         if sfx_rows:
             text = replace_block(text, "sfx", sfx_table(sfx_rows))
         if solo_rows:
-            text = replace_block(text, "layers", layers_table(solo_rows, music_rows))
+            text = replace_block(text, "layers", layers_table(balance))
         notes.write_text(text)
         print(f"wrote tables into {notes}")
     return 0

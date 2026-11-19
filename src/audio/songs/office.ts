@@ -104,7 +104,7 @@ export const office: Song = compileSong({
       id: 'base',
       inst: 'arpSoft',
       pan: -0.2,
-      vol: 1.6,
+      vol: 2.62,
       bars: cat(rep(ARP8, 16), rep(ARP16, 8), rep(ARPQ, 8)),
     },
     {
@@ -126,13 +126,13 @@ export const office: Song = compileSong({
         sh: rep('o o x o o o x o o o x o o o x o', 32),
       },
     },
-    { id: 'pad', inst: 'pad', octave: 3, to: 0.34, pan: 0.15, vol: 0.72, bars: PAD },
+    { id: 'pad', inst: 'pad', octave: 3, to: 0.34, pan: 0.15, vol: 1.19, bars: PAD },
     {
       id: 'chords',
       inst: 'chord',
       at: 0.3,
       pan: 0.2,
-      vol: 1.05,
+      vol: 1.32,
       bars: cat(rep(OFFBEAT, 24), rests(8)),
     },
     {

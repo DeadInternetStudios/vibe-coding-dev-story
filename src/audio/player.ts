@@ -22,7 +22,7 @@ export function playNote(
     }
     return;
   }
-  const voice = noteVoice(INSTRUMENTS[track.inst], midiToFreq(note.pitch) * pitchMul, time, durSec, note.vel * track.vol, note.arp);
+  const voice = noteVoice(INSTRUMENTS[track.inst], midiToFreq(note.pitch) * pitchMul, time, durSec, note.vel * track.vol, note.arp, note.bend);
   playVoice(rt, voice, dest, essential);
 }
 

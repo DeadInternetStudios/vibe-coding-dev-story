@@ -38,8 +38,8 @@ const sweep = Array.from({ length: 21 }, (_, i) => i / 20);
 const playing = (song: Song, intensity: number): Track[] => song.tracks.filter((t) => layerWanted(t, intensity, false));
 
 describe('song data', () => {
-  it('has a song to test', () => {
-    expect(songs.length).toBeGreaterThan(0);
+  it('has a song for every music id and none extra', () => {
+    expect(songs.map(([id]) => id).sort()).toEqual([...MUSIC_IDS].sort());
   });
 
   it('lists every song layer in the public MUSIC table', () => {

@@ -4,6 +4,14 @@
  * Pulse waves are exact Fourier series handed to a PeriodicWave, so the browser
  * band limits them per pitch (no aliasing, no harsh fizz). Noise comes from a
  * real NES style 15 bit LFSR so it is deterministic and has a short, tonal mode.
+ *
+ * Level is the one thing the two kinds of backend disagree on. A browser honours
+ * `disableNormalization: true`; node-web-audio-api peak-normalizes every custom
+ * wave anyway, so a duty 50% pulse came out 4.6 dB louder there than in a browser
+ * and a duty 12.5% pulse 3.3 dB quieter. Every table is therefore built to peak
+ * at exactly 1 (normalizing it changes nothing) and carries its designed level as
+ * an explicit `gain` that the voice applies. The same song then sounds the same
+ * everywhere, which is what lets a node render stand in for the browser.
  */
 
 export type PulseId = 'p12' | 'p25' | 'p50' | 'p75';
@@ -97,6 +105,53 @@ export function steppedTriangleSamples(): number[] {
   return out;
 }
 
+/** Rising sawtooth (1/n harmonics, alternating sign), at the common wave level. */
+export function sawTable(harmonics = PULSE_HARMONICS): FourierTable {
+  const real = new Float32Array(harmonics + 1);
+  const imag = new Float32Array(harmonics + 1);
+  for (let n = 1; n <= harmonics; n++) imag[n] = (n % 2 === 1 ? 2 : -2) / (n * Math.PI);
+  return normalizeRms({ real, imag });
+}
+
+const PEAK_POINTS = 4096;
+const PEAK_COS = new Float64Array(PEAK_POINTS);
+const PEAK_SIN = new Float64Array(PEAK_POINTS);
+for (let i = 0; i < PEAK_POINTS; i++) {
+  PEAK_COS[i] = Math.cos((2 * Math.PI * i) / PEAK_POINTS);
+  PEAK_SIN[i] = Math.sin((2 * Math.PI * i) / PEAK_POINTS);
+}
+
+/** Largest absolute value of the waveform a table describes, summed on a fine grid over one period. */
+export function tablePeak(t: FourierTable): number {
+  const mask = PEAK_POINTS - 1;
+  let peak = 0;
+  for (let i = 0; i < PEAK_POINTS; i++) {
+    let x = 0;
+    for (let k = 1; k < t.real.length; k++) {
+      const j = (k * i) & mask;
+      x += t.real[k]! * PEAK_COS[j]! + t.imag[k]! * PEAK_SIN[j]!;
+    }
+    peak = Math.max(peak, Math.abs(x));
+  }
+  return peak;
+}
+
+/**
+ * The same wave scaled to peak at exactly 1, and the peak it had before. Playing
+ * the scaled table at `peak` times the gain gives back the original level.
+ */
+export function unitPeak(t: FourierTable): { table: FourierTable; peak: number } {
+  const peak = tablePeak(t);
+  const g = peak > 0 ? 1 / peak : 1;
+  const real = new Float32Array(t.real.length);
+  const imag = new Float32Array(t.imag.length);
+  for (let k = 0; k < real.length; k++) {
+    real[k] = t.real[k]! * g;
+    imag[k] = t.imag[k]! * g;
+  }
+  return { table: { real, imag }, peak };
+}
+
 /** Warm bass shape: a triangle with a pinch of 2nd and 3rd harmonic so it survives phone speakers. */
 export function warmTable(): FourierTable {
   const real = new Float32Array(9);
@@ -152,6 +207,20 @@ export function lfsrCycle(short: boolean): Float32Array {
 export interface OscSource {
   type?: OscillatorType;
   wave?: PeriodicWave;
+  /** Multiply the oscillator by this. Custom waves peak at 1; this restores their designed level. 1 for built in types. */
+  gain: number;
+}
+
+/** The peak search is the same for every context, so do it once per process. */
+const PEAK_CACHE = new Map<WaveId, { table: FourierTable; peak: number }>();
+
+function unitTable(id: WaveId, build: () => FourierTable): { table: FourierTable; peak: number } {
+  let hit = PEAK_CACHE.get(id);
+  if (!hit) {
+    hit = unitPeak(build());
+    PEAK_CACHE.set(id, hit);
+  }
+  return hit;
 }
 
 /**
@@ -189,25 +258,26 @@ export class WaveBank {
     return this.noiseBuffer(id).length;
   }
 
-  private periodic(t: FourierTable): OscSource {
-    return { wave: this.ctx.createPeriodicWave(t.real, t.imag, { disableNormalization: true }) };
+  private periodic(id: WaveId, build: () => FourierTable): OscSource {
+    const { table, peak } = unitTable(id, build);
+    return { wave: this.ctx.createPeriodicWave(table.real, table.imag, { disableNormalization: true }), gain: peak };
   }
 
   private make(id: WaveId): OscSource {
-    if (isPulse(id)) return this.periodic(pulseTable(PULSE_DUTY[id]));
+    if (isPulse(id)) return this.periodic(id, () => pulseTable(PULSE_DUTY[id]));
     switch (id) {
       case 'tri':
-        return { type: 'triangle' };
-      case 'saw':
-        return { type: 'sawtooth' };
+        return { type: 'triangle', gain: 1 };
       case 'sine':
-        return { type: 'sine' };
+        return { type: 'sine', gain: 1 };
+      case 'saw':
+        return this.periodic(id, sawTable);
       case 'tri4':
-        return this.periodic(normalizeRms(tableToFourier(steppedTriangleSamples(), 16)));
+        return this.periodic(id, () => normalizeRms(tableToFourier(steppedTriangleSamples(), 16)));
       case 'warm':
-        return this.periodic(warmTable());
+        return this.periodic(id, warmTable);
       case 'organ':
-        return this.periodic(organTable());
+        return this.periodic(id, organTable);
       default:
         throw new Error(`audio: ${id} is not an oscillator wave`);
     }

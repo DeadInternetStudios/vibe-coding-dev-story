@@ -211,7 +211,7 @@ async function main(): Promise<void> {
     writeFileSync(file, encodeWav(r.sampleRate, [r.left, r.right]));
     writeFileSync(
       resolve(dir, `${p.name}.json`),
-      JSON.stringify({ name: p.name, group: p.group, label: p.label, family: p.family, backend, sampleRate: r.sampleRate, seconds: r.seconds, loopSeconds: r.loopSeconds, ...r.meta }, null, 2),
+      JSON.stringify({ name: p.name, group: p.group, label: p.label, family: p.family, backend, sampleRate: r.sampleRate, seconds: r.seconds, loopSeconds: r.loopSeconds, attempts: r.attempts, ...r.meta }, null, 2),
     );
   }
   console.log(`rendered ${planned.length} file(s) with ${backend} in ${((Date.now() - t0) / 1000).toFixed(1)}s into ${outDir}/wav`);

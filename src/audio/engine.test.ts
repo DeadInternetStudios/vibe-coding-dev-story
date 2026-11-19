@@ -120,9 +120,14 @@ describe('every sound effect, rendered offline through the real engine', () => {
     expect(peak).toBeLessThanOrEqual(PEAK_LIMIT);
     // nothing left hanging at the end of the render window
     expect(rmsOf(r, r.seconds - 0.05, r.seconds)).toBeLessThan(1e-3);
+    // DC check. A decaying sub 100 Hz thump never completes its last cycle, so it
+    // averages to about 1% of its rms: that is residue, not DC. A real DC bug (a
+    // pulse table with a nonzero mean, say) averages to tens of percent.
     let mean = 0;
     for (const v of r.left) mean += v;
-    expect(Math.abs(mean / r.left.length)).toBeLessThan(0.002);
+    mean /= r.left.length;
+    const allowed = Math.min(0.01, Math.max(0.002, 0.02 * rmsOf(r, 0, r.seconds)));
+    expect(Math.abs(mean)).toBeLessThan(allowed);
     // it starts promptly: the first sound lands within 40 ms of the call
     expect(activeSpan(r, 5e-4).first).toBeLessThan(0.04);
   });

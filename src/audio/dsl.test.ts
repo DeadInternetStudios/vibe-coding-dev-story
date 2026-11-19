@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CHORD_QUALITIES, compileSong, normalizeBars, parseChord, scaleOf, type SongSpec } from './songs/dsl';
+import { cat, every4, hold, phrase, place, rep, rests } from './songs/helpers';
 
 const R16 = '. . . . . . . . . . . . . . . .';
 
@@ -79,6 +80,30 @@ describe('compileSong: pitched tracks', () => {
     const n = pitched('@ . . . . . . . . . . . . . . .', {}, 4)[0]!;
     expect(n.pitch).toBe(60);
     expect(n.arp).toEqual([0, 4, 7, 12]);
+  });
+
+  it('\\ falls and / scoops by the given semitones over the held length', () => {
+    const notes = pitched('G3\\4 - - - E4/2 - . . C4 . . . . . . .');
+    expect(notes.map((n) => [n.pitch, n.dur, n.bend])).toEqual([
+      [55, 4, -4],
+      [64, 2, 2],
+      [60, 1, undefined],
+    ]);
+  });
+
+  it('a glide works on chord tokens and inside a stab, and the other notes of the stab stay steady', () => {
+    const notes = pitched('5\\3 - - - 1+3/1 . . . . . . . . . . .', {}, 3);
+    expect(notes.map((n) => [n.step, n.pitch, n.bend])).toEqual([
+      [0, 55, -3],
+      [4, 48, undefined],
+      [4, 52, 1],
+    ]);
+  });
+
+  it('rejects a glide on a chord arpeggio, and a glide with no size or a zero size', () => {
+    expect(() => pitched('@\\3 . . . . . . . . . . . . . . .')).toThrow(/arpeggio/);
+    expect(() => pitched('C4\\ . . . . . . . . . . . . . . .')).toThrow(/cannot read token/);
+    expect(() => pitched('C4\\0 . . . . . . . . . . . . . . .')).toThrow(/cannot read token/);
   });
 
   it('spans several bars given with pipes or as an array', () => {
@@ -181,5 +206,54 @@ describe('compileSong: mistakes name the exact place', () => {
         }),
       ),
     ).toThrow(/duplicate track id "a"/);
+  });
+});
+
+describe('bar helpers', () => {
+  it('place puts tokens on the given steps and rests everywhere else', () => {
+    expect(place({ 4: 'x', 12: 'X' })).toBe('. . . . x . . . . . . . X . . .');
+    expect(place({}, 4)).toBe('. . . .');
+  });
+
+  it('place refuses a step outside the bar', () => {
+    expect(() => place({ 16: 'x' })).toThrow(/outside 0..15/);
+    expect(() => place({ [-1]: 'x' })).toThrow(/outside/);
+  });
+
+  it('a placed bar always has the right number of steps', () => {
+    for (const steps of [8, 12, 16]) expect(place({ 0: 'x' }, steps).split(' ')).toHaveLength(steps);
+  });
+
+  it('phrase holds each note to the next onset and the last to the end of the bar', () => {
+    expect(phrase({ 0: 'G5', 3: 'Bb5', 6: 'D6' })).toBe('G5 - - Bb5 - - D6 - - - - - - - - -');
+    expect(phrase({ 4: 'C4' }, 8)).toBe('. . . . C4 - - -');
+  });
+
+  it('phrase: a "." onset cuts the note before it and rests until the next onset', () => {
+    expect(phrase({ 0: 'G5', 2: '.', 5: 'A5' }, 8)).toBe('G5 - . . . A5 - -');
+  });
+
+  it('phrase takes onsets in any order, always gives the right step count, and refuses a step outside the bar', () => {
+    expect(phrase({ 8: 'E4', 0: 'C4' })).toBe(phrase({ 0: 'C4', 8: 'E4' }));
+    for (const steps of [8, 12, 16]) expect(phrase({ 0: 'C4', 5: 'D4' }, steps).split(' ')).toHaveLength(steps);
+    expect(() => phrase({ 16: 'C4' })).toThrow(/outside/);
+    expect(() => phrase({ [-1]: 'C4' })).toThrow(/outside/);
+  });
+
+  it('a phrase compiles into held notes of the written lengths', () => {
+    const notes = compileSong(spec({ tracks: [{ id: 'x', inst: 'lead', bars: phrase({ 0: 'C4', 3: 'E4', 8: '.', 10: 'G4' }) }] })).tracks[0]!.notes;
+    expect(notes.map((n) => [n.step, n.dur, n.pitch])).toEqual([
+      [0, 3, 60],
+      [3, 5, 64],
+      [10, 6, 67],
+    ]);
+  });
+
+  it('hold, rep, cat, rests and every4 build bar lists of the right length', () => {
+    expect(hold('C4', 4)).toBe('C4 - - -');
+    expect(rep('a', 3)).toEqual(['a', 'a', 'a']);
+    expect(cat('a', ['b', 'c'], rep('d', 2))).toEqual(['a', 'b', 'c', 'd', 'd']);
+    expect(rests(2)).toEqual([R16, R16]);
+    expect(every4('n', 'f', 2)).toEqual(['n', 'n', 'n', 'f', 'n', 'n', 'n', 'f']);
   });
 });

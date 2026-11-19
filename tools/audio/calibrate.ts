@@ -3,27 +3,36 @@
  * src/audio/levels.ts so every sound lands on its target:
  *
  *   sound effects  -14 LUFS (event loudness) plus the sound's own `level` offset
- *   music          -18 LUFS (the settled middle loop, or the whole song if it does not loop)
+ *   music          -18 LUFS (one settled loop, or the whole song if it does not loop)
  *
  *   npx tsx tools/audio/render.ts all
  *   tools/audio/.venv/bin/python tools/audio/analyze.py
  *   npx tsx tools/audio/calibrate.ts          (dry run, prints the changes)
  *   npx tsx tools/audio/calibrate.ts --write  (writes src/audio/levels.ts)
+ *   add --music or --sfx to touch only that half and keep the other as it is
+ *   add --analysis <path> to calibrate against another analysis.json, e.g. the one made
+ *   from the Chromium renders (tools/audio/out/chromium/analysis.json): the game runs in a
+ *   browser, so that is the reference the final levels are set on
  *
  * new trim = trim in force when it was measured + (target - measured)
- * Boosts are limited so the sound's peak stays under -3.8 dBFS (just inside the
- * limiter ceiling of -3.5), and changes smaller than 0.25 dB are ignored so a second run is stable.
+ * Boosts are limited so a sound effect's peak stays under -3.8 dBFS (just inside the limiter
+ * ceiling of -3.5), and a song's 95th percentile frame peak stays under the start of the
+ * limiter's soft knee (-6 dBFS), so the limiter only ever catches the odd peak.
+ * Changes smaller than 0.25 dB are ignored so a second run is stable.
  * Two passes settle it. A trim beyond +/-9 dB is a hint to fix the sound itself.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MUSIC_IDS, SFX_IDS } from '../../src/audio/ids';
+import { MUSIC_TRIM_DB, SFX_TRIM_DB } from '../../src/audio/levels';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '../..');
 /** Measured peaks are after the master limiter (ceiling -3.5 dBFS), so this leaves a hair of room. */
 const PEAK_CAP_DB = -3.8;
+/** Where the master limiter's soft knee begins. */
+const KNEE_START_DB = -6;
 const DEADBAND_DB = 0.25;
 const SUSPICIOUS_DB = 9;
 
@@ -33,6 +42,7 @@ interface Row {
   trim_db: number;
   loops?: boolean;
   peak_db: number;
+  peak_p95_db?: number | null;
   lufs_event?: number;
   lufs_target: number;
   lufs_loop?: number | null;
@@ -41,12 +51,11 @@ interface Row {
 
 const round1 = (x: number): number => Math.round(x * 10) / 10;
 
-function newTrim(row: Row, measured: number, current: number): { trim: number; capped: boolean } {
+function newTrim(row: Row, measured: number, current: number, headroom: number): { trim: number; capped: boolean } {
   const delta = row.lufs_target - measured;
   if (Math.abs(delta) < DEADBAND_DB) return { trim: current, capped: false };
   let trim = current + delta;
   let capped = false;
-  const headroom = PEAK_CAP_DB - row.peak_db; // how much louder it may get
   if (delta > headroom) {
     trim = current + Math.max(headroom, 0);
     capped = true;
@@ -64,24 +73,33 @@ function render(name: string, doc: string, type: string, entries: Array<[string,
 
 function main(): void {
   const write = process.argv.includes('--write');
-  const rows = JSON.parse(readFileSync(resolve(HERE, 'out/analysis.json'), 'utf8')) as Row[];
+  const onlyMusic = process.argv.includes('--music');
+  const onlySfx = process.argv.includes('--sfx');
+  const doSfx = !onlyMusic;
+  const doMusic = !onlySfx;
+  const at = process.argv.indexOf('--analysis');
+  const analysis = at >= 0 ? resolve(process.argv[at + 1] ?? '') : resolve(HERE, 'out/analysis.json');
+  const rows = JSON.parse(readFileSync(analysis, 'utf8')) as Row[];
+  console.log(`calibrating against ${analysis}`);
 
-  const sfx = new Map<string, number>();
-  const music = new Map<string, number>();
+  const sfx = new Map<string, number>(Object.entries(SFX_TRIM_DB) as Array<[string, number]>);
+  const music = new Map<string, number>(Object.entries(MUSIC_TRIM_DB) as Array<[string, number]>);
   const notes: string[] = [];
 
   for (const r of rows) {
     if (r.name.includes('@') || r.name.includes('#')) continue; // variants and solo layers are for looking at, not calibrating
-    if (r.group === 'sfx' && r.lufs_event !== undefined) {
-      const { trim, capped } = newTrim(r, r.lufs_event, r.trim_db);
+    if (doSfx && r.group === 'sfx' && r.lufs_event !== undefined) {
+      const { trim, capped } = newTrim(r, r.lufs_event, r.trim_db, PEAK_CAP_DB - r.peak_db);
       sfx.set(r.name, trim);
       if (capped) notes.push(`${r.name}: wants more level but its peak is ${r.peak_db.toFixed(1)} dBFS, so it is held at ${trim} dB. Reduce its crest in the design.`);
-    } else if (r.group === 'music') {
+    } else if (doMusic && r.group === 'music') {
       const measured = r.loops ? r.lufs_loop : r.lufs_i;
       if (measured === null || measured === undefined) continue;
-      const { trim, capped } = newTrim(r, measured, r.trim_db);
+      const p95 = r.peak_p95_db;
+      const headroom = r.loops && p95 !== null && p95 !== undefined ? KNEE_START_DB - p95 : PEAK_CAP_DB - r.peak_db;
+      const { trim, capped } = newTrim(r, measured, r.trim_db, headroom);
       music.set(r.name, trim);
-      if (capped) notes.push(`${r.name}: held at ${trim} dB by the peak cap (peak ${r.peak_db.toFixed(1)} dBFS).`);
+      if (capped) notes.push(`${r.name}: held at ${trim} dB, any louder and the limiter would work too hard (95% of frames peak at ${(p95 ?? r.peak_db).toFixed(1)} dBFS).`);
     }
   }
 

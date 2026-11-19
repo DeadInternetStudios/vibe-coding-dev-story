@@ -13,6 +13,7 @@ import { noteToMidi, pitchClass } from '../synth/notes';
  *   1' 5,             append ' for an octave up, , for an octave down
  *   @                 the whole chord as a fast tracker style arpeggio
  *   5+1'              two notes at once (a dyad or stab)
+ *   G3\4  E4/2        glide over the note's length: \ falls, / scoops, by 1..9 semitones
  *   -                 hold the previous note one more step
  *   .                 rest
  *   !  ~              suffix: accent / soft (no suffix is a normal hit)
@@ -142,10 +143,13 @@ interface Mutable {
   drum?: DrumId;
   arp?: readonly number[];
   tune?: number;
+  bend?: number;
 }
 
 const ABS_NOTE = /^[A-G][#b]?\d$/;
 const REL_NOTE = /^([1357@8])(['`,]*)$/;
+/** A glide suffix: `\4` falls four semitones over the note, `/2` scoops up two. */
+const BEND = /^(.+?)([\\/])([1-9])$/;
 
 function octaveShift(marks: string): number {
   let s = 0;
@@ -157,8 +161,14 @@ function chordRootMidi(chord: Chord, octave: number): number {
   return 12 * (octave + 1) + chord.rootPc;
 }
 
-/** Midi pitches (and the arp offsets for '@') one token part resolves to. */
-function resolvePart(part: string, chord: Chord, octave: number, where: string): { pitch: number; arp?: number[] } {
+/** Midi pitches (and the arp offsets for '@', and any glide) one token part resolves to. */
+function resolvePart(part: string, chord: Chord, octave: number, where: string): { pitch: number; arp?: number[]; bend?: number } {
+  const glide = BEND.exec(part);
+  if (glide) {
+    const base = resolvePart(glide[1]!, chord, octave, where);
+    if (base.arp) throw new Error(`audio: ${where}: a chord arpeggio "@" cannot also glide ("${part}")`);
+    return { pitch: base.pitch, bend: (glide[2] === '\\' ? -1 : 1) * Number(glide[3]) };
+  }
   if (ABS_NOTE.test(part)) return { pitch: noteToMidi(part) };
   const m = REL_NOTE.exec(part);
   if (!m) throw new Error(`audio: ${where}: cannot read token "${part}"`);
@@ -225,7 +235,7 @@ function parsePitched(spec: TrackSpec, song: SongSpec, stepsPerBar: number, chor
       const chord = chordsForBar(chords, b, local, stepsPerBar);
       for (const part of core.split('+')) {
         const r = resolvePart(part, chord, octave, where);
-        const n: Mutable = { step, dur: 1, pitch: r.pitch, vel, arp: r.arp };
+        const n: Mutable = { step, dur: 1, pitch: r.pitch, vel, arp: r.arp, bend: r.bend };
         events.push(n);
         open.push(n);
       }

@@ -1,9 +1,7 @@
 import type { SfxIdOf } from '../ids';
+import { BELL } from './parts';
 import { noise, slide, tone, type SfxBody, type ToneEvent } from './dsl';
-import type { LayerSpec } from '../synth/voice';
 
-/** A bell: a sine with two inharmonic partials. Used for cash register dings and sparkles. */
-const BELL: readonly LayerSpec[] = [{ wave: 'sine' }, { wave: 'sine', ratio: 2.4, vol: 0.45 }, { wave: 'sine', ratio: 4.1, vol: 0.15 }];
 
 const SHOWER_NOTES = ['E6', 'G6', 'A6', 'C7', 'E6', 'G6', 'C7', 'E7', 'A6', 'G6'] as const;
 const SHOWER_PANS = [-0.4, 0.25, -0.15, 0.4, -0.3, 0.1, 0.35, -0.2, 0, 0.3] as const;

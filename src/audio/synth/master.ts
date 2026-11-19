@@ -1,13 +1,18 @@
 import type { AudioCtx } from './runtime';
 
 /**
- * Where the soft limiter tops out, linear: -3.5 dBFS. The promise to the game is
- * "never above -3 dBFS". The half decibel of room is for the 2x oversampled
- * WaveShaper, whose downsampling filter overshoots a hard clip by up to 0.2 dB.
+ * Where the soft limiter tops out, linear: -3.5 dBFS. The 2x oversampled
+ * WaveShaper's downsampling filter rings after a hard clip: measured about +0.4 dB
+ * on a loud fanfare and +1.6 dB when 600 sounds pile up. The guard stage below
+ * catches that, so this value only decides where limiting sounds natural.
  */
 export const CEILING = 0.668;
 /** The promised peak limit, linear: -3 dBFS. Tests and the analyzer check against this. */
 export const PEAK_LIMIT = 0.7079;
+/** The guard is exactly transparent up to here, just above CEILING, so limited audio passes untouched. */
+export const GUARD_KNEE = 0.672;
+/** Nothing leaves the engine above this, linear. A hair under PEAK_LIMIT. */
+export const GUARD_MAX = 0.7075;
 /** Below this input level the limiter does nothing at all. */
 export const KNEE = 0.5;
 /** Gentle master low pass. The chip waves have a lot of top end we never want. */
@@ -47,6 +52,24 @@ export function softClipCurve(size = 2049, knee = KNEE, ceiling = CEILING): Floa
   return curve;
 }
 
+/**
+ * The last stage, a WaveShaper without oversampling, so its output is bounded by
+ * the curve itself and the sample peak guarantee is exact. It does nothing up to
+ * `knee`, then a short tanh shoulder that approaches `max` and never reaches it.
+ * Input beyond full scale is clamped to the curve's end values.
+ */
+export function guardCurve(size = 8193, knee = GUARD_KNEE, max = GUARD_MAX): Float32Array<ArrayBuffer> {
+  const curve = new Float32Array(size);
+  const room = max - knee;
+  for (let i = 0; i < size; i++) {
+    const x = (i / (size - 1)) * 2 - 1;
+    const ax = Math.abs(x);
+    const y = ax <= knee ? ax : knee + room * Math.tanh((ax - knee) / room);
+    curve[i] = x < 0 ? -y : y;
+  }
+  return curve;
+}
+
 /** Volume sliders feel right when squared. 1 stays 1. */
 export function volumeToGain(v: number): number {
   const c = Math.min(Math.max(Number.isFinite(v) ? v : 0, 0), 1);
@@ -63,12 +86,13 @@ export interface MasterChain {
   lowpass: BiquadFilterNode;
   highpass: BiquadFilterNode;
   limiter: WaveShaperNode;
+  guard: WaveShaperNode;
   dispose(): void;
 }
 
 /**
  *   musicDuck -> musicVol \
- *                           master -> mute -> highpass -> lowpass -> limiter -> out
+ *                           master -> mute -> highpass -> lowpass -> limiter -> guard -> out
  *   sfxVol ---------------/
  */
 export function createMasterChain(ctx: AudioCtx, out: AudioNode): MasterChain {
@@ -80,6 +104,7 @@ export function createMasterChain(ctx: AudioCtx, out: AudioNode): MasterChain {
   const highpass = ctx.createBiquadFilter();
   const lowpass = ctx.createBiquadFilter();
   const limiter = ctx.createWaveShaper();
+  const guard = ctx.createWaveShaper();
 
   highpass.type = 'highpass';
   highpass.frequency.value = HIGHPASS_HZ;
@@ -89,6 +114,8 @@ export function createMasterChain(ctx: AudioCtx, out: AudioNode): MasterChain {
   lowpass.Q.value = 0.6;
   limiter.curve = softClipCurve();
   limiter.oversample = '2x';
+  guard.curve = guardCurve();
+  guard.oversample = 'none';
 
   musicDuck.connect(musicVol);
   musicVol.connect(master);
@@ -97,7 +124,8 @@ export function createMasterChain(ctx: AudioCtx, out: AudioNode): MasterChain {
   mute.connect(highpass);
   highpass.connect(lowpass);
   lowpass.connect(limiter);
-  limiter.connect(out);
+  limiter.connect(guard);
+  guard.connect(out);
 
   return {
     musicDuck,
@@ -108,8 +136,9 @@ export function createMasterChain(ctx: AudioCtx, out: AudioNode): MasterChain {
     lowpass,
     highpass,
     limiter,
+    guard,
     dispose() {
-      for (const n of [musicDuck, musicVol, sfxVol, master, mute, highpass, lowpass, limiter]) {
+      for (const n of [musicDuck, musicVol, sfxVol, master, mute, highpass, lowpass, limiter, guard]) {
         try {
           n.disconnect();
         } catch {
