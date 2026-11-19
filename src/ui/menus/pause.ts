@@ -12,7 +12,8 @@ export function openPause(ctx: UiCtx, onClose: () => void): Modal {
   const scene = ctx.scene;
   const s = ctx.session.s;
   const w = 190;
-  const h = 150;
+  const keys = window.matchMedia?.('(pointer: fine)').matches ?? false;
+  const h = keys ? 164 : 150;
   const m = new Modal(scene, { w, h, title: 'PAUSED', style: 'paper', closable: true, hold: ctx.hold, onClose });
   m.add(label(scene, w / 2, 21, s.company.name.toUpperCase(), { font: F.caps, tint: C.orange1, origin: [0.5, 0], maxWidth: w - 16 }));
   m.add(label(scene, w / 2, 31, `${dateLabel(s.day)}   ${money(s.company.cash)}   ${s.shipped.length} shipped`, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 12 }));
@@ -37,5 +38,6 @@ export function openPause(ctx: UiCtx, onClose: () => void): Modal {
     m.close();
     fadeTo(scene, 'Title');
   });
+  if (keys) m.add(label(scene, w / 2, h - 12, 'SPACE pause   1-4 speed   H T S O R menus', { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 8 }));
   return m;
 }

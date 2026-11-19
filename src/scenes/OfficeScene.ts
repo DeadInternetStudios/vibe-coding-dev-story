@@ -96,6 +96,7 @@ export class OfficeScene extends Phaser.Scene {
     this.karmaSeen = karmaUnlocks(session.game, app.content);
     this.ctx = this.makeCtx();
     responsive(this, () => this.build(), () => this.teardown());
+    this.installKeys();
     audio.music(session.s.company.crunch ? 'crunch' : 'office');
     window.__vcds = { ...(window.__vcds ?? {}), scene: this, session };
     this.events.once('shutdown', () => {
@@ -188,6 +189,27 @@ export class OfficeScene extends Phaser.Scene {
     if (rw <= L.W) rect(this, x - 3, y - 3, rw + 6, rh + 6, C.ink1, 1).setDepth(DEPTH.room - 1);
     this.dash = new Dash(this, this.session, L, { x, y, w: rw, h: rh }, this.view, this.termLog);
     this.dash.setProject(this.session.s.project?.name ?? null);
+  }
+
+  /** Desktop shortcuts. They stay quiet while a story box or a popup owns the screen. */
+  private installKeys(): void {
+    const kb = this.input.keyboard;
+    if (!kb) return;
+    const free = () => this.introDone && !this.launching && !this.promptOpen && !this.beatOpen && !this.children.getByName('dialogue');
+    const on = (key: string, fn: () => void, whileMenu = false) =>
+      kb.on(`keydown-${key}`, () => {
+        if (!free() || (!whileMenu && this.menuModal?.open)) return;
+        fn();
+      });
+    on('SPACE', () => this.setSpeed(-1));
+    ['ONE', 'TWO', 'THREE', 'FOUR'].forEach((key, i) => on(key, () => this.setSpeed(i)));
+    const menus: Record<string, string> = { H: 'hire', T: 'team', S: 'shop', O: 'tools', R: 'room', P: 'project' };
+    for (const [key, id] of Object.entries(menus)) on(key, () => this.openMenuById(id), true);
+    // escape opens the pause menu; the menu closes itself on escape, so only open it when nothing is up
+    on('ESC', () => this.openMenuById('menu'));
+    on('C', () => this.hud.onCrunch());
+    on('I', () => this.session.s.project?.idea && this.tapIdea());
+    this.events.once('shutdown', () => kb.removeAllListeners());
   }
 
   private setupPan(): void {

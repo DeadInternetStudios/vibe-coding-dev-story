@@ -5,6 +5,9 @@ import { button, label, panel, rect, uiEvents, type PanelObj } from './kit';
 import { layoutOf } from './layout';
 import type { BoxName } from '../art/sprites/ui';
 
+/** Phaser's names for the number row, in order: the first choice on a popup is ONE. */
+export const NUMBER_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'] as const;
+
 export interface ModalOpts {
   w: number;
   h: number;
@@ -39,6 +42,7 @@ export class Modal {
   readonly y: number;
   private release: (() => void) | null;
   private closed = false;
+  private keyOffs: (() => void)[] = [];
   private opts: ModalOpts;
   titleObj: Phaser.GameObjects.BitmapText | null = null;
 
@@ -80,7 +84,8 @@ export class Modal {
       scene.tweens.add({ targets: this.root, alpha: 1, duration: 120 });
       scene.tweens.add({ targets: [this.body, this.box], y: `-=${sy}`, duration: 160, ease: 'Back.easeOut' });
     }
-    if (opts.closable) scene.input.keyboard?.once('keydown-ESC', () => this.close());
+    // escape closes it, unless a story box is open on top: that one takes the key to skip itself
+    if (opts.closable) this.key('ESC', () => !scene.children.getByName('dialogue') && this.close());
     uiEvents.emit('open');
   }
 
@@ -91,6 +96,18 @@ export class Modal {
 
   get open(): boolean {
     return !this.closed;
+  }
+
+  /** Run `fn` when this key goes down while the modal is open. The key is let go when the modal closes. Names are Phaser's: 'ENTER', 'SPACE', 'ONE'. */
+  key(name: string, fn: () => void): void {
+    const kb = this.scene.input.keyboard;
+    if (!kb) return;
+    const event = `keydown-${name}`;
+    const handler = () => {
+      if (!this.closed) fn();
+    };
+    kb.on(event, handler);
+    this.keyOffs.push(() => kb.off(event, handler));
   }
 
   /** A modal that is fading out must not take a second tap: everything in it stops listening. The dim, the first thing in the root, keeps blocking what is behind. */
@@ -106,6 +123,8 @@ export class Modal {
   close(instant = false): void {
     if (this.closed) return;
     this.closed = true;
+    this.keyOffs.forEach((off) => off());
+    this.keyOffs = [];
     this.release?.();
     this.release = null;
     this.freeze();

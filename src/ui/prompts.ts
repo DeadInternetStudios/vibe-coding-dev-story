@@ -17,7 +17,7 @@ import type { EventOutcome, Prompt } from '../sim/types';
 import { bar, button, chip, choiceButton, iconImg, label, rect, type ButtonObj } from './kit';
 import { layoutOf } from './layout';
 import { hash7 } from './dash';
-import { Modal } from './modal';
+import { Modal, NUMBER_KEYS } from './modal';
 import { Speech } from './speech';
 import { beat, scene as playScene } from './story';
 import { dialogue } from './dialogue';
@@ -75,8 +75,9 @@ function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done)
   const w = Math.min(L.W - 8, 336);
   const textW = w - 62;
   const bodyH = textHeight(ctx, p.body, F.read, textW);
-  const choiceHs = 21;
-  const h = Math.min(L.H - 6, 30 + Math.max(40, bodyH + 14) + p.choices.length * (choiceHs + 5) + 14);
+  // a choice with a hint line is taller than one without, so stack them by their real heights
+  const choiceHs = p.choices.map((c) => (c.hint ? 14 + (textHeight(ctx, c.hint, F.body, w - 24) || 8) + 4 : 17));
+  const h = Math.min(L.H - 6, 30 + Math.max(40, bodyH + 14) + choiceHs.reduce((n, ch) => n + ch + 4, 0) + 10);
   const m = new Modal(scene, { w, h, title: p.title.toUpperCase(), style: 'paper' });
   ctx.sfx('alert');
   // portrait
@@ -104,9 +105,10 @@ function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done)
   let chosen = false;
   const showChoices = () => {
     if (buttons.length || chosen) return;
+    let y = choiceY;
     p.choices.forEach((c, i) => {
-      const y = choiceY + i * (choiceHs + 4);
       const b = choiceButton(scene, 6, y, w - 12, c.label, c.hint, c.enabled, () => pick(i), 'cream');
+      y += choiceHs[i]! + 4;
       m.add(b);
       buttons.push(b);
       if (!app.settings.reducedMotion) {
@@ -150,6 +152,11 @@ function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done)
       done();
     });
   };
+  // desktop: number keys pick, space or enter skips the typing
+  p.choices.forEach((c, i) => m.key(NUMBER_KEYS[i]!, () => buttons.length > 0 && c.enabled && pick(i)));
+  const hurry = () => !speech.finished && speech.skip();
+  m.key('SPACE', hurry);
+  m.key('ENTER', hurry);
 }
 
 function showOutcome(ctx: UiCtx, m: Modal, out: EventOutcome | null, w: number, y: number, speaker: string, onContinue: () => void): void {
@@ -186,11 +193,15 @@ function showOutcome(ctx: UiCtx, m: Modal, out: EventOutcome | null, w: number, 
     ctx.room.slumpAll();
     ctx.shake(0.003);
   } else if (good > 0) ctx.room.cheerAll();
-  const btn = button(scene, w - 78, Math.min(m.h - 24, cy + 20), 70, 18, 'CONTINUE', () => {
+  const proceed = () => {
     sp.stop();
     onContinue();
-  }, { kind: 'orange' });
+  };
+  const btn = button(scene, w - 78, Math.min(m.h - 24, cy + 20), 70, 18, 'CONTINUE', proceed, { kind: 'orange' });
   m.add(btn);
+  const onKey = () => (sp.finished ? proceed() : sp.skip());
+  m.key('SPACE', onKey);
+  m.key('ENTER', onKey);
   const zone = scene.add.zone(0, 0, w, 40).setOrigin(0, 0);
   void zone;
 }
@@ -265,6 +276,7 @@ function cardPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'card' }>, done: Done): 
   });
   const skip = button(scene, w - 52, 3, 46, 12, 'SKIP', () => play(null), { kind: 'plum', font: F.body });
   m.add(skip);
+  cards.forEach((card, i) => m.key(NUMBER_KEYS[i]!, () => play(card)));
   ctx.room.say(ctx.session.s.staff[1]?.id ?? '', 'What should we focus on?');
 }
 
@@ -334,13 +346,15 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   for (const ch of c.channels) {
     const ok = unlocked(game, ch.unlock);
     const cost = costOf(ch.id);
-    const b = button(scene, cx, cy, cw, rowH - 1, '', () => {
+    const choose = () => {
       if (!ok) return;
       selected = ch.id;
       rows.forEach((r) => r.btn.setKind(r.id === selected ? 'teal' : r.ok ? 'cream' : 'plum'));
       refreshLaunch();
       ctx.sfx('select');
-    }, { kind: ok ? (ch.id === selected ? 'teal' : 'cream') : 'plum' });
+    };
+    m.key(NUMBER_KEYS[rows.length]!, choose);
+    const b = button(scene, cx, cy, cw, rowH - 1, '', choose, { kind: ok ? (ch.id === selected ? 'teal' : 'cream') : 'plum' });
     b.setEnabled(true);
     m.add(b);
     rows.push({ id: ch.id, btn: b, ok });
@@ -361,6 +375,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   const launch = button(scene, cx, h - 25, cw, 19, 'LAUNCH', () => doLaunch(), { kind: 'orange', icon: 'ship' });
   launchBtnRef.b = launch;
   m.add(launch);
+  m.key('ENTER', () => doLaunch());
   refreshLaunch();
 
   const doLaunch = () => {
@@ -429,6 +444,8 @@ function fridayPrompt(ctx: UiCtx, done: Done): void {
         done();
       });
     };
+    m.key('ONE', () => pick('yolo'));
+    m.key('TWO', () => pick('wait'));
     m.add(choiceButton(scene, 8, 38, w - 16, 'YOLO DEPLOY NOW', 'Faster. Riskier. Dave will not answer his phone.', true, () => pick('yolo'), 'berry'));
     m.add(choiceButton(scene, 8, 78, w - 16, 'WAIT FOR MONDAY', 'Safe. The team rests. The launch slips three days.', true, () => pick('wait'), 'teal'));
   });
@@ -481,14 +498,16 @@ function paydayPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'payday' }>, done: Don
     m.add(label(scene, 10, y, `! ${wn}`, { font: F.body, tint: C.berry1, maxWidth: w - 20 }));
     y += 10;
   }
-  const btn = button(scene, w / 2 - 40, h - 24, 80, 18, 'ONWARD', () => {
+  const onward = () => {
     ctx.session.game.ackPayday();
     m.close();
     ctx.session.save();
     ctx.refresh();
     done();
-  }, { kind: 'orange' });
-  m.add(btn);
+  };
+  m.add(button(scene, w / 2 - 40, h - 24, 80, 18, 'ONWARD', onward, { kind: 'orange' }));
+  m.key('ENTER', onward);
+  m.key('SPACE', onward);
 }
 
 /* ------------------------------------------------------------------ funding */
@@ -504,11 +523,14 @@ function fundingPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'funding' }>, done: D
       const m = new Modal(scene, { w, h: 96, title: `YEAR ${p.year} FUNDING`, style: 'paper' });
       m.add(label(scene, w / 2, 24, `Valuation ${shortMoney(p.valuation)}. They wanted ${shortMoney(p.target)}.`, { font: F.body, tint: C.berry1, origin: [0.5, 0], maxWidth: w - 16, align: 'center' }));
       m.add(label(scene, w / 2, 44, game.takeFunding(null), { font: F.body, tint: C.ink2, origin: [0.5, 0], maxWidth: w - 20, align: 'center' }));
-      m.add(button(scene, w / 2 - 40, 72, 80, 18, 'OK FINE', () => {
+      const okFine = () => {
         m.close();
         ctx.refresh();
         done();
-      }, { kind: 'plum' }));
+      };
+      m.add(button(scene, w / 2 - 40, 72, 80, 18, 'OK FINE', okFine, { kind: 'plum' }));
+      m.key('ENTER', okFine);
+      m.key('SPACE', okFine);
       return;
     }
     const offers = game.fundingChoices();
@@ -517,17 +539,17 @@ function fundingPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'funding' }>, done: D
     m.add(label(scene, w / 2, 21, `Valuation ${shortMoney(p.valuation)}. The money is interested.`, { font: F.body, tint: C.teal1, origin: [0.5, 0] }));
     offers.forEach((o, i) => {
       const kind = o.id === 'vc' ? 'orange' : o.id === 'angel' ? 'teal' : 'cream';
-      m.add(
-        choiceButton(scene, 8, 34 + i * 40, w - 16, `${o.label.toUpperCase()}  ${o.cash > 0 ? `+${shortMoney(o.cash)}` : ''}`, o.blurb, true, () => {
-          const msg = game.takeFunding(o.id);
-          ctx.cashPop(o.cash);
-          ctx.sfx(o.cash > 0 ? 'cash_register' : 'praise');
-          m.close();
-          ctx.refresh();
-          ctx.toast(msg, o.cash > 0 ? 'good' : 'info');
-          done();
-        }, kind),
-      );
+      const take = () => {
+        const msg = game.takeFunding(o.id);
+        ctx.cashPop(o.cash);
+        ctx.sfx(o.cash > 0 ? 'cash_register' : 'praise');
+        m.close();
+        ctx.refresh();
+        ctx.toast(msg, o.cash > 0 ? 'good' : 'info');
+        done();
+      };
+      m.key(NUMBER_KEYS[i]!, take);
+      m.add(choiceButton(scene, 8, 34 + i * 40, w - 16, `${o.label.toUpperCase()}  ${o.cash > 0 ? `+${shortMoney(o.cash)}` : ''}`, o.blurb, true, take, kind));
     });
   });
 }
@@ -557,12 +579,15 @@ function awardsPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'awards' }>, done: Don
       m.add(label(scene, 32, y + 12, r.app!.name, { font: F.body, tint: C.cream, maxWidth: w - 110 }));
       m.add(label(scene, w - 8, y + 6, r.prize, { font: F.caps, tint: C.mint, origin: [1, 0] }));
     });
-    m.add(button(scene, w / 2 - 44, h - 24, 88, 18, 'GREAT, THANKS', () => {
+    const thanks = () => {
       game.ackAwards();
       m.close();
       audio.music('office');
       ctx.refresh();
       done();
-    }, { kind: 'orange' }));
+    };
+    m.add(button(scene, w / 2 - 44, h - 24, 88, 18, 'GREAT, THANKS', thanks, { kind: 'orange' }));
+    m.key('ENTER', thanks);
+    m.key('SPACE', thanks);
   });
 }

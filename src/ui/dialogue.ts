@@ -45,9 +45,11 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   let i = -1;
   let speech: Speech | null = null;
   let closed = false;
+  let keyOff = () => undefined as void;
   const close = () => {
     if (closed) return;
     closed = true;
+    keyOff();
     speech?.stop();
     audio.stopVoice();
     release();
@@ -79,13 +81,28 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
       },
     });
   };
+  const advance = () => {
+    if (speech && !speech.finished) speech.skip();
+    else next();
+  };
   dim.on('pointerup', (p: Phaser.Input.Pointer) => {
     if (skip && p.x > x + w - 50 && p.y < y + 14 && p.y > y) {
       close();
       return;
     }
-    if (speech && !speech.finished) speech.skip();
-    else next();
+    advance();
   });
+  // desktop: space and enter turn the page, escape skips the whole scene when that is allowed
+  const kb = scene.input.keyboard;
+  const onAdvance = () => !closed && advance();
+  const onSkip = () => !closed && skip && close();
+  kb?.on('keydown-SPACE', onAdvance);
+  kb?.on('keydown-ENTER', onAdvance);
+  kb?.on('keydown-ESC', onSkip);
+  keyOff = () => {
+    kb?.off('keydown-SPACE', onAdvance);
+    kb?.off('keydown-ENTER', onAdvance);
+    kb?.off('keydown-ESC', onSkip);
+  };
   next();
 }
