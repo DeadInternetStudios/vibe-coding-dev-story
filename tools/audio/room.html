@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sound room - Vibe Coding Dev Story</title>
+    <style>
+      :root { color-scheme: dark; --bg: #14121f; --panel: #1e1b2e; --line: #34304d; --ink: #ece8ff; --dim: #9b95c4; --hot: #ff6b8b; --ok: #6be3a5; --btn: #2b2745; --btn-hi: #3d3763; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 16px 20px 80px; background: var(--bg); color: var(--ink); font: 14px/1.4 ui-monospace, "SF Mono", Menlo, monospace; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim); margin: 0 0 10px; }
+      h3 { font-size: 12px; color: var(--dim); margin: 14px 0 6px; font-weight: 600; }
+      section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
+      header p { margin: 0; color: var(--dim); }
+      button { font: inherit; color: var(--ink); background: var(--btn); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+      button:hover { background: var(--btn-hi); }
+      button:active { transform: translateY(1px); }
+      button.primary { background: var(--hot); border-color: var(--hot); color: #1a0f16; font-weight: 700; }
+      button.primary.on { background: var(--ok); border-color: var(--ok); }
+      button.playing { outline: 2px solid var(--ok); }
+      .row { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+      .grid { display: flex; flex-wrap: wrap; gap: 6px; }
+      label { display: inline-flex; gap: 8px; align-items: center; color: var(--dim); }
+      label output { min-width: 3.2em; color: var(--ink); text-align: right; }
+      input[type=range] { width: 150px; accent-color: var(--hot); }
+      .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+      .chip { font-size: 11px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--dim); }
+      .song { display: grid; grid-template-columns: 180px 1fr; gap: 10px; align-items: start; padding: 6px 0; border-top: 1px solid var(--line); }
+      .song:first-of-type { border-top: 0; }
+      #meter { display: block; width: 100%; max-width: 560px; height: 22px; background: #0d0b16; border: 1px solid var(--line); border-radius: 4px; }
+      #peak { font-variant-numeric: tabular-nums; }
+      #peak.hot { color: var(--hot); }
+      #now { color: var(--ok); }
+      .note { color: var(--dim); font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Sound room</h1>
+      <p>Every sound effect and song in the game, on the real engine. Nothing plays, and no audio context exists, until you press Start.</p>
+    </header>
+
+    <section id="transport">
+      <div class="row">
+        <button id="start" class="primary">Start audio</button>
+        <span id="state" class="note">audio is off</span>
+      </div>
+    </section>
+
+    <section id="mix">
+      <h2>Mix</h2>
+      <div class="row">
+        <label>master <input id="v-master" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+        <label>music <input id="v-music" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+        <label>sfx <input id="v-sfx" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+        <label><input id="mute" type="checkbox" /> mute</label>
+        <button id="duck">duck 0.35 (150 ms)</button>
+        <button id="unduck">unduck (400 ms)</button>
+      </div>
+      <h3>Output level (the engine promises a peak below -3 dBFS)</h3>
+      <canvas id="meter" width="560" height="22"></canvas>
+      <div class="note">peak hold: <span id="peak">-inf dBFS</span> <button id="peak-reset">reset</button></div>
+    </section>
+
+    <section id="music">
+      <h2>Music</h2>
+      <div class="row">
+        <label>intensity <input id="intensity" type="range" min="0" max="1" step="0.01" value="0.6" /><output></output></label>
+        <label>tempo x <input id="tempo" type="range" min="0.5" max="2" step="0.01" value="1" /><output></output></label>
+        <button id="stop-music">stop music (600 ms fade)</button>
+        <span>now playing: <b id="now">nothing</b></span>
+      </div>
+      <p class="note">Intensity switches layers on and off at bar lines. The chips show each song's layers, in the order they stack.</p>
+      <div id="songs"></div>
+    </section>
+
+    <section id="sfx">
+      <h2>Sound effects</h2>
+      <div class="row">
+        <label>volume <input id="s-volume" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+        <label>rate <input id="s-rate" type="range" min="0.5" max="2" step="0.01" value="1" /><output></output></label>
+        <label>pan <input id="s-pan" type="range" min="-1" max="1" step="0.01" value="0" /><output></output></label>
+        <button id="pile">pile-up: 200 sounds in 2 s</button>
+      </div>
+      <div id="sfx-groups"></div>
+    </section>
+
+    <script type="module" src="./room.ts"></script>
+  </body>
+</html>
