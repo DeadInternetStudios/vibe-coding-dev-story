@@ -99,8 +99,21 @@ export function neon(): Px {
   return c.outline('ink0');
 }
 
-/** A trophy shelf: one real cup, one star, one medal, and a row of the same little cup for everybody. */
-export function trophy(): Px {
+const CUP = ['.wyyyyY.', 'Yywyyyyy', 'Y.yyyY.Y', '.Yyyyyy.', '..Yyyy..', '...YY...', '..OOOO..', '.OOOOOO.'];
+const STAR = ['..y..', '.yyy.', 'yywyy', '.yyY.', '.YOO.', '.OOO.'];
+const MEDAL = ['b...b', 'bB.Bb', '.bBb.', '..y..', '.ywy.', '.yyY.', '..Y..'];
+const LITTLE_CUP = ['yyyyY', 'ywyYY', '.yyY.', '..Y..', '.OOO.'];
+
+/** Where each piece stands in the case. */
+const PIECES: readonly { x: number; y: number; rows: readonly string[] }[] = [
+  { x: 4, y: 2, rows: CUP },
+  { x: 13, y: 4, rows: STAR },
+  { x: 21, y: 2, rows: MEDAL },
+  ...[0, 1, 2, 3].map((i) => ({ x: 3 + i * 6, y: 15, rows: LITTLE_CUP })),
+];
+
+/** A wooden case with one shelf across the middle, nothing in it yet. */
+function trophyCase(): Px {
   const c = new Px(30, 22);
   bevel(c, 0, 0, 30, 22, ['wood4', 'wood3', 'wood1']);
   c.rect(2, 2, 26, 18, 'wood1');
@@ -110,45 +123,20 @@ export function trophy(): Px {
   c.rect(2, 10, 26, 2, 'wood3');
   c.hline(2, 10, 26, 'wood4');
   c.hline(2, 11, 26, 'wood2');
-  // the one real trophy
-  stamp(c, 4, 2, [
-    '.wyyyyY.',
-    'Yywyyyyy',
-    'Y.yyyY.Y',
-    '.Yyyyyy.',
-    '..Yyyy..',
-    '...YY...',
-    '..OOOO..',
-    '.OOOOOO.',
-  ]);
-  // a golden star on a block
-  stamp(c, 13, 4, [
-    '..y..',
-    '.yyy.',
-    'yywyy',
-    '.yyY.',
-    '.YOO.',
-    '.OOO.',
-  ]);
-  // a medal on a blue ribbon
-  stamp(c, 21, 2, [
-    'b...b',
-    'bB.Bb',
-    '.bBb.',
-    '..y..',
-    '.ywy.',
-    '.yyY.',
-    '..Y..',
-  ]);
-  // the participation row: all the same, all golden
-  for (let i = 0; i < 4; i++) {
-    stamp(c, 3 + i * 6, 15, [
-      'yyyyY',
-      'ywyYY',
-      '.yyY.',
-      '..Y..',
-      '.OOO.',
-    ]);
-  }
+  return c;
+}
+
+/** A trophy shelf: one real cup, one star, one medal, and a row of the same little cup for everybody. */
+export function trophy(): Px {
+  const c = trophyCase();
+  for (const piece of PIECES) stamp(c, piece.x, piece.y, piece.rows);
+  return c.outline('ink0');
+}
+
+/** The same case before anybody has earned anything: a dark print where each piece will stand. */
+export function emptyCase(): Px {
+  const c = trophyCase();
+  const print = { w: 'wood0', y: 'wood0', Y: 'wood0', O: 'wood0', b: 'wood0', B: 'wood0' } as const;
+  for (const piece of PIECES) stamp(c, piece.x, piece.y, piece.rows, print);
   return c.outline('ink0');
 }

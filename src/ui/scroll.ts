@@ -44,6 +44,11 @@ export function rowWidth(w: number): number {
   return w - INSET - GUTTER;
 }
 
+/** How many pixels of rows, gaps included, a window of height `h` holds without scrolling. */
+export function roomIn(h: number): number {
+  return h - 2 - PAD * 2;
+}
+
 export function scrollList(scene: Scene, o: ScrollListOpts): Phaser.GameObjects.Container {
   const { x, y, w, h } = o;
   const { tops, total } = stackRows(o.rows.map((r) => r.h), o.gap);

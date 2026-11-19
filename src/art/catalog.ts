@@ -7,6 +7,7 @@ import { TILE, carpetTile, desk, duck, laptop, mug, plant, wallTile, windowCity,
 import { Px as PxClass } from './pixel';
 import { BIG_ICON_NAMES, ICON_NAMES, iconPx } from './sprites/icons';
 import { decorPx } from './sprites/decor';
+import { emptyCase } from './sprites/decorWall';
 import { BOX_STYLES, box, type BoxName } from './sprites/ui';
 import { ACCESSORIES, HAIR, buildPerson, roleColorsFor, type Face, type Look, type Pose } from './sprites/people';
 import { PORTRAIT_LOOKS, portraitPx } from './sprites/portraits';
@@ -103,6 +104,7 @@ export const CATALOG: Record<string, CatalogItem[]> = {
   decorCorner: decorGroup(['rack', 'barista']),
   boxes: (Object.keys(BOX_STYLES) as BoxName[]).map((name) => ({ name, make: () => box(28, 16, BOX_STYLES[name]) })),
   logo: [{ name: 'logo', make: logoPx }],
+  hall: [{ name: 'empty-case', make: emptyCase }],
   backdrop: [
     { name: 'night-city', make: () => nightCity(420, 232) },
     { name: 'night-city-tall', make: () => nightCity(252, 440) },
