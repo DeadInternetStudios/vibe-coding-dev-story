@@ -389,6 +389,11 @@ export class ThreadScene extends Phaser.Scene {
 
   /* --------------------------------------------------------------- OP */
 
+  /** Every channel is drawn as a Reddit thread, but a handle only wears the Reddit "u/" where the post really is on Reddit. */
+  private handle(user: string): string {
+    return this.rec.channel in ADDRESS ? user.replace(/^u\//, '') : user;
+  }
+
   /** The founder's name on the post, the same on the OP card and on the closing Edit. */
   private author(): string {
     const founder = current().s.staff.find((m) => m.isFounder);
@@ -423,7 +428,7 @@ export class ThreadScene extends Phaser.Scene {
     const y = 4;
     const head = label(this, x + left, y + 5, '', { font: F.caps, tint: C.cream });
     head.setText(ch?.where ?? 'r/SideProject');
-    const meta = label(this, x + left + head.width + 5, y + 5, `Posted by ${author}  2h`, { font: F.body, tint: C.ink4 });
+    const meta = label(this, x + left + head.width + 5, y + 5, `Posted by ${this.handle(author)}  2h`, { font: F.body, tint: C.ink4 });
     const title = label(this, x + left, y + 17, rec.thread.title, { font: F.head, tint: C.white, maxWidth: tw });
     const titleH = title.height;
     const body = label(this, x + left, y + 20 + titleH, rec.thread.body, { font: F.read, tint: C.ink5, maxWidth: tw });
@@ -500,7 +505,7 @@ export class ThreadScene extends Phaser.Scene {
     this.stageFace.setTexture(bakePortrait(this, voice));
     this.stageBg.setTint(AVATAR_BG[Math.abs(hash(c.user)) % AVATAR_BG.length]!);
     this.stageName.setText((VOICE_NAMES[voice] ?? voice).toUpperCase());
-    this.stageUser.setText(c.user);
+    this.stageUser.setText(this.handle(c.user));
     this.stageFlair.setText(c.flair ?? '');
     stage.setVisible(true);
     if (instant || app.settings.reducedMotion) return;
@@ -674,7 +679,7 @@ export class ThreadScene extends Phaser.Scene {
     const face = this.add.image(ax + AV / 2, by + AV - 0, bakePortrait(this, voice)).setOrigin(0.5, 1);
     block.add(face);
     const isMod = /mod/i.test(c.flair ?? '') || voice === 'automod';
-    const user = label(this, tx, by, c.user, { font: F.body, tint: isMod ? C.green2 : C.blue2 });
+    const user = label(this, tx, by, this.handle(c.user), { font: F.body, tint: isMod ? C.green2 : C.blue2 });
     block.add(user);
     item.view = { block, user, box: { x: ax - 2, y: by - 2, w: cardX + cardW - pad - ax + 2, h: blockH + 3 } };
     let hx = tx + user.width + 4;
@@ -937,7 +942,7 @@ export class ThreadScene extends Phaser.Scene {
       const qh = h - 28 - qy;
       card.add(panel(this, 8, qy, w - 16, qh, 'plum', false));
       card.add(label(this, 14, qy + 4, 'TOP COMMENT', { font: F.body, tint: C.ink4 }));
-      card.add(label(this, w - 14, qy + 4, `${best.c.user}   +${shortNumber(best.votes)}`, { font: F.body, tint: C.orange2, origin: [1, 0] }));
+      card.add(label(this, w - 14, qy + 4, `${this.handle(best.c.user)}   +${shortNumber(best.votes)}`, { font: F.body, tint: C.orange2, origin: [1, 0] }));
       card.add(label(this, 14, qy + 14, `"${quote}"`, { font: F.read, tint: C.ink5, maxWidth: w - 28 }));
     }
     const cont = button(this, Math.floor(w / 2) - 60, h - 24, 120, 18, this.replay ? 'BACK' : 'KEEP SHIPPING', () => this.leave(), { kind: 'orange', icon: 'ship' });

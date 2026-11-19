@@ -25,6 +25,9 @@ const MOMENTS: Record<string, { scene: string; pick: Pick; data?: (s: GameState)
     data: (s) => ({ appId: s.shipped[0]!.id }),
     patch: (s, c) => {
       const a = s.shipped[0]!;
+      // AutoModerator belongs to Reddit, so the demo flops there
+      a.channel = 'sideproject';
+      a.thread.channel = 'sideproject';
       a.score = 6;
       a.ratings = a.ratings.map(() => 2);
       a.thread.vignettes.forEach((v) => (v.rating = 2));

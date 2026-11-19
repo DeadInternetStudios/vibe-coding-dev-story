@@ -8,6 +8,8 @@ import { feature } from './features';
 export function buzz(pattern: number | readonly number[]): void {
   const s = app.settings;
   if (!feature('buzz') || !s.shake || s.reducedMotion || s.muted) return;
+  // browsers refuse (and log an error) until the player has tapped the page once
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
   try {
     navigator.vibrate?.(typeof pattern === 'number' ? pattern : [...pattern]);
   } catch {
