@@ -94,8 +94,8 @@ function rasterize(spec: PixelFontSpec): { glyphs: Glyph[]; ascent: number; desc
     const h = maxY - minY + 1;
     const bits = new Uint8Array(w * h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) bits[y * w + x] = on[(minY + y) * cellW + (minX + x)] ?? 0;
-    // offsets relative to pen x and the line top (ascent is the baseline row)
-    glyphs.push({ ch, adv, left: minX - pad, top: minY - pad, w, h, bits });
+    // left is relative to the pen x, top is relative to the baseline row (negative above it)
+    glyphs.push({ ch, adv, left: minX - pad, top: minY - pad - ascent, w, h, bits });
   }
   return { glyphs, ascent, descent };
 }
@@ -162,7 +162,7 @@ function bakeLook(spec: PixelFontSpec, look: Look, raster: ReturnType<typeof ras
     chars[code] = {
       x: p.x, y: p.y, width: p.cw, height: p.ch,
       centerX: Math.floor(p.cw / 2), centerY: Math.floor(p.ch / 2),
-      xOffset: g.left - border, yOffset: ascent + g.top - border + (spec.yShift ?? 0) * 0,
+      xOffset: g.left - border, yOffset: ascent + g.top - border,
       xAdvance: g.adv + pad,
       data: {}, kerning: {},
       u0: p.x / W, v0: 1 - p.y / H, u1: (p.x + p.cw) / W, v1: 1 - (p.y + p.ch) / H,

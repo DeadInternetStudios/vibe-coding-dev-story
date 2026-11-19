@@ -15,7 +15,7 @@ import { dailyIncome, launchProject } from './launch';
 import { Rng, hashSeed } from './rng';
 import { itemMood, shopItem } from './shop';
 import { gainXp, makeCandidate, randomLook, staffFromCandidate, traitMood } from './staff';
-import type { EventOutcome, GameState, Notice, Prompt, ShippedApp, Staff } from './types';
+import type { EventOutcome, GameState, Look, Notice, Prompt, ShippedApp, Staff } from './types';
 import { companyView } from './views';
 
 export interface NewGameOptions {
@@ -24,6 +24,8 @@ export interface NewGameOptions {
   founderName: string;
   origin: FounderOriginId;
   difficulty: DifficultyId;
+  /** how the founder looks, random when left out */
+  look?: Look;
 }
 
 export const SAVE_VERSION = 1;
@@ -116,19 +118,19 @@ export class Game {
       tutorial: [],
     };
     const game = new Game(content, state);
-    game.seedTeam(opts.founderName, origin.skills, origin.trait);
+    game.seedTeam(opts.founderName, origin.skills, origin.trait, opts.look);
     game.refreshCandidates();
     return game;
   }
 
-  private seedTeam(founderName: string, originSkills: Record<SkillKey, number>, originTrait: string): void {
+  private seedTeam(founderName: string, originSkills: Record<SkillKey, number>, originTrait: string, look?: Look): void {
     const { s, c, rng } = this.ctx;
     const founderA = c.archetypes.find((a) => a.id === 'founder') ?? c.archetypes[0]!;
     const founder: Staff = {
       id: 's0',
       name: founderName,
       archetype: founderA.id,
-      look: { ...randomLook(rng, founderA), accessory: 0 },
+      look: look ? { ...look } : { ...randomLook(rng, founderA), accessory: 0 },
       skills: { ...originSkills },
       level: 1,
       xp: 0,

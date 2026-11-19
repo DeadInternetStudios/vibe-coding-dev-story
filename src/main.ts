@@ -11,12 +11,16 @@ import '@fontsource/tiny5/400.css';
 import '@fontsource/vt323/400.css';
 import '@fontsource/dotgothic16/400.css';
 import { computeViewport } from './core/viewport';
-import { FontLabScene } from './scenes/FontLabScene';
+import { BootScene } from './scenes/BootScene';
+import { TitleScene } from './scenes/TitleScene';
+import { NewGameScene } from './scenes/NewGameScene';
+import { OfficeScene } from './scenes/OfficeScene';
+import { app } from './core/app';
 
 const parent = document.getElementById('game')!;
 
 function currentViewport() {
-  return computeViewport(parent.clientWidth || window.innerWidth, parent.clientHeight || window.innerHeight, window.devicePixelRatio || 1);
+  return computeViewport(parent.clientWidth || window.innerWidth, parent.clientHeight || window.innerHeight, window.devicePixelRatio || 1, app.settings.uiSize);
 }
 
 const vp = currentViewport();
@@ -31,7 +35,7 @@ const game = new Phaser.Game({
   render: { pixelArt: true, antialias: false, roundPixels: true },
   input: { activePointers: 3 },
   banner: false,
-  scene: [FontLabScene],
+  scene: [BootScene, TitleScene, NewGameScene, OfficeScene],
 });
 
 let pending = 0;
@@ -43,9 +47,9 @@ function onResize() {
     if (next.w !== game.scale.width || next.h !== game.scale.height) game.scale.resize(next.w, next.h);
   });
 }
+app.refreshViewport = onResize;
 window.addEventListener('resize', onResize);
 window.visualViewport?.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
 
 (window as unknown as { __game: Phaser.Game }).__game = game;
-document.getElementById('boot')?.classList.add('done');

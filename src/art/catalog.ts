@@ -5,6 +5,8 @@
 import type { Px, RoleColors } from './pixel';
 import { TILE, carpetTile, desk, duck, laptop, mug, plant, wallTile, windowCity, woodTile } from './sprites/office';
 import { Px as PxClass } from './pixel';
+import { ICON_NAMES, iconPx } from './sprites/icons';
+import { BOX_STYLES, box, type BoxName } from './sprites/ui';
 import { ACCESSORIES, HAIR, buildPerson, roleColorsFor, type Face, type Look, type Pose } from './sprites/people';
 
 export interface CatalogItem {
@@ -61,6 +63,8 @@ function mockOffice(floor: 'carpet' | 'wood' = 'carpet'): Px {
 }
 
 export const CATALOG: Record<string, CatalogItem[]> = {
+  icons: ICON_NAMES.map((name) => ({ name, make: () => iconPx(name)! })),
+  boxes: (Object.keys(BOX_STYLES) as BoxName[]).map((name) => ({ name, make: () => box(28, 16, BOX_STYLES[name]) })),
   mock: [{ name: 'office-carpet', make: () => mockOffice('carpet') }, { name: 'office-wood', make: () => mockOffice('wood') }],
   people: LOOKS.map((look, i) => person(`look${i}`, look, 'stand', 'normal')),
   poses: POSES.map((pose, i) => person(pose, LOOKS[i % LOOKS.length]!, pose, 'normal')),
