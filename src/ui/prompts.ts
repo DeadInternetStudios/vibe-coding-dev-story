@@ -237,7 +237,7 @@ function showOutcome(ctx: UiCtx, m: Modal, out: EventOutcome | null, w: number, 
 function cardEffects(card: Card): { text: string; good: boolean }[] {
   const out: { text: string; good: boolean }[] = [];
   if (card.speed) out.push({ text: `SPEED ${card.speed >= 1 ? '+' : ''}${Math.round((card.speed - 1) * 100)}%`, good: card.speed >= 1 });
-  for (const [k, v] of Object.entries(card.weight ?? {})) out.push({ text: `${k.slice(0, 3).toUpperCase()} x${v!.toFixed(1)}`, good: (v ?? 1) >= 1 });
+  for (const [k, v] of Object.entries(card.weight ?? {})) out.push({ text: `${STAT_WORD_7[k as StatKey]} x${v!.toFixed(1)}`, good: (v ?? 1) >= 1 });
   if (card.spaghetti) out.push({ text: card.spaghetti > 0 ? 'MORE SPAGHETTI' : 'LESS SPAGHETTI', good: card.spaghetti < 0 });
   if (card.tokens && card.tokens !== 1) out.push({ text: `TOKENS x${card.tokens}`, good: card.tokens < 1 });
   if (card.mood) out.push({ text: card.mood > 0 ? 'MORALE UP' : 'MORALE DOWN', good: card.mood > 0 });
@@ -254,7 +254,18 @@ function cardPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'card' }>, done: Done): 
   const n = Math.max(1, cards.length);
   const w = Math.min(L.W - 6, n * 94 + 24);
   const cardW = Math.floor((w - 12 - (n - 1) * 4) / n);
-  const h = Math.min(L.H - 6, 150);
+  // a card is as tall as its longest content: name, blurb and effect lines never run into each other
+  const textH = (text: string, font: typeof F.caps | typeof F.body, maxWidth: number): number => {
+    const probe = label(scene, 0, 0, text, { font, maxWidth });
+    const height = probe.height;
+    probe.destroy();
+    return height;
+  };
+  const cardNeed = cards.reduce(
+    (most, card) => Math.max(most, 33 + textH(card.name.toUpperCase(), F.caps, cardW - 6) + 3 + textH(card.blurb, F.body, cardW - 8) + 4 + cardEffects(card).length * 9 + 4),
+    0,
+  );
+  const h = Math.min(L.H - 6, Math.max(150, Math.ceil(cardNeed) + 36));
   const phaseName = PHASES[p.phase]?.label ?? '';
   const m = new Modal(scene, { w, h, title: `${phaseName.toUpperCase()}: PICK A MOVE`, style: 'paper' });
   ctx.sfx('open');
