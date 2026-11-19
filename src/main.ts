@@ -98,6 +98,7 @@ uiEvents.on('click', () => audio.sfx('click'));
 uiEvents.on('open', () => audio.sfx('open'));
 uiEvents.on('close', () => audio.sfx('close'));
 uiEvents.on('hover', () => audio.sfx('hover'));
+uiEvents.on('deny', () => audio.sfx('error'));
 uiEvents.on('settings', () => audio.applySettings());
 
 (window as unknown as { __game: Phaser.Game }).__game = game;

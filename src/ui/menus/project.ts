@@ -14,6 +14,7 @@ import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { FACE_H, FACE_PITCH, FACE_ROW_H, NAME_H, START_FROM_BOTTOM, START_H, wizardRows } from './projectLayout';
 import { beat } from '../story';
+import { because } from './common';
 import type { UiCtx } from '../ctx';
 import { STAT_WORD_7, payWord } from '../text';
 
@@ -163,14 +164,12 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const sw = Math.floor((lw - 4) / 3);
   const scopeBtns = scopes.map((sc, i) => {
     const ok = unlocked(game, SCOPES[sc].unlock);
-    const b = button(scene, 6 + i * (sw + 2), 159, sw, 15, ok ? SCOPES[sc].label.replace('Weekend ', '').replace('The Full Thing', 'FULL').toUpperCase() : 'LOCKED', () => {
-      if (!ok) {
-        ctx.toast(`Full scope needs ${SCOPES[sc].unlock.karma} karma.`, 'bad');
-        return;
-      }
+    const name = SCOPES[sc].label.replace('Weekend ', '').replace('The Full Thing', 'FULL').toUpperCase();
+    // a size you cannot pick yet keeps its name, wears a padlock, and says what it needs when it is tapped
+    const b = button(scene, 6 + i * (sw + 2), 159, sw, 15, name, () => {
       st.scope = sc;
       repaint();
-    }, { kind: 'plum', font: F.body });
+    }, { kind: 'plum', font: F.body, icon: ok ? undefined : 'lock', disabled: !ok, onDead: because(ctx, `${name === 'FULL' ? 'Full scope' : name} ${lockText(SCOPES[sc].unlock)}.`) });
     m.add(b);
     return { sc, b, ok };
   });
@@ -244,7 +243,8 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     ctx.sfx('select');
     repaint();
   }, { kind: 'violet', icon: 'dice' }));
-  const startBtn = button(scene, fx, h - START_FROM_BOTTOM, rw, START_H, 'START BUILDING', () => go(), { kind: 'orange', icon: 'ship' });
+  let startWhy = '';
+  const startBtn = button(scene, fx, h - START_FROM_BOTTOM, rw, START_H, 'START BUILDING', () => go(), { kind: 'orange', icon: 'ship', onDead: because(ctx, () => startWhy) });
   m.add(startBtn);
 
   const plan = () => ({ kind: c.kinds[st.kind]!.id, niche: c.niches[st.niche]!.id, tool: ownedTools[st.tool]?.id ?? s.company.activeTool, scope: st.scope, team: [...st.team], name: st.name });
@@ -287,6 +287,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     const team = s.staff.filter((x) => st.team.has(x.id)).length;
     noteLabel.setText(err ?? (team === 0 ? 'Nobody is building. Pick someone.' : `${team} building, ${s.staff.length - team} supporting.`));
     noteLabel.setTint(err ? C.berry1 : C.ink3);
+    startWhy = err ?? 'Nobody is building. Pick someone.';
     startBtn.setEnabled(!err && team > 0);
   }
 

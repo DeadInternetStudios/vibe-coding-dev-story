@@ -41,6 +41,9 @@ export function unlocked(game: Game, u: Unlock): boolean {
   return true;
 }
 
+/** Why nobody can be hired: said by the game when a hire is refused, and by the job board when a tap lands on a button that cannot work. */
+export const NO_DESK = 'No free desk. Upgrade the office or let someone go.';
+
 export class Game {
   readonly ctx: Ctx;
 
@@ -449,7 +452,7 @@ export class Game {
     const { s, c } = this.ctx;
     const cand = s.candidates.find((x) => x.id === candidateId);
     if (!cand) return 'That candidate took another offer.';
-    if (this.freeDesks() <= 0) return 'No free desk. Upgrade the office or let someone go.';
+    if (this.freeDesks() <= 0) return NO_DESK;
     if (s.company.cash < cand.fee) return 'Not enough cash for the signing fee.';
     addCash(this.ctx, -cand.fee, `Signing fee: ${cand.name}`);
     s.candidates = s.candidates.filter((x) => x.id !== candidateId);

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { C, F } from '../../core/theme';
 import { button, label, rect, type ButtonObj } from '../kit';
 import type { Modal } from '../modal';
+import type { UiCtx } from '../ctx';
 
 export interface Tabs {
   /** put things for the open tab in here, it is emptied on every switch */
@@ -52,4 +53,9 @@ export function skillRow(scene: Phaser.Scene, parent: Phaser.GameObjects.Contain
   const fill = rect(scene, x + 39, y + 2, Math.max(1, Math.round(Math.min(1, value / max) * (bw - 2))), 3, color);
   parent.add([well, fill]);
   parent.add(label(scene, x + w - 2, y, `${value}`, { font: F.body, tint: C.ink1, origin: [1, 0] }));
+}
+
+/** What a tap on a button that cannot work does: the reason, in the red toast every other no uses. The button itself shakes. */
+export function because(ctx: UiCtx, why: string | (() => string)): () => void {
+  return () => ctx.toast(typeof why === 'function' ? why() : why, 'bad');
 }

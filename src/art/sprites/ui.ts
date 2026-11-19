@@ -40,7 +40,8 @@ export const BOX_STYLES = {
   btnBerryDown: { fill: 'berry0', hi: 'berry1', shade: 'berry0', line: 'ink0' },
   btnViolet: { fill: 'violet1', hi: 'violet2', shade: 'violet0', line: 'ink0' },
   btnVioletDown: { fill: 'violet0', hi: 'violet1', shade: 'violet0', line: 'ink0' },
-  btnOff: { fill: 'ink2', hi: 'ink2', shade: 'ink1', line: 'ink1' },
+  // a button that cannot be pressed: flat and grey-blue, so it never passes for the plum of a live one
+  btnOff: { fill: 'steel2', hi: 'steel2', shade: 'steel1', line: 'steel1' },
   // small tags
   chipLight: { fill: 'white', hi: 'white', shade: 'cream', line: 'ink0' },
   chipDark: { fill: 'ink0', hi: 'ink1', shade: 'ink0', line: 'ink0' },

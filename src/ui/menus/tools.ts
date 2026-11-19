@@ -5,11 +5,11 @@ import { TOKEN_PLANS } from '../../sim/config';
 import { money, shortMoney } from '../../sim/format';
 import { unlocked } from '../../sim/game';
 import { workers } from '../../sim/ctx';
-import { bar, button, fit, iconImg, label, panel } from '../kit';
+import { bar, button, fit, iconImg, label, panel, stateTag } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
-import { tabs } from './common';
+import { because, tabs } from './common';
 import type { UiCtx } from '../ctx';
 
 function lockText(u: { year?: number; karma?: number }): string {
@@ -80,7 +80,7 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
       else content.add(label(scene, w - 18, y + 26, tool.monthly ? `${money(tool.monthly)}/mo` : 'free', { font: F.body, tint: C.ink3, origin: [1, 0] }));
       const by = wide ? y + Math.floor((rowH - 18) / 2) : tall ? y + 3 : y + 3;
       let btn;
-      if (active) btn = button(scene, bx, by, bw, 18, 'IN USE', () => undefined, { kind: 'teal', disabled: true });
+      if (active) btn = stateTag(scene, bx, by, bw, 18, 'IN USE');
       else if (owned) {
         btn = button(scene, bx, by, bw, 18, 'USE', () => {
           game.setTool(tool.id);
@@ -99,8 +99,8 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
           ctx.cashPop(-tool.price);
           ctx.refresh();
           redraw();
-        }, { kind: 'orange', disabled: s.company.cash < tool.price });
-      } else btn = button(scene, bx, by, bw, 18, 'LOCKED', () => undefined, { kind: 'plum', disabled: true });
+        }, { kind: 'orange', disabled: s.company.cash < tool.price, onDead: because(ctx, 'Not enough cash for that license.') });
+      } else btn = button(scene, bx, by, bw, 18, 'LOCKED', () => undefined, { kind: 'plum', icon: 'lock', disabled: true, onDead: because(ctx, `${lockText(tool.unlock)}.`) });
       content.add(btn);
     });
   }
@@ -123,12 +123,14 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
       content.add(label(scene, 11, y + 13, p.blurb, { font: F.body, tint: C.ink3, maxWidth: w - 120 }));
       content.add(label(scene, w - 100, y + 3, `${p.tokens}K tokens`, { font: F.body, tint: C.violet1, origin: [1, 0] }));
       content.add(label(scene, w - 100, y + 13, p.monthly ? `${money(p.monthly)}/mo` : 'free', { font: F.body, tint: C.ink2, origin: [1, 0] }));
-      const b = button(scene, w - 12 - 64 - 4 + 4, y + 4, 64, 18, cur ? 'CURRENT' : 'SWITCH', () => {
-        const err = game.setTokenPlan(p.id);
-        if (err) ctx.toast(err, 'bad');
-        ctx.refresh();
-        redraw();
-      }, { kind: cur ? 'teal' : 'orange', disabled: cur });
+      const b = cur
+        ? stateTag(scene, w - 12 - 64 - 4 + 4, y + 4, 64, 18, 'CURRENT')
+        : button(scene, w - 12 - 64 - 4 + 4, y + 4, 64, 18, 'SWITCH', () => {
+            const err = game.setTokenPlan(p.id);
+            if (err) ctx.toast(err, 'bad');
+            ctx.refresh();
+            redraw();
+          }, { kind: 'orange' });
       content.add(b);
     });
     const ty = 88 + TOKEN_PLANS.length * (rowH + 2) + 2;
@@ -143,7 +145,7 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
       ctx.cashPop(-price);
       ctx.refresh();
       redraw();
-    }, { kind: 'violet', icon: 'token', disabled: s.company.cash < price }));
+    }, { kind: 'violet', icon: 'token', disabled: s.company.cash < price, onDead: because(ctx, 'Not enough cash for tokens.') }));
   }
 
   return m;

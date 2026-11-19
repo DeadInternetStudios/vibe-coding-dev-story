@@ -8,6 +8,7 @@ import { unlocked } from '../../sim/game';
 import { button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
+import { because } from './common';
 import { shopGrid } from './tileFit';
 import type { UiCtx } from '../ctx';
 
@@ -151,11 +152,19 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
       ctx.refresh();
       tileRefresh();
       paint();
-    }, { kind: st === 'ok' ? 'orange' : 'plum', disabled: st !== 'ok' || s.company.cash < it.price, icon: st === 'ok' ? 'cash' : undefined });
+    }, { kind: st === 'ok' ? 'orange' : 'plum', disabled: st !== 'ok' || s.company.cash < it.price, icon: st === 'ok' ? 'cash' : undefined, onDead: because(ctx, () => deadWords(it, st)) });
     detail.add(buy);
     if (st === 'locked' && it.unlock) {
       detail.add(label(scene, px, dy + dh - 34, it.unlock.karma ? `Needs ${it.unlock.karma} karma` : `Opens in year ${it.unlock.year}`, { font: F.body, tint: C.berry1 }));
     }
+  }
+
+  /** Why the button on a thing in the shop cannot be pressed. */
+  function deadWords(it: ShopItem, st: 'owned' | 'locked' | 'tier' | 'ok'): string {
+    if (st === 'owned') return 'You already own that.';
+    if (st === 'locked') return it.unlock?.karma ? `Needs ${it.unlock.karma} karma.` : `Opens in year ${it.unlock?.year ?? 2}.`;
+    if (st === 'tier') return `You need ${OFFICE_TIERS[it.tier]!.name} first.`;
+    return 'Not enough cash.';
   }
 
   function tileRefresh(): void {

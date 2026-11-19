@@ -42,6 +42,10 @@ export const C = {
   violet0: hex('violet0'),
   violet1: hex('violet1'),
   violet2: hex('violet2'),
+  steel0: hex('steel0'),
+  steel1: hex('steel1'),
+  steel2: hex('steel2'),
+  steel3: hex('steel3'),
 };
 
 /** Baked bitmap fonts. See scenes/BootScene for the specs. */
@@ -76,6 +80,8 @@ export const T = {
   karma: C.orange2,
   token: C.violet2,
   link: C.blue1,
+  /** the words on a button that cannot be pressed */
+  dead: C.steel0,
 };
 
 export const DEPTH = {

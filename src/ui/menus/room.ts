@@ -6,7 +6,7 @@ import { dateLabel, money, shortMoney } from '../../sim/format';
 import { bar, button, iconImg, label, panel } from '../kit';
 import { fadeTo, layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
-import { tabs } from './common';
+import { because, tabs } from './common';
 import { buildingRows } from './roomLayout';
 import type { UiCtx } from '../ctx';
 
@@ -65,7 +65,7 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
         ctx.room.rebuild();
         ctx.banner('NEW OFFICE', OFFICE_TIERS[s.company.officeTier]!.name, 'wow');
         m.close();
-      }, { kind: 'orange', disabled: s.company.cash < next.upgrade }));
+      }, { kind: 'orange', disabled: s.company.cash < next.upgrade, onDead: because(ctx, 'Not enough cash to move.') }));
     } else {
       content.add(label(scene, 6 + iw / 2, R.nextY + 12, 'This is the top floor. There is nowhere left to go but down.', { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: iw - 10, align: 'center' }));
     }

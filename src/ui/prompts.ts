@@ -4,7 +4,7 @@ import { app } from '../core/app';
 import type { SfxId } from '../audio';
 import { audio } from '../core/audio';
 import { bakeBox as bakeBoxKey, bakePortrait } from '../core/bake';
-import { C, F } from '../core/theme';
+import { C, F, T } from '../core/theme';
 import { STAT_KEYS, type StatKey } from '../content/types';
 import { STAT_WORD, STAT_WORD_7 } from './text';
 import { VOICE_NAMES } from '../content/voiceNames';
@@ -17,6 +17,7 @@ import { projectView } from '../sim/views';
 import { Rng } from '../sim/rng';
 import type { EventOutcome, Prompt } from '../sim/types';
 import { bar, button, chip, choiceButton, iconImg, label, rect, type ButtonObj } from './kit';
+import { because } from './menus/common';
 import { channelRows, channelTextY } from './channelRows';
 import { layoutOf, popupH } from './layout';
 import { hash7 } from './dash';
@@ -135,7 +136,7 @@ function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done)
     if (buttons.length || chosen) return;
     let y = choiceY;
     p.choices.forEach((c, i) => {
-      const b = choiceButton(scene, 6, y, w - 12, c.label, c.hint, c.enabled, () => pick(i), 'cream');
+      const b = choiceButton(scene, 6, y, w - 12, c.label, c.hint, c.enabled, () => pick(i), 'cream', because(ctx, 'You do not have what that one needs.'));
       y += choiceHs[i]! + 4;
       m.add(b);
       buttons.push(b);
@@ -386,16 +387,20 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   for (const ch of c.channels) {
     const ok = unlocked(game, ch.unlock);
     const cost = costOf(ch.id);
+    const locked = `${ch.where} ${ch.unlock.karma ? `needs ${ch.unlock.karma} karma` : `opens in year ${ch.unlock.year ?? 2}`}.`;
     const choose = () => {
-      if (!ok) return;
+      if (!ok) {
+        ctx.toast(locked, 'bad');
+        ctx.sfx('error');
+        return;
+      }
       selected = ch.id;
       rows.forEach((r) => r.btn.setKind(r.id === selected ? 'teal' : r.ok ? 'cream' : 'plum'));
       refreshLaunch();
       ctx.sfx('select');
     };
     m.key(NUMBER_KEYS[rows.length]!, choose);
-    const b = button(scene, cx, cy, cw, rowH - 1, '', choose, { kind: ok ? (ch.id === selected ? 'teal' : 'cream') : 'plum' });
-    b.setEnabled(true);
+    const b = button(scene, cx, cy, cw, rowH - 1, '', choose, { kind: ok ? (ch.id === selected ? 'teal' : 'cream') : 'plum', disabled: !ok, onDead: () => ctx.toast(locked, 'bad') });
     m.add(b);
     rows.push({ id: ch.id, btn: b, ok });
     const dark = ok && ch.id !== selected;
@@ -404,9 +409,9 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
     const tx = cx + (art ? 18 : 4);
     // the name and what it does sit in the middle of the row: stacked when the row is tall enough, side by side when it is not
     const ty = cy + channelTextY(rowH, inline);
-    const t1 = label(scene, tx, ty, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : C.ink4 });
+    const t1 = label(scene, tx, ty, ch.where, { font: F.caps, tint: ok ? (dark ? C.ink1 : C.white) : T.dead });
     const sub = ok ? `hype +${ch.hype}${ch.roast > 0.5 ? '  spicy' : ''}` : ch.unlock.karma ? `needs ${ch.unlock.karma} karma` : `year ${ch.unlock.year ?? 2}`;
-    const t2 = label(scene, inline ? tx + t1.width + 6 : tx, inline ? ty : ty + 9, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : C.ink3 });
+    const t2 = label(scene, inline ? tx + t1.width + 6 : tx, inline ? ty : ty + 9, sub, { font: F.body, tint: ok ? (dark ? C.ink3 : C.cream) : T.dead });
     m.add(t1);
     m.add(t2);
     // a locked channel shows a padlock, not a price: nobody can pay it yet

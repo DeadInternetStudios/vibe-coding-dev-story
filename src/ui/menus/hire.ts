@@ -4,11 +4,13 @@ import { bakePerson } from '../../core/bake';
 import { C, F } from '../../core/theme';
 import { SKILL_KEYS } from '../../content/types';
 import { money, shortMoney } from '../../sim/format';
+import { NO_DESK } from '../../sim/game';
 import { button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
+import { because } from './common';
 import { HIRE_TOP, HIRE_WIDE_FOOT, hireLayout } from './hireLayout';
 
 /** The job board. Six hopefuls, each with a voice and a salary that sounds fine until the first payday. */
@@ -105,7 +107,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
         }
         ctx.refresh();
         draw();
-      }, { kind: 'orange', font: F.body, disabled: game.freeDesks() <= 0 });
+      }, { kind: 'orange', font: F.body, disabled: game.freeDesks() <= 0, onDead: because(ctx, NO_DESK) });
       r.add(hb);
       r.add(label(scene, w - 12 - bw / 2 - 4, wide ? btnY + btnH + 1 : 26, `${shortMoney(cand.salary)}/mo`, { font: F.body, tint: C.ink2, origin: [0.5, 0] }));
       m.add(r);

@@ -9,6 +9,7 @@ import { bar, button, hoverFrame, iconImg, label, panel, rect, type ButtonKind }
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
+import { because } from './common';
 import { SKILL_WORD } from '../text';
 import { teamGrid } from './tileFit';
 import type { UiCtx } from '../ctx';
@@ -17,6 +18,11 @@ const SKILL_COLORS: Record<SkillKey, number> = { prompt: C.sky, taste: C.pink, d
 
 function moodIcon(mood: number): string {
   return mood >= 70 ? 'moodHappy' : mood >= 45 ? 'moodOk' : mood >= 22 ? 'moodSad' : 'moodPanic';
+}
+
+/** Why a person cannot take a course or a wellness day right now. */
+function awayWords(mem: Staff): string {
+  return `${mem.name.split(' ')[0]} is away: ${mem.awayWhy ?? 'out'}.`;
 }
 
 /** Everyone on the payroll. Pick a face to see what they are good at and what they need. */
@@ -117,7 +123,7 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
         } else ctx.sfx('level_up');
         ctx.refresh();
         paint();
-      }, { kind: 'teal', font: F.body, disabled: s.company.cash < cost || mem.awayUntil > s.day });
+      }, { kind: 'teal', font: F.body, disabled: s.company.cash < cost || mem.awayUntil > s.day, onDead: because(ctx, () => (mem.awayUntil > s.day ? awayWords(mem) : 'Not enough cash for the course.')) });
       detail.add(tb);
       y += 11;
     }
@@ -140,8 +146,8 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
     detail.add(label(scene, px, by - 11, mem.isFounder ? 'The boss. Works for exposure.' : `${money(mem.salary)} / month`, { font: F.body, tint: C.ink2 }));
     const bw = Math.floor((dw - 8 - 6) / 4);
     let bx = px;
-    const add = (text: string, kind: ButtonKind, fn: () => void, disabled = false) => {
-      const b = button(scene, bx, by, bw, 18, text, fn, { kind, font: F.body, disabled });
+    const add = (text: string, kind: ButtonKind, fn: () => void, no?: string) => {
+      const b = button(scene, bx, by, bw, 18, text, fn, { kind, font: F.body, disabled: no !== undefined, onDead: no ? because(ctx, no) : undefined });
       detail.add(b);
       bx += bw + 2;
     };
@@ -156,7 +162,7 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
       else ctx.sfx('coin');
       ctx.refresh();
       paint();
-    }, !!mem.isFounder);
+    }, mem.isFounder ? 'You cannot give yourself a raise. Investors would notice.' : undefined);
     add(`CHILL ${shortMoney(game.therapyCost())}`, 'violet', () => {
       const err = game.therapy(mem.id);
       if (err) {
@@ -165,8 +171,8 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
       }
       ctx.refresh();
       paint();
-    }, mem.awayUntil > s.day);
-    add('FIRE', 'berry', () => confirmFire(mem), !!mem.isFounder);
+    }, mem.awayUntil > s.day ? awayWords(mem) : undefined);
+    add('FIRE', 'berry', () => confirmFire(mem), mem.isFounder ? 'You cannot fire yourself. Tempting, but no.' : undefined);
     // voice
     if (arch.intro.length) {
       const v = button(scene, dx + dw - 14, dy + 3, 11, 11, '', () => {

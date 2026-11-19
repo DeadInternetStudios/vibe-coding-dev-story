@@ -4,6 +4,7 @@
  * blurry and every screen reads as one game.
  */
 import Phaser from 'phaser';
+import { app } from '../core/app';
 import { bakeBox, bakeIcon, bakePixel, BOX_INSET, BOX_SRC } from '../core/bake';
 import { C, DEPTH, F, T, type FontKey } from '../core/theme';
 import type { BoxName } from '../art/sprites/ui';
@@ -99,6 +100,8 @@ export interface ButtonOpts {
   hint?: string;
   /** do not play the click sound, someone else will */
   silent?: boolean;
+  /** a tap while the button cannot be pressed: say why (a toast). The button shakes and the no sound plays on its own. */
+  onDead?: () => void;
 }
 
 export interface ButtonObj extends Phaser.GameObjects.Container {
@@ -113,6 +116,13 @@ export interface ButtonObj extends Phaser.GameObjects.Container {
 
 /** Event bus for click sounds so the kit does not need to know about audio. */
 export const uiEvents = new Phaser.Events.EventEmitter();
+
+/** The no of a button that cannot be pressed: a small shake and the no sound. Calm mode keeps the sound and drops the shake. */
+function refuse(scene: Scene, c: Phaser.GameObjects.Container): void {
+  uiEvents.emit('deny');
+  if (app.settings.reducedMotion || scene.tweens.isTweening(c)) return;
+  scene.tweens.add({ targets: c, x: c.x + 2, duration: 45, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' });
+}
 
 export function button(scene: Scene, x: number, y: number, w: number, h: number, text: string, onClick: () => void, o: ButtonOpts = {}): ButtonObj {
   let kind: ButtonKind = o.kind ?? 'orange';
@@ -144,6 +154,7 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   c.enabled = !o.disabled;
   let down = false;
   let over = false;
+  let deadDown = false;
   const paint = () => {
     const name = !c.enabled ? 'btnOff' : down ? BTN_BOX[kind][1] : BTN_BOX[kind][0];
     face.setTexture(bakeBox(scene, name));
@@ -154,13 +165,19 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
     glow.setAlpha(c.enabled && over && !down ? 0.22 : 0);
     lbl.y = (ic ? Math.round(h / 2) - 1 : h / 2 - 1) + dy;
     if (ic) ic.y = Math.round((h - ic.height) / 2) - 1 + dy;
-    lbl.setTint(c.enabled ? BTN_TEXT[kind] : C.ink3);
+    lbl.setTint(c.enabled ? BTN_TEXT[kind] : T.dead);
+    // dead words sit flat on the grey face: the dark drop shadow of a live label would smudge them
+    const lit = c.enabled && kind !== 'cream' ? `${font}-s` : font;
+    if (lbl.font !== lit) lbl.setFont(lit);
     shadow.setAlpha(down || !c.enabled ? 0.2 : 0.55);
   };
   const zone = scene.add.zone(0, 0, w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true });
   c.add(zone);
   zone.on('pointerdown', () => {
-    if (!c.enabled) return;
+    if (!c.enabled) {
+      deadDown = true;
+      return;
+    }
     down = true;
     paint();
   });
@@ -178,9 +195,16 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   zone.on('pointerout', () => {
     over = false;
     down = false;
+    deadDown = false;
     paint();
   });
   zone.on('pointerup', () => {
+    if (deadDown) {
+      deadDown = false;
+      refuse(scene, c);
+      o.onDead?.();
+      return;
+    }
     if (!down) return;
     release();
     if (!o.silent) uiEvents.emit('click');
@@ -201,6 +225,20 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   };
   c.textObj = lbl;
   paint();
+  return c;
+}
+
+/** A state, not a button: the thing you already have, in the colour of a yes. It cannot be pressed, so it never looks like it can. */
+export function stateTag(scene: Scene, x: number, y: number, w: number, h: number, text: string, font: FontKey = F.caps): Phaser.GameObjects.Container {
+  const c = scene.add.container(Math.round(x), Math.round(y));
+  const face = scene.add.nineslice(0, 0, bakeBox(scene, 'teal'), undefined, w, h, BOX_INSET, BOX_INSET, BOX_INSET, BOX_INSET).setOrigin(0, 0);
+  const tick = iconImg(scene, 'check', 0, 0);
+  const lbl = label(scene, 0, 0, text, { font, tint: C.mint });
+  const left = Math.round((w - (tick.width + 3 + lbl.width)) / 2);
+  tick.setPosition(left, Math.round((h - tick.height) / 2));
+  lbl.setPosition(left + tick.width + 3, Math.round((h - lbl.height) / 2));
+  c.add([face, tick, lbl]);
+  c.setSize(w, h);
   return c;
 }
 
@@ -325,7 +363,7 @@ export interface ChoiceObj extends Phaser.GameObjects.Container {
 }
 
 /** A wide two line button: a title, and under it a small hint. Used for event choices and offers. */
-export function choiceButton(scene: Scene, x: number, y: number, w: number, title: string, hint: string | undefined, enabled: boolean, onClick: () => void, kind: ButtonKind = 'cream'): ChoiceObj {
+export function choiceButton(scene: Scene, x: number, y: number, w: number, title: string, hint: string | undefined, enabled: boolean, onClick: () => void, kind: ButtonKind = 'cream', onDead?: () => void): ChoiceObj {
   const hintLabel = hint ? label(scene, 6, 13, hint, { font: F.body, tint: C.ink3, maxWidth: w - 12 }) : null;
   const h = hint ? 14 + (hintLabel?.height ?? 8) + 4 : 17;
   const c = scene.add.container(Math.round(x), Math.round(y)) as ChoiceObj;
@@ -347,8 +385,11 @@ export function choiceButton(scene: Scene, x: number, y: number, w: number, titl
     const dy = down && on ? 1 : 0;
     face.y = dy;
     t.y = 3 + dy;
-    if (hintLabel) hintLabel.y = 13 + dy;
-    t.setTint(on ? BTN_TEXT[kind] : C.ink3);
+    if (hintLabel) {
+      hintLabel.y = 13 + dy;
+      hintLabel.setTint(!on ? T.dead : kind === 'cream' ? C.ink3 : C.cream);
+    }
+    t.setTint(on ? BTN_TEXT[kind] : T.dead);
   };
   const zone = scene.add.zone(0, 0, w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true });
   c.add(zone);
@@ -363,7 +404,10 @@ export function choiceButton(scene: Scene, x: number, y: number, w: number, titl
   });
   zone.on('pointerup', () => {
     if (!down) {
-      if (!on) uiEvents.emit('deny');
+      if (!on) {
+        refuse(scene, c);
+        onDead?.();
+      }
       return;
     }
     down = false;
