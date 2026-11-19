@@ -22,6 +22,7 @@ import type { WireResult } from './offline-page';
 
 /** The slice of Playwright this file uses, so no types package is needed. */
 interface PwPage {
+  addInitScript(script: string | (() => void)): Promise<void>;
   goto(url: string): Promise<unknown>;
   waitForFunction(fn: () => unknown, arg?: unknown, opts?: { timeout?: number }): Promise<unknown>;
   evaluate<R, A>(fn: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
@@ -52,11 +53,22 @@ function decode(b64: string): Float32Array {
   return new Float32Array(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
 }
 
+export interface PageOptions {
+  /** Page to open, relative to the repo root. Default: the offline render page. */
+  path?: string;
+  /** Runs in the page before any of the page's own scripts. */
+  initScript?: () => void;
+  /** True once the page is up. Default: the render page's `__ready` flag. */
+  ready?: () => boolean;
+}
+
+const RENDER_PAGE_READY = (): boolean => (window as unknown as { __ready?: boolean }).__ready === true;
+
 /**
- * Open tools/audio/offline.html in a muted headless Chromium served by a throwaway
- * Vite server, hand the page to `fn`, and clean up whatever happens.
+ * Open a page of this repo (default tools/audio/offline.html) in a muted headless
+ * Chromium served by a throwaway Vite server, hand it to `fn`, and clean up whatever happens.
  */
-export async function withChromiumPage<T>(fn: (page: PwPage) => Promise<T>): Promise<T> {
+export async function withChromiumPage<T>(fn: (page: PwPage) => Promise<T>, opts: PageOptions = {}): Promise<T> {
   const pw = loadPlaywright();
   // The page has no dependencies, so skip Vite's scan (it would pre-bundle Phaser for the game's index.html).
   const server = await createServer({
@@ -80,8 +92,12 @@ export async function withChromiumPage<T>(fn: (page: PwPage) => Promise<T>): Pro
     page.on('console', (m) => {
       if (m.type() === 'error' || m.type() === 'warning') console.warn(`[chromium ${m.type()}] ${m.text()}`);
     });
-    await page.goto(new URL('tools/audio/offline.html', base).href);
-    await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, null, { timeout: 120_000 });
+    // tsx compiles with keepNames, which wraps every named function in a __name() helper. Playwright
+    // ships a function to the page as source, where that helper does not exist, so give it one.
+    await page.addInitScript('window.__name = window.__name || ((f) => f);');
+    if (opts.initScript) await page.addInitScript(opts.initScript);
+    await page.goto(new URL(opts.path ?? 'tools/audio/offline.html', base).href);
+    await page.waitForFunction(opts.ready ?? RENDER_PAGE_READY, null, { timeout: 120_000 });
     return await fn(page);
   } finally {
     await browser.close();

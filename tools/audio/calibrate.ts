@@ -10,6 +10,9 @@
  *   npx tsx tools/audio/calibrate.ts          (dry run, prints the changes)
  *   npx tsx tools/audio/calibrate.ts --write  (writes src/audio/levels.ts)
  *   add --music or --sfx to touch only that half and keep the other as it is
+ *   add --analysis <path> to calibrate against another analysis.json, e.g. the one made
+ *   from the Chromium renders (tools/audio/out/chromium/analysis.json): the game runs in a
+ *   browser, so that is the reference the final levels are set on
  *
  * new trim = trim in force when it was measured + (target - measured)
  * Boosts are limited so a sound effect's peak stays under -3.8 dBFS (just inside the limiter
@@ -74,7 +77,10 @@ function main(): void {
   const onlySfx = process.argv.includes('--sfx');
   const doSfx = !onlyMusic;
   const doMusic = !onlySfx;
-  const rows = JSON.parse(readFileSync(resolve(HERE, 'out/analysis.json'), 'utf8')) as Row[];
+  const at = process.argv.indexOf('--analysis');
+  const analysis = at >= 0 ? resolve(process.argv[at + 1] ?? '') : resolve(HERE, 'out/analysis.json');
+  const rows = JSON.parse(readFileSync(analysis, 'utf8')) as Row[];
+  console.log(`calibrating against ${analysis}`);
 
   const sfx = new Map<string, number>(Object.entries(SFX_TRIM_DB) as Array<[string, number]>);
   const music = new Map<string, number>(Object.entries(MUSIC_TRIM_DB) as Array<[string, number]>);

@@ -705,25 +705,45 @@ def sfx_table(rows: list[dict]) -> str:
 LAYER_TARGET_REL = {"lead": 0.0, "bass": -3.0, "kit": -4.0, "drums": -4.0, "chords": -6.0, "base": -6.0, "pad": -3.0, "extra": -9.0, "perc": -9.0}
 
 
-def layers_table(solo_rows: list[dict], mix_rows: list[dict]) -> str:
-    """Each layer's loudness alone, how far it is from where its role wants it, and the volume change that fixes it."""
-    mixes = {r["name"]: r for r in mix_rows}
-    by_song: dict[str, list[dict]] = {}
+def layer_balance(solo_rows: list[dict]) -> list[dict]:
+    """Per layer: loudness alone, distance from the lead, where its role wants it, and the volume factor that gets it there.
+
+    tools/audio/rebalance.ts applies `change` to the song source, so the targets live only here.
+    """
+    by_song: dict[str, list[tuple[str, dict]]] = {}
     for r in solo_rows:
-        song, layers = r["name"].split("#", 1)
-        by_song.setdefault(song, []).append({**r, "layers": layers})
-    head = "| Song | Layer alone | LUFS-I | Peak dBFS | vs lead dB | wanted vs lead | change vol by |\n|---|---|---|---|---|---|---|\n"
-    lines = []
+        song, layer = r["name"].split("#", 1)
+        by_song.setdefault(song, []).append((layer, r))
+    out: list[dict] = []
     for song, rows in sorted(by_song.items()):
-        ref = next((r for r in rows if r["layers"] == "lead"), None)
-        ref_lufs = ref["lufs_i"] if ref and ref.get("lufs_i") is not None else max((r.get("lufs_i") or -99.0) for r in rows)
-        for r in sorted(rows, key=lambda r: r["layers"]):
+        ref = next((r for layer, r in rows if layer == "lead"), None)
+        ref_lufs = ref["lufs_i"] if ref and ref.get("lufs_i") is not None else max((r.get("lufs_i") or -99.0) for _, r in rows)
+        for layer, r in sorted(rows, key=lambda x: x[0]):
             if r.get("lufs_i") is None:
                 continue
             rel = r["lufs_i"] - ref_lufs
-            want = LAYER_TARGET_REL.get(r["layers"])
-            fix = "" if want is None else f"x{10 ** ((want - rel) / 20):.2f}"
-            lines.append(f"| {song} | {r['layers']} | {fmt(r['lufs_i'])} | {fmt(r['peak_db'])} | {fmt(rel, '+.1f')} | {fmt(want, '+.1f')} | {fix} |")
+            want = LAYER_TARGET_REL.get(layer)
+            out.append(
+                {
+                    "song": song,
+                    "layer": layer,
+                    "lufs_i": r["lufs_i"],
+                    "peak_db": r["peak_db"],
+                    "rel": rel,
+                    "want": want,
+                    "change": None if want is None else 10 ** ((want - rel) / 20),
+                }
+            )
+    return out
+
+
+def layers_table(balance: list[dict]) -> str:
+    """The layer balance as a markdown table."""
+    head = "| Song | Layer alone | LUFS-I | Peak dBFS | vs lead dB | wanted vs lead | change vol by |\n|---|---|---|---|---|---|---|\n"
+    lines = []
+    for b in balance:
+        fix = "" if b["change"] is None else f"x{b['change']:.2f}"
+        lines.append(f"| {b['song']} | {b['layer']} | {fmt(b['lufs_i'])} | {fmt(b['peak_db'])} | {fmt(b['rel'], '+.1f')} | {fmt(b['want'], '+.1f')} | {fix} |")
     return head + "\n".join(lines) + "\n"
 
 
@@ -813,6 +833,10 @@ def main() -> int:
     if not args.no_png and any(r["group"] == "sfx" for r in results):
         family_images(sfx_rows, wav_root / "sfx", out / "png")
 
+    balance = layer_balance(solo_rows)
+    if balance:
+        (out / "balance.json").write_text(json.dumps(balance, indent=2))
+
     if not args.no_notes and (sfx_rows or music_rows):
         notes = Path(args.notes)
         text = notes.read_text() if notes.exists() else "# Audio notes\n"
@@ -821,7 +845,7 @@ def main() -> int:
         if sfx_rows:
             text = replace_block(text, "sfx", sfx_table(sfx_rows))
         if solo_rows:
-            text = replace_block(text, "layers", layers_table(solo_rows, music_rows))
+            text = replace_block(text, "layers", layers_table(balance))
         notes.write_text(text)
         print(f"wrote tables into {notes}")
     return 0
