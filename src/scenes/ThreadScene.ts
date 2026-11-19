@@ -124,6 +124,7 @@ export class ThreadScene extends Phaser.Scene {
   private nudge: (() => void) | null = null;
   private slots: { text: Phaser.GameObjects.BitmapText; box: Phaser.GameObjects.Image }[] = [];
   private skipBtn!: Phaser.GameObjects.Container;
+  private tapHint: Phaser.GameObjects.BitmapText | null = null;
   private resultsOpen = false;
   private ratingsSum = 0;
   private opBox: { x: number; y: number; w: number; h: number } | null = null;
@@ -187,6 +188,14 @@ export class ThreadScene extends Phaser.Scene {
     this.feed = this.add.container(0, this.viewTop).setDepth(5);
     this.buildChrome(L.W);
     if (this.stageH) this.buildStage(L);
+    // tapping is the fast way through a thread, and nothing said so: a few seconds of hint, then it goes
+    if (!this.instant && !this.replay) {
+      const hint = this.stageH
+        ? label(this, L.W - 5, L.H - this.stageH + 8, 'TAP: NEXT LINE', { font: F.body, tint: C.ink4, origin: [1, 0], depth: DEPTH.hud + 1 })
+        : label(this, 5, L.H - 11, 'TAP: NEXT LINE', { font: F.body, tint: C.ink4, outline: true, depth: DEPTH.panel + 3 });
+      this.tweens.add({ targets: hint, alpha: 0, delay: 9000, duration: 700 });
+      this.tapHint = hint;
+    }
     audio.music('thread', { fadeMs: 500 });
     (window as unknown as { __vcds?: Record<string, unknown> }).__vcds = { ...((window as unknown as { __vcds?: Record<string, unknown> }).__vcds ?? {}), thread: this, scene: this };
 
@@ -836,6 +845,8 @@ export class ThreadScene extends Phaser.Scene {
   private showResults(): void {
     this.resultsOpen = true;
     this.skipBtn.setVisible(false);
+    this.tapHint?.destroy();
+    this.tapHint = null;
     this.karmaT.setText(`+${shortNumber(this.rec.karma)}`);
     this.stage?.setVisible(false);
     this.dropGhosts();
@@ -902,14 +913,16 @@ export class ThreadScene extends Phaser.Scene {
     rec2.forEach((v, i) => {
       const nth = seen.get(v.judges) ?? 0;
       seen.set(v.judges, nth + 1);
+      // an odd one out takes the whole row, so three ratings do not leave a hole
+      const tileW = i === rec2.length - 1 && i % 2 === 0 ? cellW * 2 + 4 : cellW;
       const bx = lx + (i % 2) * (cellW + 4);
       const by = (wide ? 99 : 95) + Math.floor(i / 2) * 17;
       const rc = v.rating >= 7 ? C.green2 : v.rating >= 4 ? C.yellow : C.pink;
-      card.add(rect(this, bx, by, cellW, 15, C.ink0, 1));
-      card.add(rect(this, bx + 1, by + 1, cellW - 2, 13, C.ink1, 1));
-      card.add(label(this, bx + 4, by + 4, fit(judgeName(v.judges as StatKey | 'overall' | 'hype', nth), Math.floor((cellW - 26) / 5)), { font: F.body, tint: C.cream }));
-      card.add(rect(this, bx + cellW - 17, by + 1, 16, 13, rc, 1));
-      card.add(label(this, bx + cellW - 9, by + 4, `${v.rating}`, { font: F.capsBold, tint: C.ink0, origin: [0.5, 0] }));
+      card.add(rect(this, bx, by, tileW, 15, C.ink0, 1));
+      card.add(rect(this, bx + 1, by + 1, tileW - 2, 13, C.ink1, 1));
+      card.add(label(this, bx + 4, by + 4, fit(judgeName(v.judges as StatKey | 'overall' | 'hype', nth), Math.floor((tileW - 26) / 5)), { font: F.body, tint: C.cream }));
+      card.add(rect(this, bx + tileW - 17, by + 1, 16, 13, rc, 1));
+      card.add(label(this, bx + tileW - 9, by + 4, `${v.rating}`, { font: F.capsBold, tint: C.ink0, origin: [0.5, 0] }));
     });
 
     // right side: karma, money, the app store
