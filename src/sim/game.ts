@@ -376,7 +376,8 @@ export class Game {
     const ch = c.channel(channelId);
     if (!unlocked(this, ch.unlock)) return { t: 'invalid', why: 'That channel is still locked.' };
     const cost = Math.round(ch.cost * cashScale(s));
-    if (cost > s.company.cash + 20000) return { t: 'invalid', why: 'Even on credit you cannot afford that.' };
+    // a free channel is always open: with the cash box below the credit line a price of 0 still looked too dear, and the game could not go on
+    if (cost > 0 && cost > s.company.cash + 20000) return { t: 'invalid', why: 'Even on credit you cannot afford that.' };
 
     if (isFriday(s.day) && !p.flags.includes('friday_decided')) {
       s.pending.unshift({ t: 'friday' });

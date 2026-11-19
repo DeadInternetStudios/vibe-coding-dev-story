@@ -54,6 +54,19 @@ describe('the sim', () => {
     expect(JSON.stringify(a.game.snapshot())).toBe(JSON.stringify(b.game.snapshot()));
   });
 
+  it('never locks a company out of launching: a free channel works even with cash far below the credit line', () => {
+    const free = FIXTURE.channels.find((c) => c.cost === 0)!;
+    const paid = FIXTURE.channels.find((c) => c.cost > 0)!;
+    const tried: string[] = [];
+    playBot(FIXTURE, 5, 'smart', 'normal', (g) => {
+      if (tried.length === 0 && g.pending?.t === 'ready') {
+        g.s.company.cash = -23000;
+        tried.push(g.launch(paid.id).t, g.launch(free.id).t);
+      }
+    });
+    expect(tried).toEqual(['invalid', expect.not.stringMatching(/^invalid$/)]);
+  });
+
   it('round trips through JSON', () => {
     const r = playBot(FIXTURE, 7, 'smart');
     const text = JSON.stringify(r.game.snapshot());
