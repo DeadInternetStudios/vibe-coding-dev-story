@@ -19,6 +19,16 @@ export interface Ctx {
 
 export const yearMult = (s: GameState) => YEAR_MULT[Math.min(2, yearOf(s.day) - 1)]!;
 
+/**
+ * How big a dollar amount in content should feel. Follows the year, and the size of the
+ * company, so a big event still stings when the bank account has grown.
+ */
+export function cashScale(s: GameState): number {
+  const payroll = s.staff.reduce((n, m) => n + (m.isFounder ? 0 : m.salary), 0);
+  const burn = payroll + OFFICE_TIERS[s.company.officeTier]!.rent;
+  return Math.max(yearMult(s), burn / 9000);
+}
+
 export const deskCount = (s: GameState) => OFFICE_TIERS[s.company.officeTier]!.desks;
 
 export function toast(ctx: Ctx, text: string, tone: Tone = 'info', staffId?: string): void {

@@ -3,12 +3,12 @@
  * call its actions, and drain the notices it raises. No Phaser in here.
  */
 import type { SkillKey, Unlock } from '../content/types';
-import { DAYS_PER_MONTH, DIFFICULTIES, FOUNDER_ORIGINS, OFFICE_TIERS, START, TOKEN_PLANS, TOPUP_PRICE, TOTAL_DAYS, type DifficultyId, type FounderOriginId } from './config';
+import { DAYS_PER_MONTH, DIFFICULTIES, FOUNDER_ORIGINS, OFFICE_TIERS, SCOPES, START, TOKEN_PLANS, TOPUP_PRICE, TOTAL_DAYS, type DifficultyId, type FounderOriginId } from './config';
 import type { Content } from './content';
-import { addCash, addSpaghetti, bump, sound, toast, yearMult, type Ctx } from './ctx';
-import { devStep, pickCard as pickCardImpl, startProject, tapIdea, type ProjectPlan } from './dev';
+import { addCash, addSpaghetti, bump, cashScale, sound, toast, type Ctx } from './ctx';
+import { devStep, forecast as forecastImpl, pickCard as pickCardImpl, startProject, tapIdea, type Forecast, type ProjectPlan } from './dev';
 import { resolveEvent as resolveEventImpl, rollDaily } from './events';
-import { fundingOffers, isBankrupt, pickEnding, runPayday, takeFunding as takeFundingImpl, valuation, FUNDING_TARGETS } from './economy';
+import { fundingOffers, isBankrupt, monthlyBurn, pickEnding, runPayday, takeFunding as takeFundingImpl, valuation, FUNDING_TARGETS } from './economy';
 import { removeStaff } from './effects';
 import { clamp, dowOf, isFriday, isMonthStart, isPayday, isWorkday, isYearEnd, yearOf } from './format';
 import { dailyIncome, launchProject } from './launch';
@@ -228,7 +228,7 @@ export class Game {
   private staffDay(): void {
     const { s, c, rng } = this.ctx;
     const p = s.project;
-    const overdue = p && p.status === 'dev' ? Math.max(0, s.day - p.startDay - (p.workTotal / 12.5) * 7 * 1.6) : 0;
+    const overdue = p && p.status === 'dev' ? Math.max(0, s.day - p.startDay - p.workTotal * (7 / 5) * 1.6) : 0;
     const rateLimited = s.company.tokens <= 0;
     for (const m of s.staff.slice()) {
       let target = 62 + traitMood(c, m) + itemMood(s);
@@ -311,10 +311,16 @@ export class Game {
     const { s, c } = this.ctx;
     if (s.project) return 'You are already building something.';
     if (!s.company.tools.includes(plan.tool)) return 'You do not own that tool.';
+    if (!unlocked(this, SCOPES[plan.scope].unlock)) return `${SCOPES[plan.scope].label} unlocks with more karma. Ship a few things first.`;
     if (!unlocked(this, c.kind(plan.kind).unlock)) return 'That kind of app is still locked.';
     if (!unlocked(this, c.niche(plan.niche).unlock)) return 'That audience is still locked.';
     if (s.staff.length === 0) return 'Nobody works here. That is a vibe, but no.';
     return null;
+  }
+
+  /** What the wizard shows before the player commits: likely stats and how long it takes. */
+  forecast(plan: Pick<ProjectPlan, 'kind' | 'scope' | 'tool' | 'team'>): Forecast {
+    return forecastImpl(this.ctx, plan);
   }
 
   startProject(plan: ProjectPlan) {
@@ -338,7 +344,7 @@ export class Game {
     if (!p || p.status !== 'ready' || s.pending[0]?.t !== 'ready') return { t: 'invalid', why: 'Nothing is ready to launch.' };
     const ch = c.channel(channelId);
     if (!unlocked(this, ch.unlock)) return { t: 'invalid', why: 'That channel is still locked.' };
-    const cost = Math.round(ch.cost * yearMult(s));
+    const cost = Math.round(ch.cost * cashScale(s));
     if (cost > s.company.cash + 20000) return { t: 'invalid', why: 'Even on credit you cannot afford that.' };
 
     if (isFriday(s.day) && !p.flags.includes('friday_decided')) {
@@ -379,6 +385,10 @@ export class Game {
   }
 
   /* --------------------------------------------------------------- staff */
+
+  monthlyBurn(): number {
+    return monthlyBurn(this.ctx);
+  }
 
   freeDesks(): number {
     return OFFICE_TIERS[this.s.company.officeTier]!.desks - this.s.staff.length;
@@ -429,7 +439,7 @@ export class Game {
   }
 
   trainCost(m: Staff, skill: SkillKey): number {
-    return Math.round((400 + m.skills[skill] * 18) * yearMult(this.s));
+    return Math.round((400 + m.skills[skill] * 18) * cashScale(this.s));
   }
 
   train(staffId: string, skill: SkillKey): string | null {
@@ -451,7 +461,7 @@ export class Game {
   }
 
   therapyCost(): number {
-    return Math.round(450 * yearMult(this.s));
+    return Math.round(450 * cashScale(this.s));
   }
 
   therapy(staffId: string): string | null {
@@ -542,7 +552,7 @@ export class Game {
   }
 
   topUpPrice(): number {
-    return Math.round(TOPUP_PRICE * yearMult(this.s));
+    return Math.round(TOPUP_PRICE * cashScale(this.s));
   }
 
   buyTokens(): string | null {

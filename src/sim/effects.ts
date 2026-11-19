@@ -1,6 +1,6 @@
 import { SKILL_KEYS, type Effect } from '../content/types';
 import { PHASES, phaseAt } from './config';
-import { addCash, addKarma, addSpaghetti, bump, deskCount, setFlag, sound, toast, yearMult, type Ctx } from './ctx';
+import { addCash, addKarma, addSpaghetti, bump, deskCount, setFlag, sound, toast, cashScale, type Ctx } from './ctx';
 import { clamp, money } from './format';
 import { gainXp, makeCandidate, staffFromCandidate } from './staff';
 import type { Chip, Staff } from './types';
@@ -53,7 +53,7 @@ function applyOne(ctx: Ctx, e: Effect, why: string, chips: Chip[]): void {
   const p = s.project;
   switch (e.t) {
     case 'cash': {
-      const n = Math.round(e.n * yearMult(s) * (e.n < 0 ? ctx.bad : 1));
+      const n = Math.round(e.n * cashScale(s) * (e.n < 0 ? ctx.bad : 1));
       addCash(ctx, n, why);
       chips.push({ kind: 'cash', text: `${n >= 0 ? '+' : '-'}${money(Math.abs(n))}`, good: n >= 0 });
       break;
@@ -106,7 +106,7 @@ function applyOne(ctx: Ctx, e: Effect, why: string, chips: Chip[]): void {
           p.stalledUntil = Math.max(p.stalledUntil, s.day) + e.days;
           p.delayed += e.days;
         } else {
-          const perDay = (p.workTotal > 0 ? 100 / (p.workTotal / Math.max(1, ctx.s.staff.length)) : 1) * 0.8;
+          const perDay = p.workTotal > 0 ? (100 / p.workTotal) * 0.85 * (5 / 7) : 1;
           p.progress = clamp(p.progress + perDay * -e.days, 0, 99.5);
         }
       }

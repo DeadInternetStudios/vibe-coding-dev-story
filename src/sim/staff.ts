@@ -1,6 +1,6 @@
 import { SKILL_KEYS, type SkillKey, type StaffArchetype } from '../content/types';
 import type { Content } from './content';
-import { YEAR_MULT } from './config';
+import { SALARY_SCALE, YEAR_MULT } from './config';
 import { clamp, lerp, yearOf } from './format';
 import { personName } from './names';
 import type { Rng } from './rng';
@@ -36,7 +36,7 @@ export function rollSkills(rng: Rng, a: StaffArchetype, t: number, year: number)
 
 export function salaryFor(a: StaffArchetype, t: number, year: number): number {
   const [lo, hi] = a.salary;
-  const raw = lerp(lo, hi, t) * (1 + 0.3 * (year - 1));
+  const raw = lerp(lo, hi, t) * (1 + 0.3 * (year - 1)) * SALARY_SCALE;
   return Math.round(raw / 50) * 50;
 }
 
@@ -90,7 +90,7 @@ export function staffFromCandidate(c: Candidate, day: number): Staff {
 }
 
 export function xpNeeded(level: number): number {
-  return 24 + 14 * level;
+  return 40 + 28 * level;
 }
 
 /** Sum of a skill plus its trait bonuses. */
@@ -123,7 +123,8 @@ export function gainXp(s: Staff, amount: number, rng: Rng): boolean {
     const ranked = SKILL_KEYS.slice().sort((a, b) => s.skills[b] - s.skills[a]);
     for (const k of SKILL_KEYS) s.skills[k] = clamp(s.skills[k] + 1, 1, 99);
     s.skills[ranked[0]!] = clamp(s.skills[ranked[0]!] + 2, 1, 99);
-    s.skills[ranked[rng.int(1, 2)]!] = clamp(s.skills[ranked[rng.int(1, 2)]!] + 1, 1, 99);
+    const second = ranked[rng.int(1, 2)]!;
+    s.skills[second] = clamp(s.skills[second] + 1, 1, 99);
     s.mood = clamp(s.mood + 10, 0, 100);
     s.salary = Math.round((s.salary * 1.05) / 50) * 50;
   }

@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { STAT_KEYS } from '../content/types';
 import { playBot, type Strategy } from './bot';
 import { FIXTURE } from './fixtures';
-import { TOTAL_DAYS } from './config';
-import { OFFICE_TIERS } from './config';
+import { OFFICE_TIERS, STAT_SOFT_CAP, TOTAL_DAYS } from './config';
 import type { Game } from './game';
 
 function invariants(g: Game): void {
@@ -28,7 +27,7 @@ function invariants(g: Game): void {
     for (const k of STAT_KEYS) {
       expect(Number.isFinite(p.stats[k])).toBe(true);
       expect(p.stats[k]).toBeGreaterThanOrEqual(0);
-      expect(p.stats[k]).toBeLessThanOrEqual(100);
+      expect(p.stats[k]).toBeLessThanOrEqual(STAT_SOFT_CAP);
     }
   }
 }

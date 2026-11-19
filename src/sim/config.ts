@@ -2,7 +2,7 @@
  * Balance knobs and fixed tables. Numbers live here so tuning never touches
  * logic. Money is written in year 1 dollars and scaled by YEAR_MULT.
  */
-import type { SkillKey, StatKey } from '../content/types';
+import type { SkillKey, StatKey, Unlock } from '../content/types';
 
 export const DAYS_PER_WEEK = 7;
 export const DAYS_PER_MONTH = 28;
@@ -16,14 +16,18 @@ export const YEAR_MULT = [1, 1.9, 3.6] as const;
 
 export type Scope = 'hack' | 'mvp' | 'full';
 
-export const SCOPES: Record<Scope, { label: string; blurb: string; weeks: number; money: number; hype: number }> = {
-  hack: { label: 'Weekend Hack', blurb: 'Half the work, half the glory.', weeks: 0.5, money: 0.45, hype: 0 },
-  mvp: { label: 'MVP', blurb: 'Minimum viable. Maximum vibes.', weeks: 1, money: 1, hype: 4 },
-  full: { label: 'The Full Thing', blurb: 'Auth, billing, dark mode, the works.', weeks: 1.8, money: 2.3, hype: 9 },
+export const SCOPES: Record<Scope, { label: string; blurb: string; weeks: number; money: number; hype: number; unlock: Unlock }> = {
+  hack: { label: 'Weekend Hack', blurb: 'Half the work, half the glory.', weeks: 0.5, money: 0.5, hype: 0, unlock: {} },
+  mvp: { label: 'MVP', blurb: 'Minimum viable. Maximum vibes.', weeks: 1, money: 1, hype: 4, unlock: {} },
+  full: { label: 'The Full Thing', blurb: 'Auth, billing, dark mode, the works.', weeks: 1.8, money: 1.4, hype: 9, unlock: { karma: 120 } },
 };
 
-/** One team's output in a week is about this many work units. A kind's `weeks` is multiplied by it. */
-export const WORK_PER_WEEK = 12.5;
+/**
+ * How long a project takes. A kind's `weeks` times this is the working weeks of an MVP
+ * at normal pace. The team's size does not change it; tools, mood, cards and crunch do.
+ */
+export const WEEKS_SCALE = 0.55;
+export const WORKDAYS_PER_WEEK = 5;
 
 export const PHASES = [
   { id: 'plan', label: 'Plan', from: 0, to: 15 },
@@ -56,10 +60,18 @@ export const STAT_SKILLS: Record<StatKey, readonly [SkillKey, number][]> = {
   security: [['paranoia', 1]],
 };
 
-/** Scales stat gain per worker-day so a skill 15 team lands near 45 and a skill 60 team near 90. */
-export const STAT_GAIN_K = 0.075;
+/**
+ * Stat gain. Every builder adds to the pile each day, so a bigger or better team
+ * builds a better product in the same time. Tuned so the starting crew lands near
+ * quality 45 on an MVP and a strong team of ten reaches the 90s.
+ */
+export const STAT_GAIN_K = 0.128;
 /** Stats stop growing near this cap, with diminishing returns. */
-export const STAT_SOFT_CAP = 125;
+export const STAT_SOFT_CAP = 110;
+/** The AI does a share of the work for everyone, so a skill of 1 still counts for something. */
+export const SKILL_FLOOR = 8;
+/** Staff pay is the archetype's range times this. */
+export const SALARY_SCALE = 0.8;
 
 export const START = {
   cash: 40000,
@@ -109,6 +121,9 @@ export const SPEEDS = [1, 2, 4, 8] as const;
 export const EVENT_CHANCE = { dev: 0.07, month: 0.7, launch: 0.4, rare: 0.012 };
 /** Do not repeat an event within this many days. */
 export const EVENT_COOLDOWN_DAYS = 120;
+
+/** Each extra builder past the third costs this much of everyone's output. A product manager gives some back. */
+export const COORDINATION = { perHead: 0.05, freeHeads: 3, pmRelief: 0.02, floor: 0.01 };
 
 /** Mood to speed multiplier: 100 is a happy dev, 0 is a hostage. */
 export function moodSpeed(mood: number): number {
@@ -164,10 +179,22 @@ export const DIFFICULTIES = [
 
 export type DifficultyId = (typeof DIFFICULTIES)[number]['id'];
 
+/** Everyone has an AI by year two, so the same product impresses less. Subtracted from quality in ratings and revenue. */
+export const MARKET_BAR = [0, 6, 12] as const;
+
+/** Reddit gets tired of the same thing. Each recent app of the same kind or niche trims the next one. */
+export const NOVELTY = { sameKind: 0.78, sameNiche: 0.86, memoryDays: 130, floor: 0.3 };
+
 /** Revenue model: a spike that fades fast, plus a long tail. */
 export const REVENUE = {
   /** dollars of lifetime revenue for quality 50, kind money 5, fit 1, hype 30, scope mvp */
-  base: 26000,
+  base: 12000,
+  /** how hard money leans on quality */
+  qualityExp: 1.25,
+  /** how hard money leans on the kind's money rating */
+  moneyExp: 0.75,
+  /** later years pay a little more per app, on top of everything else */
+  yearMult: [1, 1.3, 1.8] as const,
   spikeShare: 0.62,
   spikeTau: 16,
   tailTau: 150,

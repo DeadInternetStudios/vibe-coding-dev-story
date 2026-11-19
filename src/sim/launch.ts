@@ -2,14 +2,25 @@
  * Launch day: the Reddit thread, the Reddit Score, karma and the money curve.
  */
 import { STAT_KEYS, type AwardId, type ThreadCtx, type Vignette } from '../content/types';
-import { REVENUE, SCOPES } from './config';
-import { addCash, addKarma, addSpaghetti, bump, setFlag, sound, toast, yearMult, type Ctx } from './ctx';
-import { clamp, lerp } from './format';
+import { MARKET_BAR, NOVELTY, REVENUE, SCOPES } from './config';
+import { addCash, addKarma, addSpaghetti, bump, setFlag, sound, toast, cashScale, type Ctx } from './ctx';
+import { clamp, lerp, yearOf } from './format';
 import { fill } from './names';
 import { gainXp } from './staff';
 import { itemBonus } from './shop';
 import type { ShippedApp, ThreadRecord } from './types';
 import { companyView, projectView, qualityOf } from './views';
+
+/** 1 for something fresh, lower when the crowd has seen it lately. */
+export function noveltyOf(s: Ctx['s'], kindId: string, nicheId: string): number {
+  let n = 1;
+  for (const a of s.shipped.slice(-8)) {
+    const fade = Math.exp(-(s.day - a.launchDay) / NOVELTY.memoryDays);
+    if (a.kind === kindId) n *= 1 - (1 - NOVELTY.sameKind) * fade;
+    if (a.niche === nicheId) n *= 1 - (1 - NOVELTY.sameNiche) * fade;
+  }
+  return Math.max(NOVELTY.floor, n);
+}
 
 export function nicheFit(ctx: Ctx, kindId: string, nicheId: string): number {
   const n = ctx.c.niche(nicheId);
@@ -67,6 +78,8 @@ export function pickVignettes(ctx: Ctx, tctx: ThreadCtx, roast: number, want = 4
   return rng.shuffle(picked);
 }
 
+/** A product of quality 50 reads as a 5.8 on a friendly channel. */
+const RATING_OFFSET = 0.8;
 const TONE_ADJ: Record<Vignette['tone'], number> = { praise: 0.7, roast: -0.7, neutral: 0, chaos: 0 };
 
 export interface LaunchResult {
@@ -81,7 +94,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   const ch = c.channel(channelId);
   const kind = c.kind(p.kind);
 
-  const cost = Math.round(ch.cost * yearMult(s));
+  const cost = Math.round(ch.cost * cashScale(s));
   if (cost > 0) addCash(ctx, -cost, `Launch: ${ch.name}`);
   p.hype = clamp(p.hype + ch.hype, 0, 100);
 
@@ -99,6 +112,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
     }
   }
 
+  const bar = MARKET_BAR[Math.min(2, yearOf(s.day) - 1)]!;
   const pv = projectView(c, p, channelId);
   const tctx: ThreadCtx = { company: companyView(s), project: pv, rand: () => rng.next() };
   const vignettes = pickVignettes(ctx, tctx, ch.roast);
@@ -109,8 +123,8 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   const awards: ThreadRecord['awards'] = [];
   let rootVotes = 0;
   for (const v of vignettes) {
-    const judged = v.judges === 'overall' ? pv.quality : v.judges === 'hype' ? pv.hype : pv.stats[v.judges];
-    const raw = judged / 10 + rng.bell() * 1.3 + TONE_ADJ[v.tone] - ch.roast * 0.8;
+    const judged = (v.judges === 'overall' ? pv.quality : v.judges === 'hype' ? pv.hype : pv.stats[v.judges]) - (v.judges === 'hype' ? 0 : bar);
+    const raw = judged / 10 + RATING_OFFSET + rng.bell() * 1.3 + TONE_ADJ[v.tone] - ch.roast * 0.8;
     const rating = clamp(Math.round(raw), 1, 10);
     ratings.push(rating);
     const t = clamp(0.25 + pv.quality / 200 + pv.hype / 400 + rng.bell() * 0.25, 0, 1);
@@ -138,14 +152,15 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   const stabilityPenalty = p.stats.stability < 30 ? 0.8 : 1;
   const lifetime = Math.round(
     REVENUE.base *
-      (kind.money / 5) *
+      Math.pow(kind.money / 5, REVENUE.moneyExp) *
       fit *
-      Math.pow(Math.max(quality, 5) / 50, 1.8) *
-      (0.6 + p.hype / 60) *
+      Math.pow(Math.max(quality - bar, 5) / 50, REVENUE.qualityExp) *
+      (0.75 + p.hype / 120) *
       SCOPES[p.scope].money *
       scoreBonus *
       stabilityPenalty *
-      yearMult(s) *
+      noveltyOf(s, p.kind, p.niche) *
+      REVENUE.yearMult[Math.min(2, yearOf(s.day) - 1)]! *
       (1 + s.company.karma / 4000) *
       ctx.revenue,
   );

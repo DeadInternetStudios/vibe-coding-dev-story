@@ -1,13 +1,13 @@
 /**
  * Payday, valuation, funding rounds and the ending.
  */
-import { BANKRUPT_CASH, OFFICE_TIERS, TOKEN_PLANS } from './config';
+import { BANKRUPT_CASH, OFFICE_TIERS, REVENUE, TOKEN_PLANS } from './config';
 import { addCash, bump, type Ctx } from './ctx';
 import { clamp, monthOf, yearOf } from './format';
 import { totalPayroll } from './staff';
 import type { EndingResult, LedgerLine, PaydayReport } from './types';
 
-export const FUNDING_TARGETS = [120_000, 650_000] as const;
+export const FUNDING_TARGETS = [600_000, 4_500_000] as const;
 
 export function valuation(ctx: Ctx): number {
   const { s } = ctx;
@@ -24,6 +24,21 @@ export function monthlyBurn(ctx: Ctx): number {
   return totalPayroll(s.staff) + OFFICE_TIERS[s.company.officeTier]!.rent + plan.monthly + tool.monthly + 200;
 }
 
+/** The world is kind to a founder who is going under, twice. */
+function lifeline(ctx: Ctx): LedgerLine | null {
+  const { s } = ctx;
+  if (s.company.cash >= 0 || s.day > 380) return null;
+  if (!s.flags.includes('lifeline_mom')) {
+    s.flags.push('lifeline_mom');
+    return { label: 'Mom', amount: 12000, note: 'Mom wired $12,000. Memo: "for groceries (and your dreams)". She still thinks you work at Google.' };
+  }
+  if (!s.flags.includes('lifeline_reddit') && s.company.karma >= 40) {
+    s.flags.push('lifeline_reddit');
+    return { label: 'Strangers on Reddit', amount: 8000, note: 'A thread called "this founder is cooked" got 4k upvotes and $8,000 in coffee donations.' };
+  }
+  return null;
+}
+
 export function runPayday(ctx: Ctx): PaydayReport {
   const { s, c, rng } = ctx;
   const year = yearOf(s.day);
@@ -38,8 +53,9 @@ export function runPayday(ctx: Ctx): PaydayReport {
   if (plan.monthly > 0) lines.push({ label: `Tokens: ${plan.name}`, amount: -plan.monthly, note: `${plan.tokens}k a month` });
   const tool = c.tool(s.company.activeTool);
   if (tool.monthly > 0) lines.push({ label: tool.name, amount: -tool.monthly, note: 'subscription' });
-  const cloud = Math.round(40 + income * 0.04 + s.company.spaghetti * 6);
-  lines.push({ label: 'Cloud bill', amount: -cloud, note: s.company.spaghetti > 40 ? 'includes the spaghetti tax' : 'servers go brr' });
+  const live = s.shipped.filter((a) => a.spikeAmp * Math.exp(-(s.day - a.launchDay) / REVENUE.spikeTau) + a.tailAmp * Math.exp(-(s.day - a.launchDay) / REVENUE.tailTau) > 40).length;
+  const cloud = Math.round(40 + income * 0.1 + live * 120 + s.company.spaghetti * 6);
+  lines.push({ label: 'Cloud bill', amount: -cloud, note: s.company.spaghetti > 40 ? 'includes the spaghetti tax' : `${live} apps still on the servers` });
 
   const items = c.paydayItems.length ? rng.shuffle(c.paydayItems).slice(0, 3) : [];
   for (const it of items) {
@@ -47,12 +63,19 @@ export function runPayday(ctx: Ctx): PaydayReport {
     lines.push({ label: it.label, amount: -Math.round(base * (0.7 + s.staff.length * 0.12) * (1 + 0.25 * (year - 1))), note: it.note });
   }
 
-  const total = lines.reduce((n, l) => n + l.amount, 0);
+  let total = lines.reduce((n, l) => n + l.amount, 0);
   s.company.cash += total;
   s.company.monthlyRevenue.push(income);
   if (s.company.monthlyRevenue.length > 36) s.company.monthlyRevenue.shift();
 
   const warnings: string[] = [];
+  const rescue = lifeline(ctx);
+  if (rescue) {
+    lines.push(rescue);
+    s.company.cash += rescue.amount;
+    total += rescue.amount;
+    warnings.push(rescue.note ?? '');
+  }
   if (s.company.cash < 0) {
     s.company.bankruptStrikes += 1;
     bump(ctx, 'bankrupt_scares');
@@ -129,11 +152,11 @@ export function finalScore(ctx: Ctx): number {
 }
 
 export function rankFor(score: number): EndingResult['rank'] {
-  if (score >= 4_000_000) return 'S';
-  if (score >= 1_600_000) return 'A';
-  if (score >= 700_000) return 'B';
-  if (score >= 300_000) return 'C';
-  if (score >= 100_000) return 'D';
+  if (score >= 20_000_000) return 'S';
+  if (score >= 11_000_000) return 'A';
+  if (score >= 5_000_000) return 'B';
+  if (score >= 1_500_000) return 'C';
+  if (score >= 400_000) return 'D';
   return 'F';
 }
 

@@ -10,7 +10,7 @@ const seeds = Number(process.argv[2] ?? 60);
 const difficulty = (process.argv[3] ?? 'normal') as 'chill' | 'normal' | 'ramen';
 const content = buildFromSource();
 
-const strategies: Strategy[] = ['smart', 'yolo', 'random', 'idle'];
+const strategies: Strategy[] = ['smart', 'casual', 'yolo', 'random', 'idle'];
 
 function pct(n: number, d: number): string {
   return `${Math.round((n / d) * 100)}%`.padStart(4);

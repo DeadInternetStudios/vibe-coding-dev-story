@@ -3,7 +3,7 @@
  */
 import { STAT_KEYS, type SkillKey, type StatKey } from '../content/types';
 import { CARDS, cardById, type Card } from './cards';
-import { PHASES, PHASE_WEIGHTS, SCOPES, STAT_GAIN_K, STAT_SKILLS, STAT_SOFT_CAP, WORK_PER_WEEK, moodBugs, moodSpeed, phaseAt, type Scope } from './config';
+import { COORDINATION, PHASES, PHASE_WEIGHTS, SCOPES, SKILL_FLOOR, STAT_GAIN_K, STAT_SKILLS, STAT_SOFT_CAP, WEEKS_SCALE, WORKDAYS_PER_WEEK, moodBugs, moodSpeed, phaseAt, type Scope } from './config';
 import { addSpaghetti, bump, sound, toast, workers, type Ctx } from './ctx';
 import { clamp } from './format';
 import { productName } from './names';
@@ -46,7 +46,7 @@ export function startProject(ctx: Ctx, plan: ProjectPlan): Project {
     status: 'dev',
     readyOn: 0,
     progress: 0,
-    workTotal: kind.weeks * SCOPES[plan.scope].weeks * WORK_PER_WEEK,
+    workTotal: workdaysFor(kind.weeks, plan.scope),
     stats,
     hype: bank + SCOPES[plan.scope].hype + karmaHype(s.company.karma),
     hotIdeas: 0,
@@ -104,16 +104,28 @@ function resolveGamble(ctx: Ctx, p: Project): void {
   toast(ctx, g.text, (g.n ?? 0) >= 0 && !g.spaghetti ? 'good' : 'bad');
 }
 
-function workPower(ctx: Ctx, m: Staff, p: Project, card: Card | undefined, rateLimited: boolean): number {
+/** Working days an MVP-sized job takes at normal pace. */
+export function workdaysFor(kindWeeks: number, scope: Scope): number {
+  return kindWeeks * WEEKS_SCALE * SCOPES[scope].weeks * WORKDAYS_PER_WEEK;
+}
+
+/** Too many cooks: the share of output each builder keeps once the team is bigger than a few. */
+export function coordination(team: readonly Staff[]): number {
+  const pms = team.filter((m) => m.archetype === 'pm').length;
+  const perHead = Math.max(COORDINATION.floor, COORDINATION.perHead - pms * COORDINATION.pmRelief);
+  return 1 / (1 + perHead * Math.max(0, team.length - COORDINATION.freeHeads));
+}
+
+/** How briskly one builder moves today. About 1 for a happy person with an ordinary tool. */
+function paceOf(ctx: Ctx, m: Staff, toolSpeed: number, card: Card | undefined, rateLimited: boolean): number {
   const { c, s } = ctx;
-  const tool = c.tool(p.tool);
-  const skill = 0.5 + skillOf(c, m, 'prompt') / 40;
+  const prompt = 0.85 + skillOf(c, m, 'prompt') / 150;
   const spaghettiDrag = 1 - s.company.spaghetti / 380;
   const crunch = s.company.crunch ? 1.35 : 1;
   return (
-    skill *
+    prompt *
     moodSpeed(m.mood) *
-    tool.speed *
+    toolSpeed *
     traitMult(c, m, 'speed') *
     (rateLimited ? 0.15 : 1) *
     (card?.speed ?? 1) *
@@ -123,10 +135,45 @@ function workPower(ctx: Ctx, m: Staff, p: Project, card: Card | undefined, rateL
   );
 }
 
+/** What one builder knows about a stat: the skills behind it plus what the AI covers. */
 function skillFor(ctx: Ctx, m: Staff, stat: StatKey): number {
-  let v = 0;
+  let v = SKILL_FLOOR;
   for (const [sk, share] of STAT_SKILLS[stat]) v += skillOf(ctx.c, m, sk as SkillKey) * share;
   return v;
+}
+
+const PHASE_SHARE = PHASES.map((ph) => (ph.to - ph.from) / 100);
+/** How much of a whole project each stat gets from the phase weights alone. */
+const STAT_SHARE = Object.fromEntries(STAT_KEYS.map((k) => [k, PHASE_SHARE.reduce((n, sh, i) => n + sh * PHASE_WEIGHTS[i as 0 | 1 | 2 | 3][k], 0)])) as Record<StatKey, number>;
+
+export interface Forecast {
+  stats: Record<StatKey, number>;
+  /** calendar days from kickoff to ready, at today's mood and no cards */
+  days: number;
+  workdays: number;
+}
+
+/** What a plan is likely to turn into with the team as it is today. Shown in the project wizard. */
+export function forecast(ctx: Ctx, plan: { kind: string; scope: Scope; tool: string; team?: string[] }): Forecast {
+  const { s, c } = ctx;
+  const kind = c.kind(plan.kind);
+  const tool = c.tool(plan.tool);
+  const team = s.staff.filter((m) => (plan.team ? plan.team.includes(m.id) : true));
+  const work = workdaysFor(kind.weeks, plan.scope);
+  const stats = {} as Record<StatKey, number>;
+  const paces = team.map((m) => paceOf(ctx, m, tool.speed, undefined, false));
+  const avgPace = paces.length ? paces.reduce((a, b) => a + b, 0) / paces.length : 1;
+  const coord = coordination(team);
+  for (const k of STAT_KEYS) {
+    let sum = 0;
+    team.forEach((m, i) => {
+      sum += (paces[i]! / avgPace) * skillFor(ctx, m, k);
+    });
+    const x = (work * STAT_GAIN_K * STAT_SHARE[k] * coord * sum * itemStat(s, k)) / STAT_SOFT_CAP;
+    stats[k] = STAT_SOFT_CAP * (1 - Math.exp(-x));
+  }
+  const workdays = work / Math.max(0.2, avgPace);
+  return { stats, days: Math.ceil((workdays * 7) / WORKDAYS_PER_WEEK), workdays };
 }
 
 /** One working day on the current project. */
@@ -155,16 +202,18 @@ export function devStep(ctx: Ctx): void {
   if (rateLimited !== wasLimited) ctx.out.push({ t: 'rateLimited', on: rateLimited });
   if (rateLimited) p.rateLimitedDays += 1;
 
-  // power and stats
-  let totalPower = 0;
+  // pace and stats: everyone adds to the pile, the clock moves at the average pace
+  let totalPace = 0;
   let bugMult = 0;
+  const coord = coordination(team);
   for (const m of team) {
-    const power = workPower(ctx, m, p, card, rateLimited);
-    totalPower += power;
+    const pace = paceOf(ctx, m, tool.speed, card, rateLimited);
+    totalPace += pace;
     bugMult += moodBugs(m.mood) * traitMult(c, m, 'bugs');
     for (const k of STAT_KEYS) {
       const gain =
-        power *
+        pace *
+        coord *
         PHASE_WEIGHTS[phase][k] *
         (card?.weight?.[k] ?? 1) *
         skillFor(ctx, m, k) *
@@ -186,7 +235,7 @@ export function devStep(ctx: Ctx): void {
   }
 
   // spaghetti
-  addSpaghetti(ctx, 0.1 * tool.bugs * Math.sqrt(totalPower) * itemBonus(s, 'spaghetti') + (card?.spaghetti ?? 0));
+  addSpaghetti(ctx, 0.1 * tool.bugs * Math.sqrt(totalPace) * itemBonus(s, 'spaghetti') + (card?.spaghetti ?? 0));
   for (const m of supporters) addSpaghetti(ctx, -0.25 * (skillOf(c, m, 'debug') / 20) * moodSpeed(m.mood));
 
   // supporters build hype with the time they have
@@ -199,7 +248,7 @@ export function devStep(ctx: Ctx): void {
   if (card?.mood) for (const m of team) m.mood = clamp(m.mood + card.mood, 0, 100);
 
   // progress
-  p.progress += (totalPower / p.workTotal) * 100;
+  p.progress += ((totalPace / team.length) / p.workTotal) * 100;
 
   // hot ideas
   if (p.idea && s.day > p.idea.until) {
