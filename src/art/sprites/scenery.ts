@@ -97,10 +97,14 @@ export function skyline(w: number, h: number, seed: number, layer: 0 | 1): Px {
   return c;
 }
 
+const STREET_H = 8;
+const LANDMARK_W = 28;
+const LANDMARK_SIGN_H = 17;
+
 /** A tall building with a billboard on the roof, so the skyline has one thing to look at. */
 function landmark(h: number): Px {
-  const bw = 28;
-  const signH = 17;
+  const bw = LANDMARK_W;
+  const signH = LANDMARK_SIGN_H;
   const c = new Px(bw, h + signH);
   const top = signH;
   c.rect(0, top, bw, h, 'ink1');
@@ -152,6 +156,12 @@ function lamp(c: Px, x: number, groundY: number): void {
   c.hline(x - 7, groundY + 2, 6, 'orange0');
 }
 
+/** Where the tall tower's rooftop sign sits on a screen of `w` by `h`, so a screen drawn over the city can keep clear of it. */
+export function landmarkSign(w: number, h: number): { x: number; y: number; w: number; h: number } {
+  const lmH = Math.round(h * 0.4);
+  return { x: Math.round(w * 0.12), y: h - STREET_H - lmH - LANDMARK_SIGN_H - 2, w: LANDMARK_W, h: LANDMARK_SIGN_H };
+}
+
 /**
  * The whole night in one picture for behind the office room: sky, stars, moon, a far and a
  * near skyline, one billboard, a taxi and a street with lamps. `w` and `h` are the screen.
@@ -161,12 +171,12 @@ export function nightCity(w: number, h: number): Px {
   c.blit(stars(w, h, 3, Math.floor((w * h) / 420)), 0, 0);
   c.blit(stars(w, h, 9, Math.floor((w * h) / 520)), 0, 0);
   c.blit(moon(), w - 44, Math.max(4, Math.round(h * 0.09)));
-  const street = 8;
+  const street = STREET_H;
   const farH = Math.round(h * 0.34);
   const nearH = Math.round(h * 0.22);
   c.blit(skyline(w, farH, 21, 0), 0, h - street - farH - 8);
-  const lmH = Math.round(h * 0.4);
-  c.blit(landmark(lmH), Math.round(w * 0.12), h - street - lmH - 17 - 2);
+  const sign = landmarkSign(w, h);
+  c.blit(landmark(Math.round(h * 0.4)), sign.x, sign.y);
   c.blit(skyline(w, nearH, 5, 1), 0, h - street - nearH);
   // the street
   c.rect(0, h - street, w, street, 'ink0');

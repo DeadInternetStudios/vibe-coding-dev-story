@@ -4,7 +4,7 @@ import { audio } from '../core/audio';
 import { bake, bakePortrait } from '../core/bake';
 import { hasOutdatedSave, loadHall, loadSave, saveSettings } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
-import { nightCity } from '../art/sprites/scenery';
+import { landmarkSign, nightCity } from '../art/sprites/scenery';
 import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
 import { fxPx } from '../art/sprites/fx';
 import { button, label, panel, rect, uiEvents, type ButtonKind } from '../ui/kit';
@@ -17,6 +17,7 @@ import { Speech } from '../ui/speech';
 import { bandEnds, ScrollText } from '../ui/scrollText';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { Rng } from '../sim/rng';
+import { BUTTON_H, BUTTON_W, STRIP_H, titleBlock } from './titleLayout';
 
 interface Drifter {
   c: Phaser.GameObjects.Container;
@@ -70,25 +71,16 @@ export class TitleScene extends Phaser.Scene {
 
     // logo, buttons: measure first so nothing collides
     const save = loadSave();
-    const buttons = save ? 4 : 3;
-    const menuH = buttons * 27 + (save ? 9 : 0);
-    const stripH = 13;
-    // the top band belongs to the sound switch, its hint and the best-rank chip: the logo starts under it
-    const band = 22;
-    const fits = (sc: number) => band + LOGO_H * sc + 14 + 14 + menuH + stripH + 6 <= H;
-    let scale = Math.max(1, Math.min(3, Math.floor((W - 16) / LOGO_W)));
-    while (scale > 1 && !fits(scale)) scale--;
-    const logoH = LOGO_H * scale;
-    const free = H - stripH - logoH - 14 - menuH - band;
-    const logoY = band + Math.max(0, Math.floor(free * 0.32));
+    const stripH = STRIP_H;
+    const { scale, logoH, logoY } = titleBlock({ W, H, cx: L.cx, save: !!save, logo: { w: LOGO_W, h: LOGO_H }, sign: landmarkSign(W, H) });
     this.buildLogo(L.cx, logoY, scale);
     const subY = logoY + logoH + 4;
     const sub = label(this, L.cx, subY, 'a startup sim where the AI writes the code', { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     this.tweens.add({ targets: sub, alpha: { from: 1, to: 0.55 }, duration: 1300, yoyo: true, repeat: -1 });
 
     // buttons
-    const bw = 128;
-    const bh = 22;
+    const bw = BUTTON_W;
+    const bh = BUTTON_H;
     let y = subY + 16;
     const add = (text: string, kind: ButtonKind, fn: () => void, icon?: string) => {
       const btn = button(this, L.cx - bw / 2, y, bw, bh, text, fn, { kind, icon });
