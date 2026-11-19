@@ -122,7 +122,7 @@ export const KINDS: ProductKind[] = [
     id: 'dash',
     name: 'Analytics Dashboard',
     article: 'an',
-    blurb: 'Fourteen charts, all up and to the right. Do not check.',
+    blurb: 'Fourteen charts, all very confident. Do not check the data.',
     weights: { vibes: 0.15, features: 0.3, polish: 0.3, stability: 0.15, security: 0.1 },
     weeks: 10,
     money: 6,

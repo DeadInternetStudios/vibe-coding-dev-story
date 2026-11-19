@@ -16,7 +16,7 @@ changed except this file.
 | `channels.ts` | `CHANNELS` | 8 |
 | `events.ts` | `EVENTS` | 92 (dev 40, month 28, launch 12, rare 12) |
 | `threads.ts` | `VIGNETTES`, `OP_BODIES` | 120 vignettes, 24 OP bodies |
-| `flavor.ts` | `LOADING`, `TIPS`, `HEADLINES`, `PAYDAY_ITEMS`, `COMMIT_MESSAGES`, `APP_REVIEWS`, `AMBIENT` | 63, 40, 65, 31, 43, 40, 47 voiced |
+| `flavor.ts` | `LOADING`, `TIPS`, `HEADLINES`, `PAYDAY_ITEMS`, `COMMIT_MESSAGES`, `APP_REVIEWS`, `AMBIENT` | 63, 40, 64, 31, 43, 40, 47 voiced |
 | `achievements.ts` | `ACHIEVEMENTS` | 49 (7 secret) |
 | `endings.ts` | `ENDINGS` | 8 |
 | `story.ts` | `INTRO`, `TUTORIAL`, `YEAR_END`, `FUNDING`, `FRIDAY`, `DEPLOY`, `MONTH_NARRATION` | 14, 14 keys, 3 shows, 2 outcomes, 3 branches, 7, 25 |
