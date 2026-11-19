@@ -11,7 +11,7 @@ const ROWS: readonly (readonly [string, string])[] = [
   ['VOICES', 'Twenty characters, each invented from a text description by Qwen3-TTS 1.7B VoiceDesign and rendered offline.'],
   ['FONTS', 'Silkscreen, Jersey, Tiny5 and VT323, under the SIL Open Font License.'],
   ['PRIVACY', 'No accounts. No tracking. Your saves and scores stay in this browser, on this device.'],
-  ['NOTE', 'Every post, brand and person in here is a joke. Any resemblance to a real subreddit is a coincidence.'],
+  ['NOTE', 'A parody. Not affiliated with Reddit, Hacker News, Product Hunt, LinkedIn or anyone else named in a joke. Every post and person in here is made up.'],
 ];
 
 /** Credits, privacy and the licence notices, one popup. Opens over Settings and hands the screen back when closed. */

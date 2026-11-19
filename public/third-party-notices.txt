@@ -19,6 +19,11 @@ art, music, sound effects, writing and voice recordings are covered by the LICEN
    Used offline to invent the twenty voices and render the spoken lines to MP3 files.
    The model itself is not part of the game. Only the rendered audio ships.
 
+NOT AFFILIATED
+This is a parody and a free game. It is not affiliated with, endorsed by or connected to Reddit, Hacker News,
+Product Hunt, LinkedIn or any other company or service named in a joke. Names belong to their owners.
+Every post, comment and person in the game is made up.
+
 PRIVACY
 The game has no accounts, no analytics and no tracking, and it makes no network requests
 to anyone but the server it was loaded from. Saves, settings and the hall of fame live in
