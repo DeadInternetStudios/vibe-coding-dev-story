@@ -37,6 +37,10 @@ const game = new Phaser.Game({
   scale: { mode: Phaser.Scale.NONE, width: vp.w, height: vp.h, zoom: vp.cssPerPx },
   render: { pixelArt: true, antialias: false, roundPixels: true },
   input: { activePointers: 3 },
+  // By default Phaser stops believing a frame once it is over 200 ms long and moves the game by a sixtieth of a second instead,
+  // and it holds the clock back for the first 120 frames. A browser or phone that draws fewer than five frames a second
+  // (a busy laptop, a weak phone, a screenshot tool) then sees the game stand still. These two keep it on real time.
+  fps: { min: 1, panicMax: 8 },
   banner: false,
   audio: { noAudio: true },
   scene: [BootScene, TitleScene, NewGameScene, OfficeScene, ThreadScene, EndingScene],
