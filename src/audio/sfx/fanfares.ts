@@ -30,7 +30,7 @@ export const fanfares: Record<SfxIdOf<'fanfare'>, SfxBody> = {
   fanfare_big: jingle({
     id: 'fanfare_big',
     key: 'C major',
-    bpm: 160,
+    bpm: 176,
     bars: 2,
     harmony: ['C,F', 'G,C'],
     tracks: [
@@ -67,7 +67,7 @@ export const fanfares: Record<SfxIdOf<'fanfare'>, SfxBody> = {
   award_win: jingle({
     id: 'award_win',
     key: 'Bb major',
-    bpm: 150,
+    bpm: 168,
     bars: 2,
     harmony: ['Bb', 'F,Bb'],
     tracks: [
@@ -105,7 +105,7 @@ export const fanfares: Record<SfxIdOf<'fanfare'>, SfxBody> = {
   victory: jingle({
     id: 'victory',
     key: 'G major',
-    bpm: 168,
+    bpm: 184,
     bars: 2,
     harmony: ['G,C', 'D,G'],
     tracks: [
@@ -149,13 +149,13 @@ export const fanfares: Record<SfxIdOf<'fanfare'>, SfxBody> = {
           { at: 0.6, hi: 'Eb4', lo: 'Eb3' },
         ] as const
       ).flatMap((n) => [
-        tone(n.at, 'p25', n.hi, 0.24, { vol: 0.26, d: 0.2, s: 0.4, r: 0.06 }),
-        tone(n.at, 'tri', n.lo, 0.24, { vol: 0.34, d: 0.2, s: 0.4, r: 0.06 }),
-        hit(n.at, 'tom', 0.7, { tune: 0.7 }),
+        tone(n.at, 'p25', n.hi, 0.24, { vol: 0.4, d: 0.2, s: 0.4, r: 0.06 }),
+        tone(n.at, 'tri', n.lo, 0.24, { vol: 0.2, d: 0.2, s: 0.4, r: 0.06 }),
+        hit(n.at, 'tom', 0.45, { tune: 0.75 }),
       ]),
       // and the last note falls a whole octave and fades
       slide(0.9, 'p25', 'C4', 'C3', 1.1, {
-        vol: 0.28,
+        vol: 0.4,
         a: 0.01,
         d: 0.9,
         s: 0.4,
@@ -163,8 +163,8 @@ export const fanfares: Record<SfxIdOf<'fanfare'>, SfxBody> = {
         vib: { rate: 5.5, depth: 30, delay: 0.2 },
         filter: { type: 'lowpass', f0: 2200, f1: 700, time: 1.1, q: 0.7 },
       }),
-      slide(0.9, 'tri', 'C3', 'C2', 1.1, { vol: 0.4, d: 0.9, s: 0.4, r: 0.25 }),
-      hit(0.9, 'tom', 1, { tune: 0.55 }),
+      slide(0.9, 'tri', 'C3', 'C2', 1.1, { vol: 0.22, d: 0.9, s: 0.4, r: 0.25 }),
+      hit(0.9, 'tom', 0.6, { tune: 0.6 }),
     ],
     cooldown: 1,
   },

@@ -34,13 +34,13 @@ export const thread: Record<SfxIdOf<'thread'>, SfxBody> = {
   award: {
     events: [
       // a gold shimmer climbing a major seventh, then a long glowing tail
-      tone(0.02, 'sine', 'E6', 0.5, { vol: 0.15, layers: BELL, a: 0.001, d: 0.45, s: 0, r: 0.2, pan: -0.25 }),
-      tone(0.075, 'sine', 'G6', 0.5, { vol: 0.15, layers: BELL, a: 0.001, d: 0.45, s: 0, r: 0.2, pan: 0.2 }),
-      tone(0.13, 'sine', 'B6', 0.5, { vol: 0.13, layers: BELL, a: 0.001, d: 0.45, s: 0, r: 0.2, pan: -0.15 }),
-      tone(0.185, 'p12', 'E7', 0.3, { vol: 0.06, d: 0.28, s: 0, r: 0.1, pan: 0.25 }),
-      tone(0.26, 'sine', 'G6', 0.9, { vol: 0.14, layers: BELL, d: 0.8, s: 0, r: 0.3 }),
-      tone(0.26, 'p50', 'B5', 0.4, { vol: 0.08, d: 0.35, s: 0.2, r: 0.15 }),
-      noise(0.02, 'noiseL', 20000, 0.6, { vol: 0.035, a: 0.05, d: 0.5, s: 0, r: 0.05, filter: { type: 'bandpass', f0: 4500, q: 2 } }),
+      tone(0, 'sine', 'E6', 0.5, { vol: 0.15, layers: BELL, a: 0.001, d: 0.45, s: 0, r: 0.2, pan: -0.25 }),
+      tone(0.055, 'sine', 'G6', 0.5, { vol: 0.15, layers: BELL, a: 0.001, d: 0.45, s: 0, r: 0.2, pan: 0.2 }),
+      tone(0.11, 'sine', 'B6', 0.5, { vol: 0.13, layers: BELL, a: 0.001, d: 0.45, s: 0, r: 0.2, pan: -0.15 }),
+      tone(0.165, 'p12', 'E7', 0.3, { vol: 0.06, d: 0.28, s: 0, r: 0.1, pan: 0.25 }),
+      tone(0.24, 'sine', 'G6', 0.9, { vol: 0.14, layers: BELL, d: 0.8, s: 0, r: 0.3 }),
+      tone(0.24, 'p50', 'B5', 0.4, { vol: 0.08, d: 0.35, s: 0.2, r: 0.15 }),
+      noise(0, 'noiseL', 20000, 0.6, { vol: 0.035, a: 0.05, d: 0.5, s: 0, r: 0.05, filter: { type: 'bandpass', f0: 4500, q: 2 } }),
     ],
     jitter: 10,
     cooldown: 0.3,
@@ -61,9 +61,9 @@ export const thread: Record<SfxIdOf<'thread'>, SfxBody> = {
   karma_tick: {
     level: -8,
     events: [
-      // one click of a counter rolling over
-      tone(0, 'p12', 'B6', 0.03, { vol: 0.16, a: 0.0005, d: 0.025, s: 0, r: 0.006 }),
-      noise(0, 'noiseL', 16000, 0.012, { vol: 0.1, a: 0.0005, d: 0.01, s: 0, r: 0.003, filter: { type: 'bandpass', f0: 3000, q: 1 } }),
+      // one click of a counter rolling over: a soft triangle tick, almost nothing above 6 kHz
+      tone(0, 'tri', 'B6', 0.03, { vol: 0.22, a: 0.0005, d: 0.025, s: 0, r: 0.006 }),
+      noise(0, 'noiseS', 5000, 0.01, { vol: 0.06, a: 0.0005, d: 0.008, s: 0, r: 0.002, filter: { type: 'bandpass', f0: 2200, q: 1.5 } }),
     ],
     jitter: 60,
     cooldown: 0.02,
@@ -110,9 +110,7 @@ export const thread: Record<SfxIdOf<'thread'>, SfxBody> = {
       // ba - dum - tss
       hit(0, 'tom', 0.8, { tune: 1.2 }),
       hit(0.12, 'snare', 1),
-      hit(0.26, 'crash', 0.55),
-      // and a hiss of something burning
-      noise(0.26, 'noiseL', 24000, 0.45, { vol: 0.035, a: 0.02, d: 0.4, s: 0, r: 0.03, filter: { type: 'highpass', f0: 3500 } }),
+      hit(0.26, 'ohat', 0.7),
     ],
     jitter: 15,
     cooldown: 0.4,

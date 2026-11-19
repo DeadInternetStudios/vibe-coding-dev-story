@@ -584,7 +584,9 @@ def flags_for(r: dict) -> list[str]:
         fl.append("CLIP")
     if r["peak_db"] > CEILING_DBFS + 0.15:
         fl.append("PEAK>-3")
-    if r["dc"] > 0.002:
+    # A decaying sub 100 Hz thump never finishes its last cycle and averages to about
+    # 1% of its rms: residue, not DC. Real DC averages to tens of percent.
+    if r["dc"] > min(0.01, max(0.002, 0.02 * 10 ** (r["rms_db"] / 20))):
         fl.append("DC")
     if r["group"] == "music":
         li = r.get("lufs_loop")

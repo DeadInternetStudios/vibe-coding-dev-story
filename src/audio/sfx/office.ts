@@ -8,14 +8,14 @@ const keys: ToneEvent[] = KEY_TIMES.flatMap((at, i): ToneEvent[] => {
   const high = i % 3 !== 1;
   return [
     noise(at, 'noiseL', high ? 15000 : 11000, 0.014, {
-      vol: 0.2 - (i % 4) * 0.015,
+      vol: 0.13 - (i % 4) * 0.01,
       a: 0.0005,
       d: 0.011,
       s: 0,
       r: 0.004,
       filter: { type: 'bandpass', f0: high ? 2300 : 1500, q: 0.9 },
     }),
-    tone(at, 'tri', high ? 720 - i * 6 : 470 + i * 5, 0.022, { vol: 0.14, a: 0.001, d: 0.02, s: 0, r: 0.006 }),
+    tone(at, 'tri', high ? 720 - i * 6 : 470 + i * 5, 0.022, { vol: 0.26, a: 0.001, d: 0.02, s: 0, r: 0.006 }),
   ];
 });
 
@@ -48,17 +48,17 @@ export const office: Record<SfxIdOf<'office'>, SfxBody> = {
   fire: {
     events: [
       // dun
-      hit(0, 'tom', 1, { tune: 0.7 }),
-      tone(0, 'saw', 'G3', 0.16, { vol: 0.2, a: 0.004, d: 0.12, s: 0.5, r: 0.05, filter: { type: 'lowpass', f0: 1800, q: 0.8 } }),
-      tone(0, 'tri', 'G2', 0.16, { vol: 0.34, d: 0.14, s: 0.5, r: 0.05 }),
+      hit(0, 'tom', 0.6, { tune: 0.75 }),
+      tone(0, 'saw', 'G3', 0.16, { vol: 0.34, a: 0.004, d: 0.12, s: 0.5, r: 0.05, filter: { type: 'lowpass', f0: 1800, q: 0.8 } }),
+      tone(0, 'tri', 'G2', 0.16, { vol: 0.2, d: 0.14, s: 0.5, r: 0.05 }),
       // dun
-      hit(0.24, 'tom', 1, { tune: 0.7 }),
-      tone(0.24, 'saw', 'G3', 0.16, { vol: 0.2, a: 0.004, d: 0.12, s: 0.5, r: 0.05, filter: { type: 'lowpass', f0: 1800, q: 0.8 } }),
-      tone(0.24, 'tri', 'G2', 0.16, { vol: 0.34, d: 0.14, s: 0.5, r: 0.05 }),
+      hit(0.24, 'tom', 0.6, { tune: 0.75 }),
+      tone(0.24, 'saw', 'G3', 0.16, { vol: 0.34, a: 0.004, d: 0.12, s: 0.5, r: 0.05, filter: { type: 'lowpass', f0: 1800, q: 0.8 } }),
+      tone(0.24, 'tri', 'G2', 0.16, { vol: 0.2, d: 0.14, s: 0.5, r: 0.05 }),
       // DUUUN: lower and long, sagging a little under a slow wobble
-      hit(0.48, 'tom', 1, { tune: 0.6 }),
+      hit(0.48, 'tom', 0.7, { tune: 0.65 }),
       slide(0.48, 'saw', 'Db3', 'C3', 0.6, {
-        vol: 0.22,
+        vol: 0.38,
         a: 0.006,
         d: 0.5,
         s: 0.5,
@@ -66,8 +66,9 @@ export const office: Record<SfxIdOf<'office'>, SfxBody> = {
         vib: { rate: 5.5, depth: 28, delay: 0.15 },
         filter: { type: 'lowpass', f0: 1600, q: 0.8 },
       }),
-      slide(0.48, 'tri', 'Db2', 'C2', 0.6, { vol: 0.36, d: 0.5, s: 0.5, r: 0.15 }),
-      hit(0.48, 'crash', 0.3),
+      slide(0.48, 'tri', 'Db2', 'C2', 0.6, { vol: 0.2, d: 0.5, s: 0.5, r: 0.15 }),
+      // a low rumble under the last stroke instead of a cymbal wash
+      noise(0.48, 'noiseL', 3000, 0.7, { vol: 0.22, a: 0.01, d: 0.6, s: 0.1, r: 0.1, filter: { type: 'lowpass', f0: 900, f1: 200, time: 0.6, q: 0.7 } }),
     ],
     jitter: 8,
     cooldown: 0.6,
@@ -76,10 +77,10 @@ export const office: Record<SfxIdOf<'office'>, SfxBody> = {
   coffee: {
     events: [
       // pouring: a band of noise that rises as the cup fills
-      noise(0, 'noiseL', 12000, 0.4, { vol: 0.055, a: 0.04, d: 0.3, s: 0.3, r: 0.06, filter: { type: 'bandpass', f0: 900, f1: 1600, time: 0.36, q: 1.3 } }),
-      ...BUBBLES.map((b) => slide(b.at, 'sine', b.from, b.to, 0.05, { vol: 0.14, d: 0.045, s: 0, r: 0.01 })),
+      noise(0, 'noiseL', 12000, 0.4, { vol: 0.5, a: 0.04, d: 0.3, s: 0.3, r: 0.06, filter: { type: 'bandpass', f0: 900, f1: 1600, time: 0.36, q: 1.3 } }),
+      ...BUBBLES.map((b) => slide(b.at, 'sine', b.from, b.to, 0.05, { vol: 0.1, d: 0.045, s: 0, r: 0.01 })),
       // the cup clinks the saucer
-      tone(0.42, 'sine', 'E7', 0.12, { vol: 0.07, layers: BELL, d: 0.1, s: 0, r: 0.04 }),
+      tone(0.42, 'sine', 'E7', 0.12, { vol: 0.06, layers: BELL, d: 0.1, s: 0, r: 0.04 }),
     ],
     jitter: 25,
     cooldown: 0.3,
@@ -119,8 +120,8 @@ export const office: Record<SfxIdOf<'office'>, SfxBody> = {
     events: [
       ...keys,
       // enter
-      noise(0.62, 'noiseL', 8000, 0.03, { vol: 0.22, a: 0.0005, d: 0.025, s: 0, r: 0.006, filter: { type: 'bandpass', f0: 1000, q: 0.8 } }),
-      tone(0.62, 'tri', 300, 0.05, { vol: 0.2, a: 0.001, d: 0.045, s: 0, r: 0.01 }),
+      noise(0.62, 'noiseL', 8000, 0.03, { vol: 0.15, a: 0.0005, d: 0.025, s: 0, r: 0.006, filter: { type: 'bandpass', f0: 1000, q: 0.8 } }),
+      tone(0.62, 'tri', 300, 0.05, { vol: 0.32, a: 0.001, d: 0.045, s: 0, r: 0.01 }),
     ],
     jitter: 60,
     cooldown: 0.2,
@@ -137,10 +138,10 @@ export const office: Record<SfxIdOf<'office'>, SfxBody> = {
         { at: 0.26, f: 'G#5' },
         { at: 0.3, f: 'A#5' },
         { at: 0.33, f: 'C6' },
-      ].map((n) => tone(n.at, 'p25', n.f, 0.04, { vol: 0.22, d: 0.035, s: 0.2, r: 0.01 })),
+      ].map((n) => tone(n.at, 'p25', n.f, 0.04, { vol: 0.34, d: 0.035, s: 0.2, r: 0.01 })),
       // ... then the door shuts: a sagging buzz
       slide(0.42, 'saw', 330, 82, 0.4, { vol: 0.2, d: 0.35, s: 0.4, r: 0.05, filter: { type: 'lowpass', f0: 1800, f1: 400, time: 0.4, q: 1 } }),
-      slide(0.42, 'tri', 165, 41, 0.4, { vol: 0.3, d: 0.35, s: 0.4, r: 0.05 }),
+      slide(0.42, 'tri', 165, 70, 0.4, { vol: 0.12, d: 0.35, s: 0.4, r: 0.05 }),
     ],
     jitter: 10,
     cooldown: 0.5,
@@ -228,9 +229,9 @@ export const office: Record<SfxIdOf<'office'>, SfxBody> = {
     events: [
       // "kwa": a saw through a band-pass that opens as the pitch falls
       noise(0, 'noiseS', 4000, 0.025, { vol: 0.1, a: 0.001, d: 0.02, s: 0, r: 0.005, filter: { type: 'bandpass', f0: 1500, q: 1.2 } }),
-      slide(0, 'saw', 620, 340, 0.1, { vol: 0.34, a: 0.004, d: 0.09, s: 0.5, r: 0.03, filter: { type: 'bandpass', f0: 900, f1: 1500, time: 0.09, q: 3 } }),
+      slide(0, 'saw', 620, 340, 0.1, { vol: 0.8, a: 0.004, d: 0.09, s: 0.5, r: 0.03, filter: { type: 'bandpass', f0: 900, f1: 1500, time: 0.09, q: 3 } }),
       // "ack": a shorter, lower second pulse
-      slide(0.11, 'saw', 480, 280, 0.08, { vol: 0.26, a: 0.004, d: 0.07, s: 0.4, r: 0.03, filter: { type: 'bandpass', f0: 800, f1: 1300, time: 0.08, q: 3 } }),
+      slide(0.11, 'saw', 480, 280, 0.08, { vol: 0.6, a: 0.004, d: 0.07, s: 0.4, r: 0.03, filter: { type: 'bandpass', f0: 800, f1: 1300, time: 0.08, q: 3 } }),
     ],
     jitter: 120,
     cooldown: 0.12,
