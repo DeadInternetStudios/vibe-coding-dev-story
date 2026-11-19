@@ -155,6 +155,8 @@ describe('content structure', () => {
       if (ev.title.length > 28) problems.push(`event ${ev.id}: title over 28 characters`);
       if (ev.body.length < 12 || ev.body.length > 260) problems.push(`event ${ev.id}: body length ${ev.body.length}`);
       if (ev.choices.length < 1 || ev.choices.length > 3) problems.push(`event ${ev.id}: needs 1 to 3 choices`);
+      // an event waits for an answer, so one choice must always be open or the game cannot go on
+      if (!ev.choices.some((ch) => !ch.requires)) problems.push(`event ${ev.id}: every choice has a requirement, the player could get stuck`);
       for (const [i, ch] of ev.choices.entries()) {
         if (ch.label.length > 26) problems.push(`event ${ev.id} choice ${i}: label over 26 characters`);
         if (ch.result.length < 8 || ch.result.length > 240) problems.push(`event ${ev.id} choice ${i}: result length ${ch.result.length}`);
