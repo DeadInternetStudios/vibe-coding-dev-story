@@ -250,7 +250,7 @@ export const VIGNETTES: Vignette[] = [
     when: hype(0, 18),
     comments: [
       { user: 'u/FirstOnTheScene', depth: 0, votes: [3, 40], awards: ['wholesome'],
-        line: vo('wholesome', 'Congrats on the launch! I think I am the only person who saw it! I feel like I found a secret!') },
+        line: vo('wholesome', "Congrats on the launch! I think I'm the only one who saw it! I feel like I found a secret!") },
       { user: 'u/InTheWildDevs', flair: 'Narrator', depth: 1, votes: [2, 30],
         line: vo('narrator', 'The post drifts through the new queue, unseen, unloved, and strangely dignified.') },
     ] },
@@ -746,7 +746,7 @@ export const VIGNETTES: Vignette[] = [
     when: niche('plumbers'),
     comments: [
       { user: 'u/TenXBro', depth: 0, votes: [150, 1300],
-        line: vo('bro', "Bro, I'm a plumber. The app says I have a leak. I know I have a leak. It's my whole job.") },
+        line: vo('bro', "Bro, I'm a plumber. The app says I have a leak. I know. That's my whole job.") },
       { user: 'u/InternOnDay1', flair: 'Intern', depth: 1, votes: [60, 700],
         line: vo('jenny', 'Is it a pipe leak or a cloud leak?') },
       { user: 'u/DoomScrollDev', depth: 2, votes: [250, 1800],
@@ -878,7 +878,7 @@ export const VIGNETTES: Vignette[] = [
       { user: 'u/ThrilledAndHumbled', flair: 'Thought Leader', depth: 1, votes: [150, 1300],
         line: vo('linkedin', 'Failure is just success wearing a hoodie. Thoughts?') },
       { user: 'u/WholesomeWendy', depth: 2, votes: [120, 1100], awards: ['wholesome'],
-        line: vo('wholesome', 'I hope you are okay, friend. If you need to talk, I am here. Not about the app. About the savings.') },
+        line: vo('wholesome', "I hope you're okay, friend. If you need to talk, I'm here. Not about the app. About the savings.") },
     ] },
   { id: 'combo-todo-cats', topic: 'combo', tone: 'chaos', judges: 'features', weight: 6,
     when: all(kind('todo'), niche('cats')),
@@ -942,8 +942,10 @@ export const VIGNETTES: Vignette[] = [
     when: always,
     comments: [
       { user: 'u/AutoModerator', flair: 'Mod', depth: 0, votes: [1, 80],
+        line: vo('automod', 'Thank you for your submission. It has been removed because the title did not contain the required flair.') },
+      { user: 'u/AutoModerator', flair: 'Mod', depth: 1, votes: [1, 60],
         line: vo('automod', 'Your submission has been removed. Reason: low effort. Also, vibes.') },
-      { user: 'u/SeniorDave_42', flair: 'Staff Engineer', depth: 1, votes: [250, 1800],
+      { user: 'u/SeniorDave_42', flair: 'Staff Engineer', depth: 2, votes: [250, 1800],
         line: vo('dave', 'Low effort is the highest rating this subreddit gives. Take the win.') },
     ] },
   { id: 'mod-too-helpful', topic: 'mod', tone: 'neutral', judges: 'overall', weight: 1.5,

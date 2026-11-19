@@ -7,7 +7,7 @@ import type { Achievement } from './types';
  *   thread), months_survived.
  *   Event counters, each set by a `counter` effect in events.ts: tests_deleted, accepted_all,
  *   rewrites, hallucinated, keys_leaked, prod_deleted, pivots, all_nighters, duck_talks, cat_pets,
- *   coffee_crises, merge_conflicts, intern_oops, legal_letters, vc_pitches, viral, naps, bounties.
+ *   coffee_crises, merge_conflicts, legal_letters, vc_pitches, viral, naps, bounties.
  * Everything else reads the company: cash, karma, spaghetti, officeTier, archetypes and traits.
  */
 
@@ -27,8 +27,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'first-ship', name: 'Hello, World', desc: 'Ship your first app. It is live. It is yours. It has a bug.', when: atLeast('apps_shipped', 1) },
   { id: 'ship-5', name: 'Five Apps Deep', desc: 'Ship five apps. None are finished. All are live.', when: atLeast('apps_shipped', 5) },
   { id: 'ship-10', name: 'Portfolio Of Regrets', desc: 'Ship ten apps. Three are still online. Nobody knows which.', when: atLeast('apps_shipped', 10) },
-  { id: 'ship-15', name: 'Serial Shipper', desc: 'Ship fifteen apps. You own fifteen domains and use two.', when: atLeast('apps_shipped', 15) },
-
   /* the thread */
   { id: 'rating-20', name: 'Mid', desc: 'Reach a Reddit Score of 20. The internet shrugged in unison.', when: atLeast('best_rating', 20) },
   { id: 'rating-30', name: 'Not Bad For A Prompt', desc: 'Reach a Reddit Score of 30. Someone asked if you wrote it yourself.', when: atLeast('best_rating', 30) },
@@ -58,10 +56,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'cash-1m', name: 'Boat Money', desc: 'Hold a million dollars. Chad is already looking at boats.', when: (k) => k.company.cash >= 1000000 },
 
   /* people and places */
-  { id: 'hire-5', name: 'HR Is Just Me', desc: 'Hire five people. The garage now has a Slack and a vibe.', when: atLeast('hires', 5) },
   { id: 'hire-12', name: 'We Are A Family', desc: 'Hire twelve people. Call it a family. Legal will call it something else.', when: atLeast('hires', 12) },
   { id: 'fire-1', name: 'It Is Not Personal', desc: 'Fire someone. It was a little personal.', when: atLeast('fires', 1) },
-  { id: 'fire-5', name: 'Restructuring', desc: 'Fire five people. Call it a restructuring. Everyone nods. Nobody is fooled.', when: atLeast('fires', 5) },
   { id: 'office-1', name: 'Out Of The Garage', desc: 'Leave the garage. The oil stain stays. It has seniority.', when: (k) => k.company.officeTier >= 1 },
   { id: 'office-3', name: 'The Tower', desc: 'Rent a tower. There is a lobby. There is a plant. The plant has a manager.', when: (k) => k.company.officeTier >= 3 },
 
@@ -85,7 +81,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'cat-pets', name: 'Cat Person', desc: 'Pet the office cat. It is the only code review that counts.', when: atLeast('cat_pets', 1) },
   { id: 'coffee-crisis', name: 'The Decaf Incident', desc: 'Survive a coffee crisis. We do not speak of what happened.', when: atLeast('coffee_crises', 1) },
   { id: 'merge-conflicts', name: 'Accept Both Changes', desc: 'Survive a merge conflict. Keep both sides. Keep the chaos.', when: atLeast('merge_conflicts', 1) },
-  { id: 'intern-oops', name: 'Learning Experience', desc: 'The intern broke something. The intern learned something. The rest is paperwork.', when: atLeast('intern_oops', 1) },
   { id: 'legal-letter', name: 'A Plumber In Ohio', desc: 'Get a strongly worded letter. It is from a plumbing company. It is mad.', when: atLeast('legal_letters', 1) },
   { id: 'vc-pitch', name: 'Quick Sync', desc: 'Take a meeting with a VC. It lasted forty minutes. It was not a sync.', when: atLeast('vc_pitches', 1) },
   { id: 'bounty', name: 'White Hat Energy', desc: 'Pay a bug bounty. The exploit came with a thank you note.', when: atLeast('bounties', 1) },
@@ -101,7 +96,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'full-roster', name: 'The Dream Team', desc: 'Hire the duck, the ghost, the cat, the hacker, the 10x and the AGI. Say goodbye to your budget.', secret: true,
     when: (k) => SPECIALS.every((a) => k.company.hasArchetype(a)),
   },
-  { id: 'trait-burnout', name: 'Burn, Baby, Burn', desc: 'Have a burned out teammate. Coffee is not a fix.', when: (k) => k.company.hasTrait('burnedout') },
   { id: 'trait-vim', name: 'How Do I Exit', desc: 'Hire someone trapped in Vim. They are still in there.', secret: true, when: (k) => k.company.hasTrait('vimtrapped') },
   { id: 'trait-arch', name: 'I Use Arch, BTW', desc: 'Hire someone who uses Arch. You will know. They will tell you.', secret: true, when: (k) => k.company.hasTrait('archbtw') },
 ];
