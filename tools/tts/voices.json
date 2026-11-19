@@ -11,7 +11,7 @@
     "role": "Co-founder and CEO",
     "description": "A deep, confident American baritone in his thirties with strong chest resonance and a low pitch, calm and assured. Podcast bro swagger, motivational speaker cadence with dramatic emphasis and punchy pauses, completely sure of himself, never high-pitched or breathless. Close microphone.",
     "trim": 0.5,
-    "target": {"f0": [114, 171], "wps": [1.67, 3.1]}
+    "target": {"f0": [104, 155], "wps": [1.61, 2.99]}
   },
   "dave": {
     "name": "Senior Dev Dave",
@@ -32,14 +32,14 @@
     "role": "Subreddit moderator bot",
     "description": "A flat, emotionless, monotone robotic voice at a steady mid pitch with no pitch variation, genderless like a vocoder. Perfectly even pace like a metronome, cold, metallic and clipped, like a machine reading the terms of service.",
     "trim": 0.0,
-    "target": {"f0": [79, 119], "wps": [1.72, 3.19], "f0_std_st": [0, 2.8]}
+    "target": {"f0": [75, 112], "wps": [1.56, 2.9], "f0_std_st": [0, 2.8]}
   },
   "announcer": {
     "name": "The Announcer",
     "role": "Awards show announcer",
     "description": "A deep, warm, velvety baritone radio host in his fifties, smooth and grand, announcing everything as if it were the most important event in history, unhurried and resonant, low pitch throughout. Dry studio recording.",
     "trim": 1.5,
-    "target": {"f0": [68, 102], "wps": [1.46, 2.72]}
+    "target": {"f0": [70, 105], "wps": [1.37, 2.54]}
   },
   "narrator": {
     "name": "The Narrator",
@@ -53,7 +53,7 @@
     "role": "Venture capitalist",
     "description": "A smooth, low-pitched American man in his forties, unhurried and calm, condescending and amused, with lazy drawn-out vowels. Never impressed, polished baritone with a faint smirk, speaking slowly as if he has all the money in the world. Close microphone, quiet room.",
     "trim": -1.0,
-    "target": {"f0": [76, 113], "wps": [1.48, 2.74]}
+    "target": {"f0": [74, 112], "wps": [1.52, 2.82]}
   },
   "karen": {
     "name": "Karen",
@@ -67,14 +67,14 @@
     "role": "Crypto and hustle bro",
     "description": "A cocky American man in his twenties with a deep, rough, gravelly gym bro voice and strong vocal fry, a low bass-baritone. Confident, laid-back swagger, talks in short punchy bursts, slight rasp, never squeaky or high. Close microphone.",
     "trim": 1.0,
-    "target": {"f0": [172, 257], "wps": [1.69, 3.15]}
+    "target": {"f0": [169, 254], "wps": [1.72, 3.19]}
   },
   "pedant": {
     "name": "Well Actually Guy",
     "role": "Well-actually guy",
     "description": "A smug, nasal American man in his thirties with a light, high tenor voice. Talks fast with precise articulation, rapid-fire, condescending and delighted to be right, self-satisfied. Close microphone, quiet room.",
     "trim": 0.0,
-    "target": {"f0": [140, 210], "wps": [1.69, 3.14]}
+    "target": {"f0": [193, 289], "wps": [1.74, 3.22]}
   },
   "doomer": {
     "name": "The Doomer",
@@ -95,7 +95,7 @@
     "role": "I-use-Arch guy",
     "description": "A nasal, mumbling American man in his late twenties with a mid-high tenor voice, smug and tired, slow flat delivery with minimal pitch variation, sounds like he is about to mention that he uses Arch, btw. Close microphone.",
     "trim": -1.5,
-    "target": {"f0": [94, 141], "wps": [1.65, 3.07], "f0_std_st": [0, 2.6]}
+    "target": {"f0": [81, 121], "wps": [1.47, 2.72], "f0_std_st": [0, 2.6]}
   },
   "ghost": {
     "name": "Stack Overflow Ghost",
@@ -123,7 +123,7 @@
     "role": "Wholesome redditor",
     "description": "A warm, soft-spoken American man in his thirties with a gentle baritone voice, tender and kind, a little teary with emotion, slow and caring, sounding like a hug. Close microphone, quiet room.",
     "trim": -1.5,
-    "target": {"f0": [94, 141], "wps": [1.67, 3.11]}
+    "target": {"f0": [103, 154], "wps": [1.57, 2.91]}
   },
   "grandma": {
     "name": "Grandma",
