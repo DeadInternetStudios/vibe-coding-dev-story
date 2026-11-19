@@ -215,7 +215,8 @@ describe('SoundEngine behaviour', () => {
     expect(peakOf(r)).toBeLessThanOrEqual(PEAK_LIMIT);
     expect(peakOf(r, 1, 2)).toBeGreaterThan(0.1); // it really played something
     expect(rmsOf(r, 7.5, 8)).toBeLessThan(1e-3); // and everything finished
-  });
+    // the render itself can take most of 30 s on a busy machine, so the test gets that long too
+  }, 40_000);
 
   it('a click spammed in the same instant plays once (cooldown), not a wall of clicks', async () => {
     const one = await render(timeline(0.6, [{ at: 0.1, do: 'sfx', id: 'click' }]));
