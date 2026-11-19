@@ -87,6 +87,26 @@ each of the 20 voices. Until a person has done either and signed here, treat the
 > Voices heard end to end by: nobody yet.
 > Voices spot-checked (one clip each) by: nobody yet.
 
+The game says the same thing to players: Settings, About tells them that a machine checked the clips and that no person has heard them all yet.
+When someone has signed above, change `VOICES_HEARD_BY` in `src/core/version.ts` to their name, and About changes with it
+(`src/core/version.test.ts` fails if the two disagree).
+
+## On a real phone
+
+The layouts have been checked in desktop browsers at the sizes and pixel densities of phones, upright, sideways and while turning.
+No real phone has run the game yet, and a desktop browser is not a phone: touch, the notch, the browser bars and the speaker are all different.
+Five minutes, on the phone itself:
+
+1. Open the game: `npm run dev -- --host` and the "Network" address it prints, or wherever the build is hosted. The title shows whole, with nothing behind the notch or the home bar.
+2. Tap once: the music starts (a phone stays silent until the first touch).
+3. New Game, type a company name, tap on to the office. Every button is easy to hit with a thumb, and the keyboard does not cover the name box.
+4. Turn the phone sideways and back. The screen redraws and nothing is lost.
+5. Open `?demo=thread&sound=1` on the same address (test links are silent unless you add `&sound=1`). The comments are readable and every one is spoken in its own voice.
+6. Open `?demo=ending&sound=1`, tap SHARE, then SAVE PICTURE. The picture lands in your photos or downloads and its footer is whole.
+
+> Played on a real phone by: nobody yet.
+> Phone and browser:
+
 ## Balance
 
 The bots in `src/sim/bot.ts` are the acceptance test for the money. `npx tsx tools/balance.ts 48 normal smart,casual,yolo` plays whole

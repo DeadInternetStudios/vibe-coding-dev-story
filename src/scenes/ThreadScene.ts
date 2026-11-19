@@ -4,13 +4,14 @@ import { audio } from '../core/audio';
 import { feature } from '../core/features';
 import { bakeIcon, bakePortrait } from '../core/bake';
 import { C, DEPTH, F } from '../core/theme';
-import type { AwardId, StatKey, ThreadComment } from '../content/types';
+import type { AwardId, ThreadComment } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { shortMoney, shortNumber } from '../sim/format';
 import type { ShippedApp } from '../sim/types';
 import { confettiBurst, gild } from '../ui/fx';
 import { BUZZ, buzz } from '../core/haptics';
 import { button, hintChip, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
+import { judgeNames, type Judged } from '../ui/judgeNames';
 import { fit } from '../ui/text';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
@@ -42,25 +43,6 @@ const AWARD_NAME: Record<AwardId, string> = {
   copium: 'COPIUM',
 };
 
-const JUDGE_NAME: Record<StatKey | 'overall' | 'hype', string> = {
-  vibes: 'VIBES',
-  features: 'FEATURES',
-  polish: 'POLISH',
-  stability: 'STABILITY',
-  security: 'SECURITY',
-  overall: 'OVERALL',
-  hype: 'HYPE',
-};
-
-/** The 2nd, 3rd and 4th "overall" rating get their own names, so the tiles never read as one copied tile. */
-const OVERALL_AGAIN = ['GUT', 'SELL', 'WOW'];
-
-function judgeName(judges: StatKey | 'overall' | 'hype', nth: number): string {
-  if (nth === 0) return JUDGE_NAME[judges];
-  if (judges === 'overall') return OVERALL_AGAIN[nth - 1] ?? 'OVERALL';
-  return `${JUDGE_NAME[judges]} ${nth + 1}`;
-}
-
 /** What the address bar says for each place the app can be posted. Every thread is drawn as Reddit, the URL keeps the joke honest. */
 const ADDRESS: Record<string, string> = {
   quiet: 'my-garage-blog.dev/launch',
@@ -81,7 +63,8 @@ interface Item {
   awards: AwardId[];
   /** set on the root comment of a vignette */
   rating?: number;
-  judges?: StatKey | 'overall' | 'hype';
+  /** what the rating is about, in words: see judgeNames */
+  ratingName?: string;
   /** filled in when the comment is drawn, so its votes can decorate it when they land */
   view?: { block: Phaser.GameObjects.Container; user: Phaser.GameObjects.BitmapText; box: { x: number; y: number; w: number; h: number } };
 }
@@ -320,6 +303,7 @@ export class ThreadScene extends Phaser.Scene {
   private items(): Item[][] {
     const c = app.content;
     const out: Item[][] = [];
+    const names = judgeNames(this.rec.thread.vignettes.map((r) => r.judges as Judged));
     this.rec.thread.vignettes.forEach((rec, vi) => {
       const v = c.vignette(rec.id);
       if (!v) return;
@@ -329,7 +313,7 @@ export class ThreadScene extends Phaser.Scene {
         c: cm,
         votes: rec.votes[ci] ?? 0,
         awards: this.rec.thread.awards.filter((a) => a.vignette === rec.id && a.index === ci).map((a) => a.award),
-        ...(ci === 0 ? { rating: rec.rating, judges: rec.judges as Item['judges'] } : {}),
+        ...(ci === 0 ? { rating: rec.rating, ratingName: names[vi] } : {}),
       }));
       out.push(group);
     });
@@ -815,7 +799,7 @@ export class ThreadScene extends Phaser.Scene {
   private landRating(item: Item, x: number, y: number, block: Phaser.GameObjects.Container, instant: boolean): void {
     const rating = item.rating ?? 0;
     const col = rating >= 7 ? C.green2 : rating >= 4 ? C.yellow : C.pink;
-    const text = `${JUDGE_NAME[item.judges ?? 'overall']} ${rating}/10`;
+    const text = `${item.ratingName ?? 'OVERALL'} ${rating}/10`;
     const chip = this.add.container(0, 0);
     const t = label(this, 0, 0, text, { font: F.caps, tint: C.ink0 });
     const w = Math.ceil(t.width) + 8;
@@ -920,11 +904,9 @@ export class ThreadScene extends Phaser.Scene {
     card.add(verdictT);
     // the four ratings the thread handed out, in words
     const rec2 = this.rec.thread.vignettes;
-    const seen = new Map<string, number>();
     const cellW = wide ? 66 : Math.min(100, Math.floor((w - 16 - 4) / 2));
+    const ratingNames = judgeNames(rec2.map((v) => v.judges as Judged), Math.floor((cellW - 26) / 5));
     rec2.forEach((v, i) => {
-      const nth = seen.get(v.judges) ?? 0;
-      seen.set(v.judges, nth + 1);
       // an odd one out takes the whole row, so three ratings do not leave a hole
       const tileW = i === rec2.length - 1 && i % 2 === 0 ? cellW * 2 + 4 : cellW;
       const bx = lx + (i % 2) * (cellW + 4);
@@ -932,7 +914,7 @@ export class ThreadScene extends Phaser.Scene {
       const rc = v.rating >= 7 ? C.green2 : v.rating >= 4 ? C.yellow : C.pink;
       card.add(rect(this, bx, by, tileW, 15, C.ink0, 1));
       card.add(rect(this, bx + 1, by + 1, tileW - 2, 13, C.ink1, 1));
-      card.add(label(this, bx + 4, by + 4, fit(judgeName(v.judges as StatKey | 'overall' | 'hype', nth), Math.floor((tileW - 26) / 5)), { font: F.body, tint: C.cream }));
+      card.add(label(this, bx + 4, by + 4, fit(ratingNames[i]!, Math.floor((tileW - 26) / 5)), { font: F.body, tint: C.cream }));
       card.add(rect(this, bx + tileW - 17, by + 1, 16, 13, rc, 1));
       card.add(label(this, bx + tileW - 9, by + 4, `${v.rating}`, { font: F.capsBold, tint: C.ink0, origin: [0.5, 0] }));
     });
