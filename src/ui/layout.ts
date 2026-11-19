@@ -21,6 +21,11 @@ export function layoutOf(scene: Phaser.Scene): Layout {
   return { W, H, portrait: H > W * 1.02, cw, x0: Math.floor((W - cw) / 2), cx: Math.floor(W / 2) };
 }
 
+/** Height for a popup that wants `want`: on a short screen it keeps a margin so the page behind still frames it. */
+export function popupH(L: Layout, want: number): number {
+  return Math.min(L.H - (L.H < 270 ? 14 : 4), want);
+}
+
 /** Run `build` now and again whenever the canvas size changes. `build` must make everything fresh. */
 export function responsive(scene: Phaser.Scene, build: () => void, teardown?: () => void): void {
   let lastW = scene.scale.width;

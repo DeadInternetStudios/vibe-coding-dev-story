@@ -15,7 +15,7 @@ import { projectView } from '../sim/views';
 import { Rng } from '../sim/rng';
 import type { EventOutcome, Prompt } from '../sim/types';
 import { bar, button, chip, choiceButton, iconImg, label, rect, type ButtonObj } from './kit';
-import { layoutOf } from './layout';
+import { layoutOf, popupH } from './layout';
 import { hash7 } from './dash';
 import { Modal, NUMBER_KEYS } from './modal';
 import { Speech } from './speech';
@@ -295,7 +295,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   }
   const wide = !L.portrait && L.W >= 360;
   const w = Math.min(L.W - 4, wide ? 392 : 246);
-  const h = Math.min(L.H - 4, wide ? 232 : 408);
+  const h = popupH(L, wide ? 232 : 408);
   const m = new Modal(scene, { w, h, title: 'READY TO LAUNCH', style: 'paper' });
   ctx.sfx('fanfare_small');
   const view = projectView(c, p);
@@ -461,7 +461,7 @@ function paydayPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'payday' }>, done: Don
   const w = Math.min(L.W - 6, 300);
   const rowH = 10;
   const warnH = r.warnings.length * 10;
-  const h = Math.min(L.H - 4, 56 + (lines.length + 3) * rowH + warnH + 26);
+  const h = popupH(L, 56 + (lines.length + 3) * rowH + warnH + 26);
   const m = new Modal(scene, { w, h, title: 'PAYDAY', style: 'paper' });
   ctx.sfx('payday');
   m.add(label(scene, w / 2, 20, r.headline, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 16, align: 'center' }));
@@ -566,7 +566,7 @@ function awardsPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'awards' }>, done: Don
     const won = game.awardsFor(p.year);
     const w = Math.min(L.W - 8, 300);
     const rows = won.filter((x) => x.app);
-    const h = Math.min(L.H - 4, 54 + Math.max(1, rows.length) * 26 + 24);
+    const h = popupH(L, 54 + Math.max(1, rows.length) * 26 + 24);
     const m = new Modal(scene, { w, h, title: `THE VIBEY AWARDS, YEAR ${p.year}`, style: 'plum' });
     ctx.sfx('award_win');
     if (rows.length === 0) {

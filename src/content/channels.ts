@@ -123,7 +123,7 @@ export const CHANNELS: Channel[] = [
   {
     id: 'influencer',
     name: 'Influencer Shoutout',
-    where: 'Sponsored Post',
+    where: 'Influencer Post',
     blurb: 'Pay a person with a ring light to say your name out loud.',
     cost: 3500,
     hype: 28,
@@ -142,7 +142,7 @@ export const CHANNELS: Channel[] = [
   {
     id: 'ad',
     name: 'Big Ad Campaign',
-    where: 'Sponsored',
+    where: 'Billboards',
     blurb: 'Billboards, banners and a jingle. Burns cash like a GPU farm.',
     cost: 15000,
     hype: 36,

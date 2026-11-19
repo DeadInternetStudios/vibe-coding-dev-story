@@ -6,7 +6,7 @@ import { money, shortMoney } from '../../sim/format';
 import { unlocked } from '../../sim/game';
 import { workers } from '../../sim/ctx';
 import { bar, button, fit, iconImg, label, panel } from '../kit';
-import { layoutOf } from '../layout';
+import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
 import { tabs } from './common';
@@ -27,7 +27,7 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
   const c = ctx.content;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const h = Math.min(L.H - 4, wide ? 246 : 404);
+  const h = popupH(L, wide ? 246 : 404);
   const m = new Modal(scene, { w, h, title: 'AI TOOLS', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'tool');
   const cash = label(scene, w - 8, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
