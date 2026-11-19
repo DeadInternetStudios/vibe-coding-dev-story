@@ -14,10 +14,15 @@ interface Toast {
   born: number;
 }
 
-/** A short stack of messages under the top bar. New ones slide in, old ones fade. */
+/**
+ * A short stack of messages under the top bar. New ones slide in, old ones fade.
+ * They never print over a story box: the box has words the player has to read, so a message that
+ * arrives while one is up waits for it, and the ones already showing step aside and come back after.
+ */
 export class Toasts {
   private scene: Phaser.Scene;
   private items: Toast[] = [];
+  private waiting: { text: string; tone: Tone; icon?: string }[] = [];
   private L: Layout;
   private topY: number;
   private clock = 0;
@@ -35,7 +40,20 @@ export class Toasts {
     this.items = [];
   }
 
+  private talking(): boolean {
+    return !!this.scene.children.getByName('dialogue');
+  }
+
   push(text: string, tone: Tone = 'info', icon?: string): void {
+    if (this.talking()) {
+      this.waiting.push({ text, tone, icon });
+      if (this.waiting.length > 3) this.waiting.shift();
+      return;
+    }
+    this.show(text, tone, icon);
+  }
+
+  private show(text: string, tone: Tone, icon?: string): void {
     const s = this.scene;
     const maxW = Math.min(this.L.cw - 16, 250);
     const t = label(s, 14, 3, text, { font: F.body, tint: tone === 'info' ? C.cream : TONE_COLOR[tone], maxWidth: maxW - 20 });
@@ -65,6 +83,11 @@ export class Toasts {
   }
 
   update(dtMs: number): void {
+    const talking = this.talking();
+    for (const t of this.items) t.c.setVisible(!talking);
+    // the clock stands still while a box is up, so nothing runs out before the player could see it
+    if (talking) return;
+    for (const w of this.waiting.splice(0)) this.show(w.text, w.tone, w.icon);
     this.clock += dtMs / 1000;
     let changed = false;
     this.items = this.items.filter((t) => {

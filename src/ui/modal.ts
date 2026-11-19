@@ -31,6 +31,18 @@ export interface ModalOpts {
 const up: Modal[] = [];
 
 /**
+ * A story box talks over a bare room, not over a card: every popup that is showing steps behind it, hidden,
+ * and comes back when the box is gone. Returns the call that brings them back.
+ */
+export function tuckPopups(scene: Phaser.Scene): () => void {
+  const tucked = up.filter((m) => m.scene === scene && m.root.visible);
+  for (const m of tucked) m.root.setVisible(false);
+  return () => {
+    for (const m of tucked) if (m.open && m.root.scene) m.root.setVisible(true);
+  };
+}
+
+/**
  * A panel in the middle of the screen with a dim behind it. Children are placed
  * in the panel's own coordinates, 0,0 is its top left corner.
  */

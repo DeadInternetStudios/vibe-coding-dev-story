@@ -7,6 +7,7 @@ import type { DialogueStep } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { label, panel, rect } from './kit';
 import { layoutOf } from './layout';
+import { tuckPopups } from './modal';
 import { Speech } from './speech';
 import type { StageCtx } from './ctx';
 
@@ -18,6 +19,8 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   const scene = ctx.scene;
   const L = layoutOf(scene);
   const release = ctx.hold('dialogue');
+  // a card that is open (the new project card, the hire list) waits behind the box instead of being talked over
+  const bringBack = tuckPopups(scene);
   const root = scene.add.container(0, 0).setDepth(DEPTH.modal + 20).setName('dialogue');
   const dim = rect(scene, 0, 0, L.W, L.H, C.ink0, 0.35).setInteractive();
   root.add(dim);
@@ -64,6 +67,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     audio.stopVoice();
     release();
     root.destroy();
+    bringBack();
     onDone();
   };
   const next = () => {
@@ -123,6 +127,7 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     mouthTimer?.remove();
     audio.stopVoice();
     release();
+    bringBack();
   });
   next();
 }
