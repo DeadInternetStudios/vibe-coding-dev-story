@@ -279,7 +279,8 @@ export class Room {
   }
 
   private randomQuip(): void {
-    const list = [...this.sprites.values()].filter((sp) => sp.mode === 'desk' || sp.mode === 'roam');
+    // a joke nobody can see is wasted, and the room can be wider than the screen
+    const list = [...this.sprites.values()].filter((sp) => (sp.mode === 'desk' || sp.mode === 'roam') && sp.seen);
     if (list.length === 0) return;
     if (list.filter((s) => s.talking).length >= 2) return;
     const sp = this.rng.pick(list);

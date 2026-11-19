@@ -4,6 +4,7 @@ import { C, F } from '../core/theme';
 import type { Face, Pose } from '../art/sprites/people';
 import type { Staff } from '../sim/types';
 import { floatUp } from '../ui/fx';
+import { onScreen, placeBubble } from './bubbleMath';
 import { label, panel } from '../ui/kit';
 
 export type Mode = 'desk' | 'roam' | 'away' | 'arrive' | 'leave';
@@ -211,12 +212,20 @@ export class StaffSprite {
     return this.bubble !== null;
   }
 
+  /** True when this person is on the screen with room to spare: the office can be wider than the screen and dragged. */
+  get seen(): boolean {
+    return onScreen(this.root.x, this.parent.x, this.scene.scale.width);
+  }
+
   private followBubble(): void {
     if (!this.bubble) return;
     const p = this.bubble.list[0] as unknown as { boxW: number; boxH: number };
+    const tail = this.bubble.list[2] as Phaser.GameObjects.Image;
     const top = this.mode === 'desk' ? this.root.y - 22 : this.root.y - 25;
-    const x = Phaser.Math.Clamp(Math.round(this.root.x - p.boxW / 2), 2, 9999);
-    this.bubble.setPosition(x, Math.round(top - p.boxH - 4));
+    // the words stay whole on the screen wherever the room has been dragged, and the tail still points at the speaker
+    const at = placeBubble(this.root.x, p.boxW, this.parent.x, this.scene.scale.width);
+    this.bubble.setPosition(at.x, Math.round(top - p.boxH - 4));
+    tail.x = at.tail;
   }
 
   destroy(): void {

@@ -8,6 +8,9 @@ import type { Layout } from './layout';
 const TONE_ICON: Record<Tone, string> = { good: 'check', bad: 'warn', info: 'note', wow: 'star' };
 const TONE_COLOR: Record<Tone, number> = { good: C.mint, bad: C.pink, info: C.cream, wow: C.yellow };
 
+/** How many show at once. The ones under the top bar sit over the log and the chart, so a short stack keeps them readable. */
+const MAX_SHOWN = 2;
+
 interface Toast {
   c: Phaser.GameObjects.Container;
   h: number;
@@ -65,7 +68,7 @@ export class Toasts {
     c.setDepth(DEPTH.toast);
     const item: Toast = { c, h, born: this.clock };
     this.items.unshift(item);
-    if (this.items.length > 3) this.items.pop()?.c.destroy();
+    if (this.items.length > MAX_SHOWN) this.items.pop()?.c.destroy();
     if (!app.settings.reducedMotion) {
       c.setAlpha(0);
       s.tweens.add({ targets: c, alpha: 1, duration: 140 });
