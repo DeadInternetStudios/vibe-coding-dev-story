@@ -148,15 +148,24 @@ export function playVoice(rt: SynthRuntime, v: VoiceSpec, dest: AudioNode, essen
       else if (w.type) osc.type = w.type;
       lvl *= w.gain;
       const base = f0 * ratio;
-      osc.frequency.setValueAtTime(base, v.t);
-      if (slide) {
-        osc.frequency.exponentialRampToValueAtTime(base * slideRatio, v.t + v.slideTime!);
-      } else if (v.arp && v.arp.semis.length > 1 && v.arp.rate > 0) {
-        const step = 1 / v.arp.rate;
-        const n = v.arp.semis.length;
-        for (let k = 1, tk = v.t + step; tk < v.t + v.dur; k++, tk += step) {
-          osc.frequency.setValueAtTime(base * semitoneRatio(v.arp.semis[k % n]!), tk);
+      const arp = !slide && v.arp && v.arp.semis.length > 1 && v.arp.rate > 0 ? v.arp : undefined;
+      if (slide || arp) {
+        osc.frequency.setValueAtTime(base, v.t);
+        if (slide) {
+          osc.frequency.exponentialRampToValueAtTime(base * slideRatio, v.t + v.slideTime!);
+        } else if (arp) {
+          const step = 1 / arp.rate;
+          const n = arp.semis.length;
+          for (let k = 1, tk = v.t + step; tk < v.t + v.dur; k++, tk += step) {
+            osc.frequency.setValueAtTime(base * semitoneRatio(arp.semis[k % n]!), tk);
+          }
         }
+      } else {
+        // A plain value, not an automation event. When a browser sees the frequency automated it
+        // starts the oscillator's phase from where the note falls inside the 128 frame render
+        // quantum: up to half a cycle at 1 kHz, measured in Chromium (tools/audio/startprobe.ts),
+        // so every note began at a different phase and the same song never rendered the same twice.
+        osc.frequency.value = base;
       }
       if (layer.detune) osc.detune.value = layer.detune;
       if (lfoGain) lfoGain.connect(osc.detune);

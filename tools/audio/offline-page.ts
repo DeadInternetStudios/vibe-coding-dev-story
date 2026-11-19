@@ -8,6 +8,7 @@
  */
 import { renderJob, type OfflineCtor, type RenderJob, type RenderResult } from './job';
 import { probeWaves } from './probe-core';
+import { probeStarts, type StartMode } from './start-core';
 
 /** A render with its sample buffers as base64, which is what crosses from the page to node. */
 export interface WireResult {
@@ -46,10 +47,12 @@ declare global {
   interface Window {
     __renderJob: typeof renderForNode;
     __probeWaves: () => ReturnType<typeof probeWaves>;
+    __probeStarts: (wave: string, mode: StartMode) => ReturnType<typeof probeStarts>;
     __ready: boolean;
   }
 }
 
 window.__renderJob = renderForNode;
 window.__probeWaves = () => probeWaves(OfflineAudioContext as unknown as OfflineCtor);
+window.__probeStarts = (wave, mode) => probeStarts(OfflineAudioContext as unknown as OfflineCtor, wave, 24, mode);
 window.__ready = true;
