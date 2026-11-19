@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { hasIcon } from '../art/sprites/icons';
 import { app } from '../core/app';
+import type { SfxId } from '../audio';
 import { audio } from '../core/audio';
 import { bakeBox as bakeBoxKey, bakePortrait } from '../core/bake';
 import { C, F } from '../core/theme';
@@ -69,6 +70,30 @@ function textHeight(ctx: UiCtx, text: string, font: string, maxWidth: number): n
 
 /* -------------------------------------------------------------------- event */
 
+/** The first sound of an event popup. Most are the plain alert; a few have a noise of their own. */
+const EVENT_SOUND: Partial<Record<string, SfxId>> = {
+  'mystery-pizza': 'pizza',
+  'last-good-snack': 'pizza',
+  'coffee-died': 'coffee',
+  'mom-focus-group': 'phone',
+  'the-bank-called': 'phone',
+  'recruiter-spam': 'phone',
+  'duck-listens': 'quack',
+  'duck-applies': 'quack',
+  'cat-typed': 'meow',
+  'cat-moves-in': 'meow',
+  'prod-gone': 'explosion',
+  'intern-force-push': 'explosion',
+  'citywide-blackout': 'explosion',
+  'qa-gremlin-wakes': 'bug',
+  'bug-bounty-hunter': 'bug',
+  'fake-package': 'bug',
+  'hooded-pull-request': 'bug',
+  'hooded-visitor': 'bug',
+  'all-nighter': 'keyboard_burst',
+  'one-more-feature': 'keyboard_burst',
+};
+
 function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done): void {
   const scene = ctx.scene;
   const L = layoutOf(scene);
@@ -79,7 +104,7 @@ function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done)
   const choiceHs = p.choices.map((c) => (c.hint ? 14 + (textHeight(ctx, c.hint, F.body, w - 24) || 8) + 4 : 17));
   const h = Math.min(L.H - 6, 30 + Math.max(40, bodyH + 14) + choiceHs.reduce((n, ch) => n + ch + 4, 0) + 10);
   const m = new Modal(scene, { w, h, title: p.title.toUpperCase(), style: 'paper' });
-  ctx.sfx('alert');
+  ctx.sfx(EVENT_SOUND[p.eventId] ?? 'alert');
   // portrait
   const frame = rect(scene, 6, 24, 38, 40, C.ink0, 1);
   const bg = rect(scene, 7, 25, 36, 38, p.speaker === 'system' ? C.violet2 : C.sky, 1);

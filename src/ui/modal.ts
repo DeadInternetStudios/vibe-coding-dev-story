@@ -143,6 +143,7 @@ export class Modal {
       this.root.destroy();
       this.opts.onClose?.();
     };
+    if (!instant) uiEvents.emit('close');
     if (instant || app.settings.reducedMotion) {
       done();
       return;

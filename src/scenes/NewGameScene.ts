@@ -224,7 +224,10 @@ export class NewGameScene extends Phaser.Scene {
         label(this, x0, startY - 12, best ? `Normal difficulty. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'Normal difficulty. Same chaos for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: wide ? leftW : cw });
       }
     }
-    const back = button(this, 4, 4, 30, 14, 'BACK', () => fadeTo(this, 'Title'), { kind: 'plum' });
+    const back = button(this, 4, 4, 30, 14, 'BACK', () => {
+      audio.sfx('back');
+      fadeTo(this, 'Title');
+    }, { kind: 'plum', silent: true });
     void back;
     void cards;
   }

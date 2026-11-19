@@ -169,9 +169,11 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
     down = false;
     paint();
   };
-  zone.on('pointerover', () => {
+  zone.on('pointerover', (p?: Phaser.Input.Pointer) => {
     over = true;
     paint();
+    // a mouse gets a soft tick; a finger lands and presses in one go, so it gets only the click
+    if (c.enabled && !p?.wasTouch) uiEvents.emit('hover');
   });
   zone.on('pointerout', () => {
     over = false;

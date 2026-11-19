@@ -8,7 +8,7 @@ import type { AwardId, StatKey, ThreadComment } from '../content/types';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { shortMoney, shortNumber } from '../sim/format';
 import type { ShippedApp } from '../sim/types';
-import { confettiBurst } from '../ui/fx';
+import { confettiBurst, gild } from '../ui/fx';
 import { BUZZ, buzz } from '../core/haptics';
 import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fadeTo, layoutOf } from '../ui/layout';
@@ -78,6 +78,9 @@ const ADDRESS: Record<string, string> = {
   ad: 'billboards.example/campaign',
 };
 
+/** A Reddit score under this and the mods take the post down. The score card calls it REMOVED BY MODS. */
+const REMOVED_BELOW = 10;
+
 const AVATAR_BG = [C.sky, C.mint, C.yellow, C.pink, C.violet2, C.orange3, C.blue2, C.green2];
 
 interface Item {
@@ -89,6 +92,8 @@ interface Item {
   /** set on the root comment of a vignette */
   rating?: number;
   judges?: StatKey | 'overall' | 'hype';
+  /** filled in when the comment is drawn, so its votes can decorate it when they land */
+  view?: { block: Phaser.GameObjects.Container; user: Phaser.GameObjects.BitmapText; box: { x: number; y: number; w: number; h: number } };
 }
 
 interface Card {
@@ -132,6 +137,7 @@ export class ThreadScene extends Phaser.Scene {
   private skipBtn!: Phaser.GameObjects.Container;
   private resultsOpen = false;
   private ratingsSum = 0;
+  private opBox: { x: number; y: number; w: number; h: number } | null = null;
   /** portrait only: the speaker, big, under the feed */
   private stageH = 0;
   private stage: Phaser.GameObjects.Container | null = null;
@@ -355,8 +361,34 @@ export class ThreadScene extends Phaser.Scene {
     }
     if (!this.alive) return;
     this.dropGhosts();
+    if (this.rec.score < REMOVED_BELOW) await this.stampRemoved();
     await this.wait(500);
     this.showResults();
+  }
+
+  /** A flop gets taken down: the mods stamp the post before the score card opens. */
+  private async stampRemoved(): Promise<void> {
+    const box = this.opBox;
+    if (!box) return;
+    this.scrollTarget = 0;
+    if (this.instant) this.scroll = 0;
+    const quick = this.instant || this.fast;
+    const st = this.add.container(Math.round(box.x + box.w / 2), Math.round(box.y + box.h / 2));
+    const word = label(this, 0, -3, 'REMOVED', { font: F.title, tint: C.pink, origin: [0.5, 0.5] });
+    word.setScale(1.5);
+    const sub = label(this, 0, 14, 'by the moderators. rule 3.', { font: F.body, tint: C.cream, origin: [0.5, 0.5] });
+    const w = Math.ceil(word.width * 1.5) + 16;
+    const h = 40;
+    st.add([rect(this, -w / 2 - 2, -h / 2 - 2, w + 4, h + 4, C.pink, 1), rect(this, -w / 2, -h / 2, w, h, C.ink0, 0.92), word, sub]);
+    this.feed.add(st);
+    if (quick) return;
+    audio.sfx('removed');
+    st.setAlpha(0).setScale(2.6);
+    this.tweens.add({ targets: st, alpha: 1, scale: 1, duration: 150, ease: 'Cubic.easeIn' });
+    await this.wait(150);
+    this.cameras.main.shake(180, 0.006);
+    buzz(BUZZ.bad);
+    await this.wait(900);
   }
 
   /* --------------------------------------------------------------- OP */
@@ -382,6 +414,7 @@ export class ThreadScene extends Phaser.Scene {
     const footY = y + 24 + titleH + bodyH;
     const h = footY + 14 - y;
     const card = panel(this, x, y, w, h, 'plum', false);
+    this.opBox = { x, y, w, h };
     // vote column
     const up = iconImg(this, 'arrowUp', x + 6, y + 8);
     const votes = label(this, x + 10, y + 19, '0', { font: F.body, tint: C.orange2, origin: [0.5, 0] });
@@ -625,6 +658,7 @@ export class ThreadScene extends Phaser.Scene {
     const isMod = /mod/i.test(c.flair ?? '') || voice === 'automod';
     const user = label(this, tx, by, c.user, { font: F.body, tint: isMod ? C.green2 : C.blue2 });
     block.add(user);
+    item.view = { block, user, box: { x: ax - 2, y: by - 2, w: cardX + cardW - pad - ax + 2, h: blockH + 3 } };
     let hx = tx + user.width + 4;
     if (c.flair) {
       const f = label(this, hx + 3, by + 1, c.flair, { font: F.body, tint: C.white });
@@ -728,6 +762,11 @@ export class ThreadScene extends Phaser.Scene {
     if (item.awards.length && item.awards.length <= 2) {
       awardsBox.add(label(this, item.awards.length * 10 + 2, 1, item.awards.map((a) => AWARD_NAME[a]).join(' + '), { font: F.body, tint: C.yellow }));
     }
+    // gold turns the name gold, and when it lands live, light runs over the comment
+    if (item.awards.includes('gold') && item.view) {
+      item.view.user.setTint(C.yellow);
+      if (!instant) gild(this, item.view.block, item.view.box, { x: awardsBox.x + 5, y: awardsBox.y + 4 });
+    }
     if (!instant && neg) audio.sfx('downvote');
     else if (!instant && item.votes > 400) audio.sfx('upvote');
   }
@@ -799,7 +838,7 @@ export class ThreadScene extends Phaser.Scene {
     // the big number
     const score = rec.score;
     const col = score >= 28 ? C.green1 : score >= 18 ? C.orange1 : C.berry1;
-    const verdict = score >= 34 ? 'FRONT PAGE' : score >= 28 ? 'HOT' : score >= 22 ? 'DECENT' : score >= 16 ? 'MID' : score >= 10 ? 'RATIOED' : 'REMOVED BY MODS';
+    const verdict = score >= 34 ? 'FRONT PAGE' : score >= 28 ? 'HOT' : score >= 22 ? 'DECENT' : score >= 16 ? 'MID' : score >= REMOVED_BELOW ? 'RATIOED' : 'REMOVED BY MODS';
     const lx = 8;
     card.add(label(this, lx, 20, 'REDDIT SCORE', { font: F.caps, tint: C.ink3 }));
     const big = label(this, lx, 29, '0', { font: F.title, tint: col });

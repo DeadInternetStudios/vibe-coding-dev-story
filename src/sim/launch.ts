@@ -221,7 +221,8 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   }
   toast(ctx, `${p.name} is live: ${score}/40 on Reddit.`, score >= 24 ? 'wow' : score >= 16 ? 'good' : 'bad');
   ctx.out.push({ t: 'launched', appId: app.id });
-  sound(ctx, score >= 24 ? 'fanfare_big' : 'fanfare_small');
+  // the thread scene plays the fanfare that matches the score once it has told everyone; launch day itself only gets the stinger
+  sound(ctx, 'ship_it');
   return { app, incident };
 }
 

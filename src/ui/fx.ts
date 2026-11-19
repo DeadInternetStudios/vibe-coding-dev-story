@@ -1,4 +1,4 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import { app } from '../core/app';
 import { bake } from '../core/bake';
 import { C, DEPTH } from '../core/theme';
@@ -106,5 +106,19 @@ export function confettiBurst(scene: Phaser.Scene, x: number, y: number, opts: {
       for (const p of parts) p.piece.setPosition(Math.round(x + p.vx * t), Math.round(y + p.vy * t + 0.5 * GRAVITY * t * t)).setAlpha(fade);
     },
     onComplete: () => parts.forEach((p) => p.piece.destroy()),
+  });
+}
+
+/** Gold light on a comment that got gilded: a bright bar sweeps across it once and a few sparkles blink over the award. */
+export function gild(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, box: { x: number; y: number; w: number; h: number }, at: { x: number; y: number }): void {
+  if (app.settings.reducedMotion) return;
+  const bar = rect(scene, box.x, box.y, 10, box.h, C.yellow, 0.45).setBlendMode(Phaser.BlendModes.ADD);
+  parent.add(bar);
+  scene.tweens.add({ targets: bar, x: box.x + box.w - 10, alpha: 0, duration: 520, ease: 'Cubic.easeOut', onComplete: () => bar.destroy() });
+  const spots: [number, number][] = [[-6, -5], [9, -7], [15, 3], [-2, 6], [22, -4]];
+  spots.forEach(([dx, dy], i) => {
+    const sp = scene.add.image(Math.round(at.x + dx), Math.round(at.y + dy), fxKey(scene, i % 2 ? 'sparkleSmall' : 'sparkle')).setOrigin(0.5).setAlpha(0);
+    parent.add(sp);
+    scene.tweens.add({ targets: sp, alpha: 1, duration: 140, delay: 80 + i * 90, yoyo: true, hold: 60, onComplete: () => sp.destroy() });
   });
 }
