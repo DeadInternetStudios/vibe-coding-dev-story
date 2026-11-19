@@ -4,6 +4,7 @@ import { audio } from '../core/audio';
 import { C, DEPTH, F } from '../core/theme';
 import { clearSave, pushHall, type HallEntry } from '../core/save';
 import { copyText, shareText } from '../core/share';
+import { recordTrophies } from '../core/trophies';
 import { dateLabel, shortMoney, shortNumber } from '../sim/format';
 import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
@@ -76,6 +77,7 @@ export class EndingScene extends Phaser.Scene {
   /** Save the run once and clear the save, a finished game cannot be continued. */
   private record(): void {
     const s = current().s;
+    recordTrophies(s.achievements);
     const end = s.ending;
     if (!end) return;
     const founder = s.staff.find((m) => m.isFounder)?.name ?? 'Founder';
@@ -267,7 +269,7 @@ export class EndingScene extends Phaser.Scene {
       fadeTo(this, 'NewGame');
     }, { kind: 'orange', icon: roomy ? 'plus' : undefined });
     const hall = button(this, at(1), by, bw, 18, 'HALL', () => {
-      openHall(this);
+      openHall(this, { run: s.achievements });
     }, { kind: 'violet', icon: roomy ? 'trophy' : undefined });
     const share: ButtonObj = button(this, at(2), by, bw, 18, 'SHARE', () => {
       const text = shareText(s, ending?.title, `${location.origin}${location.pathname}`);

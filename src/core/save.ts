@@ -106,8 +106,11 @@ export function loadHall(): HallEntry[] {
   return readJson<HallEntry[]>(HALL_KEY) ?? [];
 }
 
+/** How many runs the hall keeps. */
+export const HALL_SIZE = 20;
+
 export function pushHall(e: HallEntry): HallEntry[] {
-  const list = [e, ...loadHall()].sort((a, b) => b.score - a.score).slice(0, 20);
+  const list = [e, ...loadHall()].sort((a, b) => b.score - a.score).slice(0, HALL_SIZE);
   writeJson(HALL_KEY, list);
   return list;
 }

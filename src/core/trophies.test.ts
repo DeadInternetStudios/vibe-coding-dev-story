@@ -57,6 +57,17 @@ describe('the hint a locked trophy shows', () => {
     expect(trophyHint(a)).toBe(hint);
   });
 
+  it('gives neighbouring secrets different teasers, and earning one changes nobody else', () => {
+    const secrets = [1, 2, 3, 4].map((n) => mk(`s${n}`, `Do ${n}. Joke ${n}.`, { secret: true }));
+    const text = (saved: string[]) => trophyView(secrets, saved, []).rows.map((r) => r.text);
+    const locked = text([]);
+    expect(locked.slice(1).every((t, i) => t !== locked[i])).toBe(true);
+    const after = text(['s2']);
+    expect(after[0]).toBe(locked[0]);
+    expect(after[2]).toBe(locked[2]);
+    expect(after[3]).toBe(locked[3]);
+  });
+
   it('falls back to the first sentence, so the joke after it stays a reward', () => {
     expect(trophyHint(mk('x', 'Deploy on a Friday. Nothing happened. Yet.'))).toBe('Deploy on a Friday.');
     expect(trophyHint(mk('x', 'Become a meme on r/ProgrammerHumor. Not the good kind.'))).toBe('Become a meme on r/ProgrammerHumor.');

@@ -4,7 +4,6 @@
  * plain text, so the modal only has to draw it.
  */
 import type { Achievement } from '../content/types';
-import { hashSeed } from '../sim/rng';
 import { readJson, writeJson } from './save';
 
 const TROPHIES_KEY = 'vcds.trophies.v1';
@@ -86,16 +85,22 @@ const SECRET_HINTS = [
   'Secret. Nobody is going to tell you.',
   'Secret. Not even the cat knows.',
   'Secret. Look under the hood.',
+  'Secret. It is not in the tutorial.',
+  'Secret. Nobody wrote the wiki page.',
+  'Secret. Locked behind a vibe check.',
+  'Secret. The AI knows. It will not say.',
+  'Secret. Read the changelog. There is none.',
 ];
 
 /**
  * What a locked trophy says instead of its text. The achievement's own `hint` if it
- * has one, a teaser for a secret one, and otherwise its first sentence: the goal
- * stays visible and the joke after it is the reward.
+ * has one, a teaser for a secret one (`secretNo` is its place among the secrets, so
+ * neighbours get different teasers), and otherwise its first sentence: the goal stays
+ * visible and the joke after it is the reward.
  */
-export function trophyHint(a: Achievement): string {
+export function trophyHint(a: Achievement, secretNo = 0): string {
   if (a.hint) return a.hint;
-  if (a.secret) return SECRET_HINTS[hashSeed(a.id) % SECRET_HINTS.length]!;
+  if (a.secret) return SECRET_HINTS[secretNo % SECRET_HINTS.length]!;
   return /^.*?[.!?](?=\s|$)/s.exec(a.desc)?.[0] ?? a.desc;
 }
 
@@ -123,9 +128,12 @@ export interface TrophyView {
 export function trophyView(all: readonly Achievement[], saved: readonly string[], run: readonly string[]): TrophyView {
   const have = new Set([...saved, ...run]);
   const fresh = new Set(run);
+  // every secret counts, earned or not, so earning one never changes the teaser of another
+  let secrets = 0;
   const rows = all.map((a): TrophyRow => {
+    const secretNo = a.secret ? secrets++ : 0;
     if (have.has(a.id)) return { id: a.id, icon: trophyIcon(a.id), name: a.name, text: a.desc, locked: false, isNew: fresh.has(a.id) };
-    return { id: a.id, icon: a.secret ? 'question' : 'lock', name: a.secret ? '???' : a.name, text: trophyHint(a), locked: true, isNew: false };
+    return { id: a.id, icon: a.secret ? 'question' : 'lock', name: a.secret ? '???' : a.name, text: trophyHint(a, secretNo), locked: true, isNew: false };
   });
   return { rows, got: rows.filter((r) => !r.locked).length, total: rows.length };
 }
