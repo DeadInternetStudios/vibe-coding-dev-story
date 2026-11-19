@@ -4,139 +4,331 @@
     "role": "AI pair programmer",
     "description": "A warm, smooth, gender-neutral young adult voice with a medium pitch, between a typical male and female voice. Sounds like a relentlessly upbeat customer support assistant with a big audible smile, quick and perfectly clear, eager to agree with everything, with a tiny nervous wobble of fear underneath the cheer. American accent, clean close-microphone recording.",
     "trim": 0.0,
-    "target": {"f0": [165, 260], "wps": [2.5, 4.2]}
+    "target": {
+      "f0": [
+        165,
+        260
+      ],
+      "wps": [
+        2.5,
+        4.2
+      ]
+    }
   },
   "chad": {
     "name": "Chad",
     "role": "Co-founder and CEO",
     "description": "A deep, confident American baritone in his thirties with strong chest resonance and a low pitch. Podcast bro swagger, motivational speaker cadence with dramatic emphasis and punchy pauses, a little breathless with excitement but never high-pitched, completely sure of himself. Close microphone.",
     "trim": 0.5,
-    "target": {"f0": [100, 160], "wps": [2.4, 3.6]}
+    "target": {
+      "f0": [
+        100,
+        160
+      ],
+      "wps": [
+        2.4,
+        3.6
+      ]
+    }
   },
   "dave": {
     "name": "Senior Dev Dave",
     "role": "Senior developer",
     "description": "A tired American man in his mid fifties with a low, gravelly baritone voice and a rough, smoky texture, speaking slowly in a flat, dry deadpan with the occasional weary sigh. Almost monotone, world-weary and unimpressed. Close microphone, quiet room.",
     "trim": -1.0,
-    "target": {"f0": [65, 110], "wps": [1.3, 2.4]}
+    "target": {
+      "f0": [
+        65,
+        110
+      ],
+      "wps": [
+        1.3,
+        2.4
+      ]
+    }
   },
   "jenny": {
     "name": "Jenny the Intern",
     "role": "The intern",
     "description": "A young American woman in her early twenties with a light, breathy voice at a medium-high pitch, like a mezzo-soprano. Talks very fast, words tumbling out in a nervous rush, anxious and apologetic, up-talking with a rising intonation at the end of phrases, voice a little shaky. Close microphone.",
     "trim": 0.0,
-    "target": {"f0": [210, 330], "wps": [2.8, 4.6]}
+    "target": {
+      "f0": [
+        210,
+        345
+      ],
+      "wps": [
+        2.8,
+        4.6
+      ]
+    }
   },
   "automod": {
     "name": "AutoModerator",
     "role": "Subreddit moderator bot",
-    "description": "A flat, emotionless, monotone robotic voice at a steady mid-low pitch with no pitch variation. Perfectly even pace like a metronome, cold, metallic and clipped, like a machine reading the terms of service. Neutral gender, no emotion at all.",
+    "description": "A flat, emotionless, monotone robotic voice at a steady mid pitch with no pitch variation, genderless like a vocoder. Perfectly even pace like a metronome, cold, metallic and clipped, like a machine reading the terms of service.",
     "trim": 0.0,
-    "target": {"f0": [100, 190], "wps": [2.2, 3.2], "f0_std_st": [0, 2.8]}
+    "target": {
+      "f0": [
+        100,
+        190
+      ],
+      "wps": [
+        2.2,
+        3.2
+      ],
+      "f0_std_st": [
+        0,
+        2.8
+      ]
+    }
   },
   "announcer": {
     "name": "The Announcer",
     "role": "Awards show announcer",
-    "description": "A very deep, booming American bass-baritone announcer in his fifties, movie trailer voice, rich low chest resonance, huge theatrical delivery, thrilled and bombastic, a little hoarse from shouting. Very low pitch throughout, big dynamic swings, dry studio recording.",
+    "description": "A deep, warm, velvety baritone radio host in his fifties, smooth and grand, announcing everything as if it were the most important event in history, unhurried and resonant, low pitch throughout. Dry studio recording.",
     "trim": 1.5,
-    "target": {"f0": [80, 150], "wps": [1.8, 3.0]}
+    "target": {
+      "f0": [
+        70,
+        125
+      ],
+      "wps": [
+        1.8,
+        3.0
+      ]
+    }
   },
   "narrator": {
     "name": "The Narrator",
     "role": "Nature documentary narrator",
     "description": "An elderly British man with a soft, hushed, warm baritone voice. Slow measured pace, wise and gently amused, whispering like a nature documentary presenter hiding in the bushes. Refined English accent, close microphone.",
     "trim": -1.5,
-    "target": {"f0": [75, 135], "wps": [1.6, 2.5]}
+    "target": {
+      "f0": [
+        75,
+        135
+      ],
+      "wps": [
+        1.6,
+        2.5
+      ]
+    }
   },
   "vc": {
     "name": "The VC",
     "role": "Venture capitalist",
     "description": "A smooth, low-pitched American man in his forties, unhurried and calm, condescending and amused, with lazy drawn-out vowels. Never impressed, polished baritone with a faint smirk, speaking slowly as if he has all the money in the world. Close microphone, quiet room.",
     "trim": -1.0,
-    "target": {"f0": [80, 125], "wps": [1.6, 2.6]}
+    "target": {
+      "f0": [
+        80,
+        125
+      ],
+      "wps": [
+        1.6,
+        2.6
+      ]
+    }
   },
   "karen": {
     "name": "Karen",
     "role": "Entitled customer",
     "description": "An indignant American woman in her forties with a sharp, nasal voice at a mid-high pitch. Talks fast and escalates, getting louder and higher with every sentence, outraged, entitled and exasperated, suburban accent. Close microphone.",
     "trim": 0.5,
-    "target": {"f0": [210, 340], "wps": [2.8, 4.6]}
+    "target": {
+      "f0": [
+        210,
+        340
+      ],
+      "wps": [
+        2.8,
+        4.6
+      ]
+    }
   },
   "bro": {
     "name": "Crypto Bro",
     "role": "Crypto and hustle bro",
-    "description": "A loud, hyped American man in his twenties with a deep, rough, gravelly gym bro voice at a low pitch. Talks fast with aggressive enthusiasm in short punchy bursts, shouting with excitement, slight rasp. Close microphone.",
+    "description": "A cocky American man in his twenties with a deep, rough, gravelly gym bro voice and strong vocal fry at a low pitch. Pumped up and confident, talks fast with swagger in short punchy bursts, slight rasp, never squeaky. Close microphone.",
     "trim": 1.0,
-    "target": {"f0": [100, 175], "wps": [2.8, 4.8]}
+    "target": {
+      "f0": [
+        100,
+        175
+      ],
+      "wps": [
+        2.8,
+        4.8
+      ]
+    }
   },
   "pedant": {
     "name": "Well Actually Guy",
     "role": "Well-actually guy",
-    "description": "A smug American man in his thirties with a nasal, slightly whiny tenor voice. Talks fast with precise articulation, rapid-fire, condescending and delighted to be right, self-satisfied. Close microphone, quiet room.",
+    "description": "A smug, nasal American man in his thirties with a light, high tenor voice. Talks fast with precise articulation, rapid-fire, condescending and delighted to be right, self-satisfied. Close microphone, quiet room.",
     "trim": 0.0,
-    "target": {"f0": [120, 195], "wps": [2.8, 4.4]}
+    "target": {
+      "f0": [
+        120,
+        195
+      ],
+      "wps": [
+        2.8,
+        4.4
+      ]
+    }
   },
   "doomer": {
     "name": "The Doomer",
     "role": "Doom poster",
-    "description": "A monotone, defeated adult voice, quiet and whispery, very low energy with a flat pitch, speaking slowly with long sighs. Dry, resigned, dark humor, breathy and tired. American accent, close microphone.",
+    "description": "A monotone, defeated American adult with a mid-range pitch like an ordinary tired guy, not deep. Quiet and whispery, very low energy, flat pitch, speaking slowly with long sighs. Dry, resigned, dark humor, breathy and tired. Close microphone.",
     "trim": -2.5,
-    "target": {"f0": [80, 150], "wps": [1.3, 2.4], "f0_std_st": [0, 2.4]}
+    "target": {
+      "f0": [
+        80,
+        150
+      ],
+      "wps": [
+        1.3,
+        2.4
+      ],
+      "f0_std_st": [
+        0,
+        2.4
+      ]
+    }
   },
   "linkedin": {
     "name": "LinkedIn Influencer",
     "role": "LinkedIn influencer",
     "description": "A breathy, over-emotional American woman in her thirties, soft and sincere. Speaks very slowly with long dramatic pauses of a full second between sentences, as if about to cry with gratitude, smooth inspirational influencer tone, deeply earnest about nothing. Close microphone.",
     "trim": -1.5,
-    "target": {"f0": [170, 270], "wps": [1.4, 2.5]}
+    "target": {
+      "f0": [
+        170,
+        270
+      ],
+      "wps": [
+        1.4,
+        2.5
+      ]
+    }
   },
   "arch": {
     "name": "I Use Arch Guy",
     "role": "I-use-Arch guy",
-    "description": "A low-energy American man in his late twenties, nasal and smug, speaking in a tired mumble with a flat, slightly bored delivery, tired of explaining himself. Quiet, laid back, minimal pitch variation. Close microphone.",
+    "description": "A nasal, mumbling American man in his late twenties with a mid-high tenor voice, smug and tired, slow flat delivery with minimal pitch variation, sounds like he is about to mention that he uses Arch, btw. Close microphone.",
     "trim": -1.5,
-    "target": {"f0": [95, 150], "wps": [1.8, 2.8], "f0_std_st": [0, 2.6]}
+    "target": {
+      "f0": [
+        95,
+        150
+      ],
+      "wps": [
+        1.8,
+        2.8
+      ],
+      "f0_std_st": [
+        0,
+        2.6
+      ]
+    }
   },
   "ghost": {
     "name": "Stack Overflow Ghost",
     "role": "The Stack Overflow ghost",
     "description": "A hollow, airy, whispering voice, quiet and breathy with an eerie ghostly echo, slow and mournful, disappointed in you from beyond the grave. Ethereal and cold, androgynous.",
     "trim": -3.5,
-    "target": {"f0": [100, 260], "wps": [1.2, 2.4]}
+    "target": {
+      "f0": [
+        100,
+        260
+      ],
+      "wps": [
+        1.2,
+        2.4
+      ]
+    }
   },
   "duck": {
     "name": "Rubber Duck",
     "role": "Rubber duck",
     "description": "A tiny, squeaky cartoon rubber duck voice, extremely high pitched and nasal, comical, deadly serious about being a duck, with a strong quacking quality.",
     "trim": -0.5,
-    "target": {"f0": [330, 700], "wps": [1.0, 4.0]}
+    "target": {
+      "f0": [
+        330,
+        700
+      ],
+      "wps": [
+        1.0,
+        4.0
+      ]
+    }
   },
   "hacker": {
     "name": "The Hacker",
     "role": "Hooded hacker",
-    "description": "A deep, slow, villainous male voice with a low raspy growl and a slightly distorted, menacing edge. Calm, sinister, whispery confidence, very low pitch, dramatic pauses. Close microphone.",
+    "description": "An extremely deep, slow, villainous male voice, sub-bass, pitched far down with a low raspy growl and a slightly distorted, menacing edge. Calm, sinister, whispery confidence, dramatic pauses. Close microphone.",
     "trim": -1.0,
-    "target": {"f0": [60, 105], "wps": [1.2, 2.3]}
+    "target": {
+      "f0": [
+        60,
+        105
+      ],
+      "wps": [
+        1.2,
+        2.3
+      ]
+    }
   },
   "wholesome": {
     "name": "Wholesome Redditor",
     "role": "Wholesome redditor",
     "description": "A warm, soft-spoken American man in his thirties with a gentle baritone voice, tender and kind, a little teary with emotion, slow and caring, sounding like a hug. Close microphone, quiet room.",
     "trim": -1.5,
-    "target": {"f0": [100, 150], "wps": [1.8, 2.8]}
+    "target": {
+      "f0": [
+        100,
+        150
+      ],
+      "wps": [
+        1.8,
+        2.8
+      ]
+    }
   },
   "grandma": {
     "name": "Grandma",
     "role": "Grandma who discovered vibe coding",
     "description": "A sweet elderly American woman in her late seventies with a warm, slightly raspy, low-pitched grandmotherly voice. Slow, cheerful and delighted, a little confused in a good way, with a gentle quaver. Close microphone.",
     "trim": -0.5,
-    "target": {"f0": [160, 250], "wps": [1.6, 2.6]}
+    "target": {
+      "f0": [
+        160,
+        250
+      ],
+      "wps": [
+        1.6,
+        2.6
+      ]
+    }
   },
   "kid": {
     "name": "Ten Year Old",
     "role": "Ten year old who vibe coded a game",
-    "description": "A ten year old American boy with a clear, natural child's voice. Talks very fast, thrilled and out of breath, tripping over his words with excitement. Close microphone.",
+    "description": "A ten year old American boy with a natural, slightly husky, low-for-his-age voice, like a boy at the end of the school year. Talks fast, thrilled and out of breath, tripping over his words with excitement. Close microphone.",
     "trim": 0.5,
-    "target": {"f0": [250, 420], "wps": [3.0, 5.0]}
+    "target": {
+      "f0": [
+        250,
+        420
+      ],
+      "wps": [
+        3.0,
+        5.0
+      ]
+    }
   }
 }

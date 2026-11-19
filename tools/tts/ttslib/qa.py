@@ -7,6 +7,10 @@ another seed. All numbers are measured on the decoded MP3, the file the game wil
 
 `badness` is one number to compare takes: 0 is perfect, anything under 1 is accepted, 100 or more
 is a hard failure (capped, unintelligible, clipped, absurd duration).
+
+Same seed-to-seed spread is about 3 semitones of F0, more than the spread between different lines,
+so being inside the band is not enough: a small pull toward the middle of the band makes the retry
+loop keep sampling until a take is "excellent" (close to the voice's centre), and keep the closest.
 """
 from __future__ import annotations
 
@@ -20,6 +24,12 @@ ACCEPT_WER = 0.25
 HARD = 100.0
 MIN_VOICED_SEC = 0.5  # below this the F0 numbers are noise, skip the identity gate
 BAND_SLACK_ST = 0.5  # semitones outside the F0 band that still count as inside
+RATE_SLACK = 0.10  # relative distance outside the pace band that still counts as inside
+EXPRESSIVE_EXTRA_SLACK_ST = 2.0  # a delivery note ("whispering", "fired up") legitimately moves pitch and pace
+EXPRESSIVE_EXTRA_RATE_SLACK = 0.20
+CENTER_F0_PER_ST = 0.10  # badness per semitone away from the geometric middle of the F0 band
+CENTER_RATE_PER_LN = 0.8  # badness per natural-log unit away from the middle of the pace band
+EXCELLENT = 0.35  # below this a take is good enough to stop sampling
 
 
 @dataclass
@@ -38,13 +48,17 @@ class Assessment:
     def ok(self) -> bool:
         return self.badness < 1.0
 
+    @property
+    def excellent(self) -> bool:
+        return self.badness < EXCELLENT
+
 
 def _st(a: float, b: float) -> float:
     return abs(12.0 * np.log2(max(a, 1e-6) / max(b, 1e-6)))
 
 
 def assess(decoded: np.ndarray, sr: int, text: str, voice: dict, sc: stt.Score, capped: bool,
-           accept_wer: float = ACCEPT_WER) -> Assessment:
+           accept_wer: float = ACCEPT_WER, expressive: bool = False) -> Assessment:
     m = audio.measure(decoded, sr, text)
     words = len(text.split())
     problems: list = []
@@ -79,9 +93,10 @@ def assess(decoded: np.ndarray, sr: int, text: str, voice: dict, sc: stt.Score, 
     if "f0" in target and voiced_sec >= MIN_VOICED_SEC and m["f0_med"] > 0:
         lo, hi = target["f0"]
         d = _st(lo, m["f0_med"]) if m["f0_med"] < lo else (_st(m["f0_med"], hi) if m["f0_med"] > hi else 0.0)
-        if d > BAND_SLACK_ST:
+        if d > BAND_SLACK_ST + (EXPRESSIVE_EXTRA_SLACK_ST if expressive else 0.0):
             bad += d
             problems.append("F0 %.0f Hz is %.1f st outside %d-%d" % (m["f0_med"], d, lo, hi))
+        bad += CENTER_F0_PER_ST * _st(float(np.sqrt(lo * hi)), m["f0_med"])
         if "f0_std_st" in target and m["f0_std_st"] > 0:
             slo, shi = target["f0_std_st"]
             sd = max(0.0, slo - m["f0_std_st"], m["f0_std_st"] - shi)
@@ -92,9 +107,11 @@ def assess(decoded: np.ndarray, sr: int, text: str, voice: dict, sc: stt.Score, 
         lo, hi = target["wps"]
         wps = m["wps"]
         rel = (lo - wps) / lo if wps < lo else ((wps - hi) / hi if wps > hi else 0.0)
-        if rel > 0.1:
+        if rel > RATE_SLACK + (EXPRESSIVE_EXTRA_RATE_SLACK if expressive else 0.0):
             bad += 6.0 * rel
             problems.append("rate %.2f words/s outside %.1f-%.1f" % (wps, lo, hi))
+        if wps > 0:
+            bad += CENTER_RATE_PER_LN * abs(float(np.log(wps / np.sqrt(lo * hi))))
 
     bad += 5.0 * sc.wer
     return Assessment(wer=sc.wer, missing=sc.missing, extra=sc.extra, heard=sc.hyp_text, dur=m["dur"],

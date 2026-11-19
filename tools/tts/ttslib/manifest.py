@@ -26,6 +26,7 @@ def atomic_write(path: str, text: str) -> None:
             fh.write(text)
             fh.flush()
             os.fsync(fh.fileno())
+        os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except BaseException:
         with contextlib.suppress(OSError):

@@ -25,8 +25,10 @@ import argparse
 import hashlib
 import json
 import logging
+import math
 import os
 import signal
+import statistics
 import sys
 import time
 import traceback
@@ -104,17 +106,9 @@ def voice_sampling(voice: dict) -> dict:
     return {**DEFAULT_SAMPLING, **(voice.get("sampling") or {})}
 
 
-def ref_paths(voice_id: str):
-    return HERE / "refs" / f"{voice_id}.flac", HERE / "refs" / f"{voice_id}.txt"
-
-
-def voice_sig(voice_id: str, voice: dict) -> str:
+def voice_sig(voice: dict) -> str:
     """Changes when the way a voice is RENDERED changes. A different sig means re-render."""
-    payload = {"d": voice["description"], "s": voice_sampling(voice), "r": voice.get("route", "design"), "v": PIPELINE_VERSION}
-    if voice.get("route") == "clone":
-        flac, txt = ref_paths(voice_id)
-        payload["ref"] = hashlib.sha1(flac.read_bytes() + txt.read_bytes()).hexdigest()[:8] if flac.exists() and txt.exists() else None
-    return _sha(payload)
+    return _sha({"d": voice["description"], "s": voice_sampling(voice), "v": PIPELINE_VERSION})
 
 
 def master_sig(voice: dict, kbps: int) -> str:
@@ -151,7 +145,7 @@ def finish_take(raw, sr: int, line: dict, voice: dict, st: stt.Stt, tmp: Path, k
     decoded = audio.decode_audio(tmp, sr)
     tr = st.transcribe(tmp)
     sc = stt.score(line["text"], tr.text)
-    a = qa.assess(decoded, sr, line["text"], voice, sc, capped, accept_wer)
+    a = qa.assess(decoded, sr, line["text"], voice, sc, capped, accept_wer, expressive=bool(line["delivery"]))
     return Attempt(k, seed, tmp, decoded, tr, sc, a, rtf, gain, tokens)
 
 
@@ -171,10 +165,10 @@ def entry_from(line: dict, att: Attempt, sr: int) -> dict:
     return entry
 
 
-def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, route: str, note: str = "") -> dict:
+def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, note: str = "") -> dict:
     m = att.assessment.metrics
     s = {
-        "sig": voice_sig(line["voice"], voice), "msig": master_sig(voice, kbps), "route": route, "seed": att.seed,
+        "sig": voice_sig(voice), "msig": master_sig(voice, kbps), "seed": att.seed,
         "attempts": attempts, "bad": att.assessment.badness, "f0": m["f0_med"], "wps": m["wps"],
         "lufs": m["lufs"], "peak": m["peak_db"], "rtf": round(att.rtf, 2), "ts": int(time.time()),
     }
@@ -189,22 +183,13 @@ def state_from(line: dict, voice: dict, att: Attempt, attempts: int, kbps: int, 
 
 
 def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, takes_dir: Path):
-    """Up to args.attempts takes. Returns (best Attempt, attempts used, route)."""
+    """Up to args.attempts takes, stopping at the first excellent one. Returns (best Attempt, attempts used)."""
     from ttslib import tts
 
-    route = voice.get("route", "design")
     sampling = voice_sampling(voice)
     sr = tts.SAMPLE_RATE
     best = None
     used = 0
-    ref = None
-    if route == "clone":
-        import soundfile as sf
-
-        flac, txt = ref_paths(line["voice"])
-        ref = (sf.read(flac, dtype="float32")[0], txt.read_text(encoding="utf-8").strip())
-        if line["delivery"]:
-            log.info("%s: clone route ignores delivery %r (Base has no instruct)", line["id"], line["delivery"])
     instruct = tts.compose_instruct(voice["description"], line["delivery"])
 
     for k in range(args.attempts):
@@ -212,10 +197,7 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
             break
         seed = seed_for(line["id"], k)
         try:
-            if route == "clone":
-                take = eng.clone(ref[0], ref[1], line["text"], seed, **sampling)
-            else:
-                take = eng.design(instruct, line["text"], seed, **sampling)
+            take = eng.design(instruct, line["text"], seed, **sampling)
         except Exception:
             log.error("%s attempt %d: render crashed\n%s", line["id"], k + 1, traceback.format_exc())
             continue
@@ -233,7 +215,7 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
         a = att.assessment
         log.info("%s take %d/%d seed=%d dur=%.2fs wer=%.2f f0=%.0f wps=%.2f rtf=%.2f bad=%.2f %s",
                  line["id"], k + 1, args.attempts, seed, a.dur, a.wer, a.metrics["f0_med"], a.metrics["wps"], take.rtf, a.badness,
-                 "ACCEPT" if a.ok else "RETRY: " + "; ".join(a.problems))
+                 "ACCEPT" if a.excellent else ("ok, sampling for a closer take" if a.ok else "RETRY: " + "; ".join(a.problems)))
         keep_raw = best is None or a.badness < best.assessment.badness
         if keep_raw:
             if best is not None:
@@ -248,9 +230,9 @@ def render_line(line: dict, voice: dict, eng, st: stt.Stt, args, out_dir: Path, 
                 log.warning("%s: could not store the raw take", line["id"])
         else:
             tmp.unlink(missing_ok=True)
-        if a.ok:
+        if a.excellent:
             break
-    return best, used, route
+    return best, used
 
 
 def remaster_line(line: dict, voice: dict, st: stt.Stt, args, out_dir: Path, takes_dir: Path):
@@ -270,7 +252,7 @@ def adopt_line(line: dict, voice: dict, st: stt.Stt, args, out_dir: Path):
     decoded = audio.decode_audio(path, sr)
     tr = st.transcribe(path)
     sc = stt.score(line["text"], tr.text)
-    a = qa.assess(decoded, sr, line["text"], voice, sc, False, args.accept_wer)
+    a = qa.assess(decoded, sr, line["text"], voice, sc, False, args.accept_wer, expressive=bool(line["delivery"]))
     return Attempt(0, 0, path, decoded, tr, sc, a, 0.0, 0.0, 0)
 
 
@@ -301,7 +283,7 @@ def classify(lines: list, manifest: dict, state: dict, voices: dict, out_dir: Pa
                 buckets["adopt"].append(line)
             else:
                 buckets["render"].append(line)
-        elif not args.keep_stale and st_.get("sig") and st_["sig"] != voice_sig(line["voice"], v):
+        elif not args.keep_stale and st_.get("sig") and st_["sig"] != voice_sig(v):
             buckets["render"].append(line)
         elif not args.keep_stale and st_.get("msig") and st_["msig"] != master_sig(v, args.kbps) \
                 and (Path(args.takes) / f"{line['id']}.flac").exists():
@@ -322,17 +304,35 @@ def commit_entry(args, manifest: dict, state: dict, line: dict, entry: dict, st_
     mf.save_state(args.state, state)
 
 
-def audit(manifest: dict, voices: dict, out_dir: Path) -> None:
+def _semitones(hz: float) -> float:
+    return 12.0 * math.log2(hz)
+
+
+def audit(manifest: dict, voices: dict, out_dir: Path, state: dict) -> None:
+    """Per-voice consistency from the manifest and render state, then the lines worth a second look."""
     rows = manifest["lines"]
     print(f"{len(rows)} lines in manifest, {sum(e['dur'] for e in rows.values()):.0f}s of audio")
     per = {}
     for lid, e in rows.items():
         per.setdefault(e["voice"], []).append((lid, e))
-    print(f"{'voice':10s} {'n':>3s} {'mean WER':>8s} {'max WER':>7s} {'mean dur':>8s} {'wps':>5s}")
+    print(f"{'voice':10s} {'n':>3s} {'WER':>6s} {'max':>5s} {'s/line':>6s} {'wps':>5s} {'F0 Hz':>6s} {'sd st':>5s} {'in band':>7s} {'LUFS':>6s} {'sd':>4s} {'takes':>5s}")
     for vid, items in per.items():
         w = [e["wer"] for _, e in items]
-        wps = [len(e["text"].split()) / max(e["dur"], 0.1) for _, e in items]
-        print(f"{vid:10s} {len(items):3d} {sum(w)/len(w):8.3f} {max(w):7.2f} {sum(e['dur'] for _, e in items)/len(items):8.2f} {sum(wps)/len(wps):5.2f}")
+        recs = [state.get(lid, {}) for lid, _ in items]
+        f0 = [r["f0"] for r in recs if r.get("f0", 0) > 0]
+        wps = [r["wps"] for r in recs if r.get("wps", 0) > 0]
+        lufs = [r["lufs"] for r in recs if "lufs" in r]
+        takes = [r["attempts"] for r in recs if r.get("attempts")]
+        band = (voices.get(vid, {}).get("target") or {}).get("f0")
+        in_band = "-"
+        if band and f0:
+            lo, hi = band[0] * 2 ** (-qa.BAND_SLACK_ST / 12), band[1] * 2 ** (qa.BAND_SLACK_ST / 12)
+            in_band = f"{100 * sum(lo <= x <= hi for x in f0) / len(f0):.0f}%"
+        sd_st = statistics.pstdev([_semitones(x) for x in f0]) if len(f0) > 1 else 0.0
+        print(f"{vid:10s} {len(items):3d} {sum(w) / len(w):6.3f} {max(w):5.2f} {sum(e['dur'] for _, e in items) / len(items):6.2f} "
+              f"{statistics.median(wps) if wps else 0:5.2f} {statistics.median(f0) if f0 else 0:6.0f} {sd_st:5.1f} {in_band:>7s} "
+              f"{statistics.mean(lufs) if lufs else 0:6.1f} {statistics.pstdev(lufs) if len(lufs) > 1 else 0:4.1f} "
+              f"{statistics.mean(takes) if takes else 0:5.1f}")
     print("\nsuspicious:")
     n = 0
     for lid, e in sorted(rows.items()):
@@ -346,6 +346,9 @@ def audit(manifest: dict, voices: dict, out_dir: Path) -> None:
             probs.append("file missing or broken")
         if "words" in e and len(e["words"]) != words:
             probs.append("words count != text")
+        rec = state.get(lid, {})
+        if rec.get("bad", 0) >= 1.0:
+            probs.append(f"kept a weak take (badness {rec['bad']})")
         if probs:
             n += 1
             print(f"  {lid}: {', '.join(probs)} | {e['text'][:60]!r}")
@@ -405,7 +408,7 @@ def main() -> int:
     state = mf.load_state(args.state)
 
     if args.audit:
-        audit(manifest, voices, out_dir)
+        audit(manifest, voices, out_dir, state["lines"])
         return 0
 
     paths = [Path(p) for p in (args.lines or default_lines_paths())]
@@ -453,7 +456,7 @@ def main() -> int:
                 att = adopt_line(line, voice, st, args, out_dir)
                 if att.assessment.wer <= args.accept_wer:
                     commit_entry(args, manifest, state, line, entry_from(line, att, sr),
-                                 state_from(line, voice, att, 0, args.kbps, voice.get("route", "design"), "adopted orphan mp3"))
+                                 state_from(line, voice, att, 0, args.kbps, "adopted orphan mp3"))
                     adopted += 1
                     log.info("%s adopted existing mp3 wer=%.2f", line["id"], att.assessment.wer)
                 else:
@@ -485,16 +488,16 @@ def main() -> int:
             if eng is None:
                 from ttslib import tts
 
-                eng = tts.Engine(need_base=any(v.get("route") == "clone" for v in voices.values()))
+                eng = tts.Engine()
                 log.info("engine ready in %.1fs", eng.load_s)
             t_line = time.time()
             try:
-                best, used, route = render_line(line, voice, eng, st, args, out_dir, Path(args.takes))
+                best, used = render_line(line, voice, eng, st, args, out_dir, Path(args.takes))
                 if best is None:
                     raise RuntimeError("no usable take in %d attempts" % args.attempts)
                 final = out_dir / f"{line['id']}.mp3"
                 os.replace(best.path, final)
-                commit_entry(args, manifest, state, line, entry_from(line, best, sr), state_from(line, voice, best, used, args.kbps, route))
+                commit_entry(args, manifest, state, line, entry_from(line, best, sr), state_from(line, voice, best, used, args.kbps))
                 done += 1
                 wers.append(best.assessment.wer)
                 if not best.assessment.ok:
