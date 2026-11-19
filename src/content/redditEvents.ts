@@ -68,7 +68,7 @@ export const REDDIT_EVENTS: GameEvent[] = [
     line: vo('pedant', 'Well, actually, a screenshot of code is not source code. I will wait here, with a link to the license.'),
     choices: [
       { label: 'Open source it',
-        result: 'The repo goes public. Three strangers send pull requests. One finds an API key. One finds your commit messages. The commit messages hurt more.',
+        result: 'The repo goes public. Three strangers send pull requests. One goes hunting for an API key. One reads your commit messages. The commit messages hurt more.',
         effects: [karma(300), hype(10), mood(-10), counter('open_sourced'), chance(0.35, [cash(-1200), counter('keys_leaked')])] },
       { label: 'Say it is on the roadmap',
         result: 'The roadmap is a link. The link is also on the roadmap. Fourteen people unsubscribe from hope. The team exhales.',
