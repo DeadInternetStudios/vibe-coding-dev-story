@@ -10,6 +10,8 @@ dist/
 tools/tts/.venv/
 tools/tts/.cache/
 tools/tts/scratch/
+# half-rendered takes while generate.py runs
+public/audio/vo/.*.mp3
 __pycache__/
 *.pyc
 

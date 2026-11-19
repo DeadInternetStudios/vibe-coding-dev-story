@@ -3,8 +3,8 @@
 
     .venv/bin/python selftest.py
 
-Covers the contract id, the WER normalizer and word timings, the take scoring gate, the loudness and MP3
-chain, and the manifest writer. Run it after touching anything under ttslib/.
+Covers the contract id, the WER normalizer and word timings, the take scoring gate, the polish rule, the
+loudness and MP3 chain, and the manifest writer. Run it after touching anything under ttslib/ or generate.py.
 """
 from __future__ import annotations
 
@@ -149,6 +149,20 @@ def manifest_files():
         sp = os.path.join(d, "state.json")
         mf.save_state(sp, {"version": 1, "lines": {"a-00000000": {"f0": 1.0}}})
         assert mf.load_state(sp)["lines"]["a-00000000"]["f0"] == 1.0
+
+
+@test
+def needs_polish_rules():
+    import generate
+
+    voice = {"target": {"f0": [100, 150]}}
+    assert not generate.needs_polish({"bad": 0.2, "f0": 120}, voice, {})
+    assert generate.needs_polish({"bad": 1.5, "f0": 120}, voice, {}), "a weak take is polished even inside the band"
+    assert generate.needs_polish({"bad": 0.2, "f0": 200}, voice, {}), "far outside the band"
+    assert generate.needs_polish({"bad": 0.2, "f0": 160}, voice, {}), "a little outside, no delivery note"
+    assert not generate.needs_polish({"bad": 0.2, "f0": 160}, voice, {"delivery": "tired"}), "a delivery note widens the band"
+    assert not generate.needs_polish({"bad": 5.0, "f0": 200, "polish": generate.MAX_POLISH_ROUNDS}, voice, {}), "gives up after the last round"
+    assert not generate.needs_polish({"bad": 0.2, "f0": 0.0}, voice, {}), "no pitch measured, nothing to compare with"
 
 
 def main() -> int:

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Check public/audio/vo against docs/voice-contract.md. Standard library plus ffprobe, nothing is played.
 
-    python3 tools/tts/verify.py                         # manifest in public/audio/vo, lines files next to this script
+    python3 tools/tts/verify.py                         # manifest in public/audio/vo; lines files: lines.json, the last
+                                                        # watch.sh export (scratch/export), lines.seed.json, lines.extra.json
     python3 tools/tts/verify.py --out DIR --lines lines.json lines.seed.json
 
 Errors (exit code 1): bad manifest shape, line id that does not match the contract formula, missing or
 unreadable MP3, `dur` that differs from the MP3's real duration, `env` or `words` of the wrong length,
 stereo or over-bitrate files. Warnings: WER above 0.25, MP3 files the manifest does not list, manifest lines
-no lines file asks for.
+no lines file asks for. The manifest does not store delivery notes, so the id of a line with a note can only be
+checked against a lines file that lists it; an unknown line whose id does not fit is a warning, not an error.
 """
 from __future__ import annotations
 
@@ -72,7 +74,8 @@ def main() -> int:
             errors.append("voices.%s needs a string `name`" % vid)
 
     wanted: dict[str, dict] = {}
-    lines_files = [Path(p) for p in args.lines] if args.lines else [HERE / n for n in ("lines.json", "lines.seed.json", "lines.extra.json")]
+    lines_files = [Path(p) for p in args.lines] if args.lines else [
+        HERE / n for n in ("lines.json", "scratch/export/tools/tts/lines.json", "lines.seed.json", "lines.extra.json")]
     for p in lines_files:
         if p.exists():
             for ln in json.loads(p.read_text(encoding="utf-8")).get("lines", []):
@@ -95,9 +98,13 @@ def main() -> int:
             errs.append("id is not voice-hex8")
         if e["voice"] not in voices:
             errs.append("voice %r is not in manifest.voices" % e["voice"])
-        delivery = (wanted.get(lid) or {}).get("delivery")
+        known = wanted.get(lid)
+        delivery = (known or {}).get("delivery")
         if line_id(e["voice"], e["text"], delivery) != lid:
-            errs.append("id does not match the contract formula for voice|text|delivery (delivery=%r)" % delivery)
+            if known is None:
+                warnings.append("%s: id is not voice|text without a delivery note; fine if the line has a note that no lines file lists" % lid)
+            else:
+                errs.append("id does not match the contract formula for voice|text|delivery (delivery=%r)" % delivery)
         if e["file"] != lid + ".mp3":
             errs.append("file is %r, expected %s.mp3" % (e["file"], lid))
         f = out_dir / e["file"]
