@@ -52,8 +52,8 @@ export function drawTrophies(scene: Scene, content: Phaser.GameObjects.Container
     }),
   );
 
-  const counter = label(scene, 20, TOP - 1, `${view.got} / ${view.total}`, { font: F.read, tint: C.orange1 });
-  const barX = 20 + Math.ceil(counter.width) + 8;
+  const counter = label(scene, 20, TOP - 1, `${view.got} / ${view.total}`, { font: F.caps, tint: C.orange1 }).setScale(2);
+  const barX = 20 + Math.ceil(counter.displayWidth) + 8;
   content.add([
     iconImg(scene, 'trophy', 8, TOP + 4),
     counter,
