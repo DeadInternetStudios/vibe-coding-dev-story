@@ -259,7 +259,7 @@ export class ThreadScene extends Phaser.Scene {
     for (let i = 0; i < n; i++) {
       const x = W - slotsW - 2 + i * (slotW + 1);
       const box = rect(this, x, 3, slotW, 11, C.ink0, 1).setDepth(DEPTH.panel + 1);
-      const text = label(this, x + slotW / 2, 5, '', { font: F.body, tint: C.cream, origin: [0.5, 0], depth: DEPTH.panel + 2 });
+      const text = label(this, x + slotW / 2, 5, '?', { font: F.body, tint: C.ink3, origin: [0.5, 0], depth: DEPTH.panel + 2 });
       this.slots.push({ box, text });
     }
     // skip
