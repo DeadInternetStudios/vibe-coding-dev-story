@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#120f24">
+<meta name="robots" content="noindex">
+<title>Listening pass - Vibe Coding Dev Story</title>
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="brand">
+    <h1>Listening pass</h1>
+    <p class="sub" id="sub-count"></p>
+  </div>
+  <div class="who">
+    <label for="listener">Listener</label>
+    <input id="listener" type="text" autocomplete="name" spellcheck="false" maxlength="60" placeholder="Your name">
+  </div>
+  <div class="overall" id="overall" aria-live="polite"></div>
+  <div class="top-actions">
+    <button type="button" class="btn" id="btn-export">Export flags (0)</button>
+    <details class="menu" id="menu">
+      <summary class="btn ghost">Tools</summary>
+      <div class="menu-pop">
+        <button type="button" class="btn ghost" id="btn-keys">Keyboard keys</button>
+        <button type="button" class="btn ghost" id="btn-save">Save progress file</button>
+        <label class="btn ghost file">Load progress file<input type="file" id="file-load" accept="application/json,.json" hidden></label>
+        <button type="button" class="btn ghost danger" id="btn-reset">Clear all marks</button>
+      </div>
+    </details>
+  </div>
+</header>
+<p class="notice" id="warn" hidden></p>
+
+<div class="layout">
+  <nav class="rail" aria-label="Tiers and voices">
+    <ol class="tiers" id="tiers"></ol>
+    <section>
+      <h2 class="rail-h" id="voices-h">Voices</h2>
+      <ul class="voices" id="voices"></ul>
+    </section>
+    <section class="hint" id="signoff-hint" aria-label="What the sign-off needs"></section>
+  </nav>
+
+  <main class="work" id="work">
+    <section class="signoff" id="signoff" aria-label="Sign-off" hidden></section>
+    <section class="head" id="head"></section>
+    <div class="toolbar" role="toolbar" aria-label="Filters">
+      <div class="seg" id="seg-status" role="group" aria-label="Show"></div>
+      <label class="search"><span class="sr">Search the lines</span><input id="q" type="search" placeholder="Search text or id" autocomplete="off" spellcheck="false"></label>
+      <button type="button" class="btn ghost" id="btn-next-todo">Next to do</button>
+    </div>
+    <div class="subbar">
+      <label class="toggle"><input type="checkbox" id="auto"><span class="box" aria-hidden="true"></span>Auto-advance</label>
+      <p class="keyhint" id="keyhint"><kbd>Space</kbd> play <kbd>J</kbd> <kbd>K</kbd> move <kbd>N</kbd> next and play <kbd>O</kbd> ok <kbd>F</kbd> flag <kbd>U</kbd> undo <kbd>?</kbd> keys</p>
+    </div>
+    <ol class="clips" id="list"></ol>
+    <p class="end" id="end"></p>
+  </main>
+</div>
+
+<dialog id="dlg-export" aria-labelledby="export-h">
+  <h2 id="export-h">Flagged clips</h2>
+  <p id="export-sum" class="lede"></p>
+  <textarea id="export-json" readonly spellcheck="false" aria-label="flagged-lines.json"></textarea>
+  <p class="next">Save it as <code>flagged-lines.json</code>. Then run <code>npx tsx tools/listen/flags-to-redo.ts flagged-lines.json</code> for the re-render commands.</p>
+  <div class="row">
+    <button type="button" class="btn play" id="export-copy" autofocus>Copy JSON</button>
+    <button type="button" class="btn" id="export-dl">Download again</button>
+    <button type="button" class="btn ghost" id="export-close">Close</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-keys" aria-labelledby="keys-h">
+  <h2 id="keys-h">Keyboard keys</h2>
+  <p class="lede">They act on the highlighted clip. Nothing plays until you press Space, N, or a Play control.</p>
+  <dl class="keys">
+    <dt><kbd>Space</kbd></dt><dd>Play or pause</dd>
+    <dt><kbd>J</kbd> <kbd>Down</kbd></dt><dd>Next clip</dd>
+    <dt><kbd>K</kbd> <kbd>Up</kbd></dt><dd>Previous clip</dd>
+    <dt><kbd>N</kbd></dt><dd>Next clip, and play it</dd>
+    <dt><kbd>O</kbd></dt><dd>Mark OK</dd>
+    <dt><kbd>F</kbd></dt><dd>Flag. Press 1 to 7 to pick reasons, Enter to save, Esc to cancel</dd>
+    <dt><kbd>U</kbd></dt><dd>Remove the mark</dd>
+    <dt><kbd>T</kbd></dt><dd>Jump to the next clip still to do</dd>
+    <dt><kbd>A</kbd></dt><dd>Auto-advance on or off</dd>
+    <dt><kbd>/</kbd></dt><dd>Search</dd>
+    <dt><kbd>?</kbd></dt><dd>This list</dd>
+  </dl>
+  <p class="next">With Auto-advance on, a clip you started is followed by the next one after a short pause, and O or a saved flag moves on and plays the next clip.</p>
+  <div class="row"><button type="button" class="btn" id="keys-close" autofocus>Close</button></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<noscript><p class="notice">This page needs JavaScript. It has no server and loads nothing from the network.</p></noscript>
+
+<script type="application/json" id="data">{{DATA}}</script>
+<script>
+{{JS}}
+</script>
+</body>
+</html>
