@@ -9,7 +9,7 @@ import { feature } from '../core/features';
 import { openShare } from '../features/share/modal';
 import { recordTrophies } from '../core/trophies';
 import { dateLabel, shortMoney, shortNumber } from '../sim/format';
-import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
+import { button, hintChip, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
 import { openHall } from '../ui/modals/hall';
@@ -140,7 +140,8 @@ export class EndingScene extends Phaser.Scene {
     const x = Math.floor((L.W - w) / 2);
     const y = Math.floor((L.H - h) / 2);
     const card = this.add.container(x, y).setDepth(DEPTH.panel);
-    card.add(panel(this, 0, 0, w, h, 'paper'));
+    const frame = panel(this, 0, 0, w, h, 'paper');
+    card.add(frame);
     card.add(panel(this, 0, 0, w, 15, rank === 'F' || rank === 'D' ? 'btnBerry' : 'btnOrange', false));
     card.add(label(this, w / 2, 3, s.daily ? `THE END - ${dailyTag(s.daily)}` : 'THE END', { font: F.caps, tint: C.white, origin: [0.5, 0] }));
     if (!instant) {
@@ -164,9 +165,17 @@ export class EndingScene extends Phaser.Scene {
     const bodyT = label(this, wide ? 8 : 10, bodyY, '', { font: F.read, tint: C.ink1, maxWidth: bodyW });
     card.add(bodyT);
     const text = ending?.body ?? 'The company is over. The Reddit thread is not.';
+    // measure the finished text on a probe: the card is only as tall as its words while they are spoken, and the stamp and the numbers sit below the last line however it wrapped
+    const probe = label(this, -999, -999, text, { font: F.read, maxWidth: bodyW });
+    const bodyH = probe.height || 40;
+    probe.destroy();
+    const wordsH = Math.min(h, Math.ceil(Math.max(bodyY + bodyH + 14, wide ? 100 : 0)));
     if (instant) {
       bodyT.setText(text);
     } else {
+      frame.setBoxSize(w, wordsH);
+      const more = hintChip(this, w - 6, wordsH - 17, 'TAP: SHOW ALL', true);
+      card.add(more);
       const sp = new Speech(this, bodyT);
       void sp.say(text, ending?.line);
       const skipper = () => {
@@ -174,13 +183,18 @@ export class EndingScene extends Phaser.Scene {
       };
       this.input.once('pointerup', skipper);
       await Promise.race([sp.done, new Promise<void>((r) => this.time.delayedCall(9000, r))]);
+      more.destroy();
       if (!alive()) return;
       await this.wait(250);
+      // the card drops down to hold the stamp and the numbers
+      if (app.settings.reducedMotion) frame.setBoxSize(w, h);
+      else {
+        await new Promise<void>((res) => {
+          this.tweens.addCounter({ from: wordsH, to: h, duration: 240, ease: 'Sine.easeOut', onUpdate: (tw) => frame.setBoxSize(w, Math.round(tw.getValue() ?? h)), onComplete: () => res() });
+        });
+      }
+      if (!alive()) return;
     }
-    // measure the finished text on a probe, so the stamp and the numbers sit below the last line however it wrapped
-    const probe = label(this, -999, -999, text, { font: F.read, maxWidth: bodyW });
-    const bodyH = probe.height || 40;
-    probe.destroy();
 
     // the rank stamp
     const sx = wide ? w - 54 : w / 2;

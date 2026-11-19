@@ -16,7 +16,7 @@ import { money, shortMoney, signedMoney } from '../sim/format';
 import { projectView } from '../sim/views';
 import { Rng } from '../sim/rng';
 import type { EventOutcome, Prompt } from '../sim/types';
-import { bar, button, chip, choiceButton, iconImg, label, rect, type ButtonObj } from './kit';
+import { bar, button, chip, choiceButton, hintChip, iconImg, label, rect, type ButtonObj } from './kit';
 import { because } from './menus/common';
 import { channelRows, channelTextY } from './channelRows';
 import { layoutOf, popupH } from './layout';
@@ -130,10 +130,18 @@ function eventPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'event' }>, done: Done)
     },
   });
   const choiceY = 30 + Math.max(40, bodyH + 14);
+  // while the words are spoken the card is only as tall as they are, with a way to hurry them; it drops down to hold the choices when they arrive
+  const wordsH = Math.min(h, choiceY + 6);
+  m.box.setBoxSize(w, wordsH);
+  const more = hintChip(scene, w - 6, wordsH - 17, 'TAP: SHOW ALL', true);
+  m.add(more);
   const buttons: Phaser.GameObjects.Container[] = [];
   let chosen = false;
   const showChoices = () => {
     if (buttons.length || chosen) return;
+    more.destroy();
+    if (app.settings.reducedMotion) m.box.setBoxSize(w, h);
+    else scene.tweens.addCounter({ from: wordsH, to: h, duration: 160, ease: 'Sine.easeOut', onUpdate: (tw) => m.box.setBoxSize(w, Math.round(tw.getValue() ?? h)) });
     let y = choiceY;
     p.choices.forEach((c, i) => {
       const b = choiceButton(scene, 6, y, w - 12, c.label, c.hint, c.enabled, () => pick(i), 'cream', because(ctx, 'You do not have what that one needs.'));
