@@ -27,9 +27,14 @@ import {
   PULSE_DUTY,
   WAVE_RMS,
   lfsrCycle,
+  normalizeRms,
   organTable,
   pulseTable,
+  sawTable,
   steppedTriangleSamples,
+  tablePeak,
+  tableToFourier,
+  unitPeak,
   warmTable,
   type FourierTable,
 } from './synth/waves';
@@ -225,6 +230,52 @@ describe('wave tables', () => {
     expect(new Set(s).size).toBe(16);
     expect(Math.max(...s)).toBeCloseTo(1, 12);
     expect(Math.min(...s)).toBeCloseTo(-1, 12);
+  });
+
+  it('the sawtooth rises through each half of the cycle, at the common level, with no DC', () => {
+    const t = sawTable();
+    const { rms, mean } = rmsOf(t);
+    expect(rms).toBeCloseTo(WAVE_RMS, 2);
+    expect(Math.abs(mean)).toBeLessThan(1e-3);
+    expect(evalTable(t, 0.25 * Math.PI)).toBeLessThan(evalTable(t, 0.75 * Math.PI));
+    expect(evalTable(t, 1.25 * Math.PI)).toBeLessThan(evalTable(t, 1.75 * Math.PI));
+    expect(evalTable(t, 0.5 * Math.PI)).toBeGreaterThan(0);
+    expect(evalTable(t, 1.5 * Math.PI)).toBeLessThan(0);
+  });
+});
+
+describe('unit peak tables', () => {
+  const tables: Record<string, FourierTable> = {
+    p12: pulseTable(0.125),
+    p25: pulseTable(0.25),
+    p50: pulseTable(0.5),
+    p75: pulseTable(0.75),
+    saw: sawTable(),
+    tri4: normalizeRms(tableToFourier(steppedTriangleSamples(), 16)),
+    warm: warmTable(),
+    organ: organTable(),
+  };
+
+  it('tablePeak finds the top of a sine and of a square (Gibbs overshoot included)', () => {
+    const sine: FourierTable = { real: new Float32Array(2), imag: Float32Array.of(0, 0.8) };
+    expect(tablePeak(sine)).toBeCloseTo(0.8, 3);
+    const sq = pulseTable(0.5);
+    const plateau = Math.abs(evalTable(sq, Math.PI / 2));
+    expect(tablePeak(sq)).toBeGreaterThan(plateau * 1.05); // the ripple at the edge is the peak
+    expect(tablePeak(sq)).toBeLessThan(plateau * 1.25);
+  });
+
+  it.each(Object.entries(tables))('%s: scaled to peak 1, and the reported peak restores its level', (_name, t) => {
+    const before = rmsOf(t).rms;
+    const { table, peak } = unitPeak(t);
+    expect(tablePeak(table)).toBeCloseTo(1, 3);
+    expect(rmsOf(table).rms * peak).toBeCloseTo(before, 3);
+    expect(peak).toBeGreaterThan(0);
+  });
+
+  it('a short duty pulse needs a boost and a square needs a cut to sit at the same level', () => {
+    expect(unitPeak(pulseTable(0.125)).peak).toBeGreaterThan(1.3);
+    expect(unitPeak(pulseTable(0.5)).peak).toBeLessThan(0.7);
   });
 });
 

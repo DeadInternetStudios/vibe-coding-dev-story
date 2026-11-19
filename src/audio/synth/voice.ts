@@ -125,7 +125,7 @@ export function playVoice(rt: SynthRuntime, v: VoiceSpec, dest: AudioNode, essen
 
   for (const layer of v.layers) {
     const ratio = layer.ratio ?? 1;
-    const lvl = layer.vol ?? 1;
+    let lvl = layer.vol ?? 1;
     let src: AudioScheduledSourceNode;
 
     if (isNoise(layer.wave)) {
@@ -146,6 +146,7 @@ export function playVoice(rt: SynthRuntime, v: VoiceSpec, dest: AudioNode, essen
       const w = rt.bank.osc(layer.wave);
       if (w.wave) osc.setPeriodicWave(w.wave);
       else if (w.type) osc.type = w.type;
+      lvl *= w.gain;
       const base = f0 * ratio;
       osc.frequency.setValueAtTime(base, v.t);
       if (slide) {

@@ -25,6 +25,14 @@ const TAIL: Readonly<Record<DrumId, number>> = {
   riser: 2,
 };
 
+/**
+ * Level of the cowbell's two tones on the bank's duty 50% wave (RMS 0.5). The
+ * cowbell used to be the backend's own square at 0.22, which a browser plays at
+ * 0.85 RMS and node at 1.0, so it was 1.4 dB louder in node. 0.37 on the bank
+ * wave is the level a browser gave it.
+ */
+const COWBELL_LEVEL = 0.37;
+
 /** Percussive gain curve: instant-ish attack, exponential fall to silence. */
 function perc(g: AudioParam, t: number, peak: number, attack: number, decay: number): void {
   g.setValueAtTime(0, t);
@@ -181,18 +189,19 @@ export function playDrum(rt: SynthRuntime, id: DrumId, t: number, vel: number, d
     }
     case 'cowbell': {
       const bus = gainBell(ctx, nodes, t, vel, out);
+      const square = rt.bank.osc('p50');
       for (const [f, lvl] of [
         [587 * tune, 1],
         [845 * tune, 0.8],
       ] as const) {
         const o = ctx.createOscillator();
-        o.type = 'square';
+        if (square.wave) o.setPeriodicWave(square.wave);
         o.frequency.value = f;
         o.start(t);
         o.stop(t + 0.28);
         sources.push(o);
         const gl = ctx.createGain();
-        gl.gain.value = lvl * 0.22;
+        gl.gain.value = lvl * COWBELL_LEVEL * square.gain;
         nodes.push(gl);
         o.connect(gl).connect(bus);
       }
