@@ -244,6 +244,12 @@ export function installDriver(game: Phaser.Game): void {
     for (let i = 0; i < n; i += 1) console.error(`DRIVER ${i + 1}/${n} ${text.slice(i * 200, (i + 1) * 200)}`);
   };
 
+  /** What a run came to, in one record: the numbers a flow check reads. `ending` is how the game ended, once it has. */
+  const summary = () => {
+    const e = app.session?.s.ending;
+    return { ...stats, errors: errors.slice(0, 6), stuckAt, ending: e ? { id: e.endingId, rank: e.rank, bankrupt: e.bankrupt, day: e.day } : null };
+  };
+
   const api = {
     list: () => list().map((c) => ({ label: c.label, depth: c.depth, x: Math.round(c.x), y: Math.round(c.y), dim: c.dim })),
     click,
@@ -255,6 +261,7 @@ export function installDriver(game: Phaser.Game): void {
     audio: () => audio.status(),
     errors,
     stats,
+    summary,
     autoplay(ms = 60000, every = 120): void {
       window.clearInterval(timer);
       const t0 = performance.now();
@@ -267,7 +274,7 @@ export function installDriver(game: Phaser.Game): void {
         const over = performance.now() - t0 > ms || stats.scene === 'Ending';
         if (over) {
           window.clearInterval(timer);
-          report(JSON.stringify({ ...stats, errors: errors.slice(0, 6), stuckAt, stuckFlight, flight, trace, freezes, pulse, elapsed: Math.round(performance.now() - t0) }));
+          report(JSON.stringify({ ...summary(), stuckFlight, flight, trace, freezes, pulse, elapsed: Math.round(performance.now() - t0) }));
         }
       }, every);
     },
