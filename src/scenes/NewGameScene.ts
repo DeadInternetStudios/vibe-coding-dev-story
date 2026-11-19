@@ -97,12 +97,12 @@ export class NewGameScene extends Phaser.Scene {
 
     // ---------------------------------------------------------- left: names
     let y = 22;
-    const field = (title: string, value: string, onEdit: () => void, onDice: () => void, yy: number) => {
+    /** A name box with its dice. The box that opens for typing is made from the same `yy` as the field, so it always opens over the field that was tapped. */
+    const field = (title: string, current: () => string, maxLen: number, set: (name: string) => void, onDice: () => void, yy: number) => {
       const heading = label(this, x0, yy, title, { font: F.caps, tint: C.cream });
       const box = panel(this, x0, yy + 9, leftW - 22, 14, 'paper');
-      const t = label(this, x0 + 4, yy + 13, value, { font: F.caps, tint: C.ink1, maxWidth: leftW - 30 });
+      const t = label(this, x0 + 4, yy + 13, current(), { font: F.caps, tint: C.ink1, maxWidth: leftW - 30 });
       const z = this.add.zone(x0, yy + 9, leftW - 22, 14).setOrigin(0, 0).setInteractive({ useHandCursor: true });
-      z.on('pointerup', onEdit);
       const dice = button(this, x0 + leftW - 20, yy + 9, 20, 14, '', onDice, { kind: 'violet', icon: 'dice' });
       let hintTimer: Phaser.Time.TimerEvent | undefined;
       /** The title says what happened to what was typed for a moment, then goes back to being the title. No words: back at once. */
@@ -111,21 +111,23 @@ export class NewGameScene extends Phaser.Scene {
         heading.setText(words ?? title).setTint(words ? C.yellow : C.cream);
         if (words) hintTimer = this.time.delayedCall(NAME_HINT_MS, () => say());
       };
+      /** What was typed, as the font can draw it. Nothing usable keeps the old name. Anything the player will see differently is said out loud. */
+      const take = (typed: string) => {
+        const { name, changed } = tidyName(typed, maxLen);
+        if (name) {
+          set(name);
+          t.setText(name);
+        }
+        say(changed ? (name ? NAME_TIDIED : NAME_REFUSED) : undefined);
+      };
+      z.on('pointerup', () => editText(this, { x: x0, y: yy + 9, w: leftW - 22, h: 14 }, current(), maxLen, take));
       return { box, t, z, dice, say };
-    };
-    /** What was typed, as the font can draw it. Nothing usable keeps the old name. Anything the player will see differently is said out loud. */
-    const take = (typed: string, maxLen: number, shown: ReturnType<typeof field>, set: (name: string) => void) => {
-      const { name, changed } = tidyName(typed, maxLen);
-      if (name) {
-        set(name);
-        shown.t.setText(name);
-      }
-      shown.say(changed ? (name ? NAME_TIDIED : NAME_REFUSED) : undefined);
     };
     const companyField = field(
       'COMPANY',
-      f.company,
-      () => editText(this, { x: x0, y: y + 9, w: leftW - 22, h: 14 }, f.company, 22, (typed) => take(typed, 22, companyField, (v) => (f.company = v))),
+      () => f.company,
+      22,
+      (name) => (f.company = name),
       () => {
         f.company = new Rng(Math.floor(Math.random() * 1e9)).pick(app.content.companyNames);
         companyField.t.setText(f.company);
@@ -135,8 +137,9 @@ export class NewGameScene extends Phaser.Scene {
     y += 26;
     const founderField = field(
       'FOUNDER',
-      f.founder,
-      () => editText(this, { x: x0, y: y + 9, w: leftW - 22, h: 14 }, f.founder, 14, (typed) => take(typed, 14, founderField, (v) => (f.founder = v))),
+      () => f.founder,
+      14,
+      (name) => (f.founder = name),
       () => {
         f.founder = new Rng(Math.floor(Math.random() * 1e9)).pick(app.content.firstNames);
         founderField.t.setText(f.founder);
