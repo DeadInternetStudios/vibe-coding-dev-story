@@ -87,20 +87,20 @@ export const awards: Song = compileSong({
   defaultIntensity: 0.6,
   harmony: HARMONY,
   tracks: [
-    { id: 'base', inst: 'organ', octave: 3, pan: -0.15, vol: 1, bars: ORGAN },
-    { id: 'bass', inst: 'bassPulse', octave: 3, vol: 1.15, bars: BASS },
-    { id: 'chords', inst: 'stab', octave: 4, at: 0.25, pan: 0.2, vol: 1.2, bars: every4(PAH, PAH_END, 4) },
+    { id: 'base', inst: 'organ', octave: 3, pan: -0.15, vol: 0.37, bars: ORGAN },
+    { id: 'bass', inst: 'bassPulse', octave: 3, vol: 0.95, bars: BASS },
+    { id: 'chords', inst: 'stab', octave: 4, at: 0.25, pan: 0.2, vol: 2.21, bars: every4(PAH, PAH_END, 4) },
     { id: 'lead', inst: 'brass', at: 0.3, pan: 0.05, vol: 1.5, bars: MELODY },
     {
       id: 'perc',
       at: 0.45,
-      vol: 1,
+      vol: 0.37,
       lanes: {
         s: every4(MARCH, ROLL, 4),
         tl: every4(TIMP, TIMP_END, 4),
         cr: cat(CRASH, rests(3), CRASH, rests(3), CRASH, rests(3), CRASH, rests(3)),
       },
     },
-    { id: 'extra', inst: 'glock', octave: 5, at: 0.7, pan: 0.3, vol: 2, bars: cat(rests(4), rep(SPARK, 4), rep(TWINKLE, 4), rep(SPARK, 4)) },
+    { id: 'extra', inst: 'glock', octave: 5, at: 0.7, pan: 0.3, vol: 1.32, bars: cat(rests(4), rep(SPARK, 4), rep(TWINKLE, 4), rep(SPARK, 4)) },
   ],
 });

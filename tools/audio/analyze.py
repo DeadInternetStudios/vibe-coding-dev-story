@@ -623,9 +623,11 @@ def flags_for(r: dict) -> list[str]:
     if r["dc"] > min(0.01, max(0.002, 0.02 * 10 ** (r["rms_db"] / 20))):
         fl.append("DC")
     if r["group"] == "music":
-        li = r.get("lufs_loop")
-        if li is not None and abs(li - MUSIC_TARGET_LUFS) > 2.0 and "@" not in r["name"]:
-            fl.append(f"LUFS {li - MUSIC_TARGET_LUFS:+.1f}")
+        # a loop is judged on one settled loop, a stinger (no loop) on the whole file, each against its own target
+        li = r.get("lufs_loop") if r.get("lufs_loop") is not None else r.get("lufs_i")
+        target = r.get("lufs_target", MUSIC_TARGET_LUFS)
+        if li is not None and abs(li - target) > 2.0 and "@" not in r["name"]:
+            fl.append(f"LUFS {li - target:+.1f}")
         if r.get("tempo_match") == "MISMATCH":
             fl.append("TEMPO")
         if r.get("key_match") in ("MISMATCH",):

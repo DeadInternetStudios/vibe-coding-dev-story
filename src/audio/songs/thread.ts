@@ -92,19 +92,19 @@ export const thread: Song = compileSong({
       id: 'base',
       inst: 'pluckSq',
       pan: -0.15,
-      vol: 1,
+      vol: 2.09,
       bars: rep(COMP, 24),
     },
     {
       id: 'bass',
       inst: 'bassPizz',
       octave: 2,
-      vol: 0.66,
+      vol: 0.85,
       bars: cat(rep(TWO_FEEL, 7), WALK, rep(WALK, 8), rep(TWO_FEEL, 7), WALK),
     },
     {
       id: 'perc',
-      vol: 0.78,
+      vol: 0.82,
       lanes: {
         sh: rep('X . o . x . o . X . o . x . o .', 24),
         r: rep(place({ 4: 'x', 12: 'x' }), 24),
@@ -133,7 +133,7 @@ export const thread: Song = compileSong({
       octave: 4,
       at: 0.3,
       pan: 0.2,
-      vol: 0.34,
+      vol: 0.22,
       bars: cat(
         DRONE_5, DRONE_5, DRONE_5, DRONE_5, DRONE_5, DRONE_5, DRONE_5, DRONE_5,
         DRONE_3, DRONE_3, DRONE_3, DRONE_3, DRONE_3, DRONE_3, DRONE_3_SPLIT, DRONE_3_SPLIT,

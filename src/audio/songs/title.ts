@@ -83,12 +83,12 @@ export const title: Song = compileSong({
       id: 'base',
       inst: 'arp',
       pan: -0.2,
-      vol: 1.9,
+      vol: 1.64,
       bars: cat(rep(ARP8, 8), rep(ARP16, 8)),
     },
     {
       id: 'perc',
-      vol: 1.15,
+      vol: 0.96,
       lanes: {
         sh: rep('X o x o X o x o X o x o X o x o', 16),
       },
@@ -98,7 +98,7 @@ export const title: Song = compileSong({
       inst: 'bassPulse',
       octave: 3,
       at: 0.3,
-      vol: 1.2,
+      vol: 1.01,
       bars: cat(rep(BASS_A, 8), rep(BASS_B, 8)),
     },
     {
@@ -106,13 +106,13 @@ export const title: Song = compileSong({
       inst: 'stab',
       at: 0.3,
       pan: 0.2,
-      vol: 1.5,
+      vol: 2.89,
       bars: rep(STABS, 16),
     },
     {
       id: 'kit',
       at: 0.3,
-      vol: 1,
+      vol: 0.89,
       lanes: {
         k: every4(KICK, KICK_FILL, 4),
         s: every4(SNARE, SNARE_FILL, 4),
@@ -137,7 +137,7 @@ export const title: Song = compileSong({
       octave: 4,
       at: 0.8,
       pan: 0.25,
-      vol: 2.4,
+      vol: 1.97,
       bars: cat(rep(TWINKLE_A, 8), rep(TWINKLE_B, 8)),
     },
   ],

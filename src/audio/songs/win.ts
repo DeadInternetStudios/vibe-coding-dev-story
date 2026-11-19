@@ -44,11 +44,11 @@ export const win: Song = compileSong({
   tracks: [
     { id: 'lead', inst: 'leadChorus', vol: 1.3, bars: LEAD },
     { id: 'brass', inst: 'brass', octave: 4, pan: -0.15, vol: 1, bars: [...rep(STABS, 7), hold('1+3+5', 16)] },
-    { id: 'base', inst: 'arp', octave: 4, pan: 0.2, vol: 0.9, bars: [...rep(ARP, 7), '. . . . . . . . . . . . . . . .'] },
-    { id: 'bass', inst: 'bassPulse', octave: 3, vol: 1.1, bars: [...rep(BASS_BOUNCE, 7), hold('1', 16)] },
+    { id: 'base', inst: 'arp', octave: 4, pan: 0.2, vol: 1.88, bars: [...rep(ARP, 7), '. . . . . . . . . . . . . . . .'] },
+    { id: 'bass', inst: 'bassPulse', octave: 3, vol: 1.31, bars: [...rep(BASS_BOUNCE, 7), hold('1', 16)] },
     {
       id: 'kit',
-      vol: 1,
+      vol: 1.1,
       lanes: {
         k: [...rep(place({ 0: 'X', 4: 'x', 8: 'X', 12: 'x' }), 7), place({ 0: 'X' })],
         s: cat(rep(place({ 4: 'X', 12: 'X' }), 6), place({ 4: 'X', 8: 'x', 10: 'x', 12: 'x', 13: 'x', 14: 'x', 15: 'X' }), R16),
@@ -64,7 +64,7 @@ export const win: Song = compileSong({
       inst: 'glock',
       octave: 4,
       pan: 0.25,
-      vol: 2.2,
+      vol: 2.53,
       bars: [
         ...rests(4),
         ...rep('. . 5 . . . 8 . . . 5 . . . 8 .', 3),

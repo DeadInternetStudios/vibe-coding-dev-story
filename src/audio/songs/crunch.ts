@@ -128,13 +128,13 @@ export const crunch: Song = compileSong({
       id: 'bass',
       inst: 'bassPulse',
       octave: 3,
-      vol: 1.2,
+      vol: 0.86,
       bars: cat(rep(BOUNCE, 7), BOUNCE_END, rep(DRIVE, 8), rep(BOUNCE, 7), BOUNCE_END, rep(QUARTERS, 4), rep(PULSE16, 4)),
     },
     {
       id: 'perc',
       at: 0.2,
-      vol: 1,
+      vol: 1.45,
       lanes: {
         h: rep(HATS, 32),
         oh: rep(OPEN, 32),
@@ -143,7 +143,7 @@ export const crunch: Song = compileSong({
     {
       id: 'kit',
       at: 0.35,
-      vol: 1,
+      vol: 0.64,
       lanes: {
         k: cat(rep(FOUR, 24), rep(HALFTIME, 4), rep(FOUR, 4)),
         s: cat(
@@ -169,7 +169,7 @@ export const crunch: Song = compileSong({
       octave: 4,
       at: 0.5,
       pan: 0.25,
-      vol: 1.1,
+      vol: 2,
       bars: cat(rep(RIFF, 24), rests(4), rep(STAB8, 4)),
     },
     {
@@ -178,7 +178,7 @@ export const crunch: Song = compileSong({
       octave: 5,
       at: 0.8,
       pan: -0.1,
-      vol: 0.9,
+      vol: 2.75,
       bars: cat(rep(TICK, 24), rep(TICK8, 2), rep(TICK8, 2), rep(TICK16, 4)),
     },
   ],

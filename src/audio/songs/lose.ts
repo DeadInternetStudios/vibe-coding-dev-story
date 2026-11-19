@@ -34,19 +34,19 @@ export const lose: Song = compileSong({
       id: 'bass',
       inst: 'bass',
       octave: 2,
-      vol: 1,
+      vol: 0.35,
       bars: [hold('1', BAR), hold('1\\4', BAR)],
     },
     {
       id: 'pad',
       inst: 'pad',
       octave: 3,
-      vol: 1,
+      vol: 0.58,
       bars: [hold('1+3+5', BAR), hold('1+3+5', BAR)],
     },
     {
       id: 'perc',
-      vol: 1,
+      vol: 0.27,
       lanes: {
         tl: [place({ 0: 'X' }, BAR), place({ 0: 'X' }, BAR)],
         k: [place({}, BAR), place({ 0: 'X' }, BAR)],

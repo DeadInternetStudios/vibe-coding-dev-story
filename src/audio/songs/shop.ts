@@ -85,17 +85,17 @@ export const shop: Song = compileSong({
   defaultIntensity: 0.55,
   harmony: HARMONY,
   tracks: [
-    { id: 'base', inst: 'pluckSq', octave: 4, pan: -0.2, vol: 1.1, bars: cat(rep(COMP_A, 8), rep(COMP_B, 8), rep(COMP_A, 8)) },
+    { id: 'base', inst: 'pluckSq', octave: 4, pan: -0.2, vol: 2.99, bars: cat(rep(COMP_A, 8), rep(COMP_B, 8), rep(COMP_A, 8)) },
     {
       id: 'bass',
       inst: 'bassPizz',
       octave: 2,
-      vol: 1.25,
+      vol: 1.08,
       bars: cat(rep(BOSSA, 7), BOSSA_WALK, rep(BOSSA, 7), BOSSA_WALK, rep(BOSSA, 7), BOSSA_WALK),
     },
     {
       id: 'perc',
-      vol: 0.9,
+      vol: 0.81,
       lanes: {
         r: rep(CLAVE, 24),
         sh: rep(SHAKER, 24),
@@ -105,7 +105,7 @@ export const shop: Song = compileSong({
     {
       id: 'kit',
       at: 0.45,
-      vol: 0.8,
+      vol: 1.03,
       lanes: {
         k: every8(KICK, KICK_FILL, 3),
       },
@@ -116,7 +116,7 @@ export const shop: Song = compileSong({
       octave: 4,
       at: 0.6,
       pan: 0.25,
-      vol: 1.6,
+      vol: 1.39,
       bars: cat(rests(4), rep(MARIMBA_A, 4), rep(MARIMBA_B, 8), rep(MARIMBA_A, 8)),
     },
   ],

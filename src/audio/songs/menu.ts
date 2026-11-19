@@ -86,7 +86,7 @@ export const menu: Song = compileSong({
       id: 'base',
       inst: 'arpSoft',
       pan: -0.2,
-      vol: 2.4,
+      vol: 4.03,
       bars: cat(rep(ARP8, 7), ARPHALF, rep(ARP7, 6), ARP8, ARP7, rep(ARP8, 7), ARPHALF),
     },
     {
@@ -94,7 +94,7 @@ export const menu: Song = compileSong({
       inst: 'pad',
       octave: 3,
       pan: 0.15,
-      vol: 0.8,
+      vol: 1.33,
       bars: cat(rep(PAD, 14), PAD2, PAD2, rep(PAD, 3), PAD2, rep(PAD, 3), PAD),
     },
     {
@@ -102,7 +102,7 @@ export const menu: Song = compileSong({
       inst: 'bassWarm',
       octave: 2,
       at: 0.2,
-      vol: 0.72,
+      vol: 0.95,
       bars: cat(rep(HALF, 3), WALK, rep(HALF, 3), WALK, rep(LONG, 6), rep(ROOTS2, 2), rep(HALF, 3), ROOTS2, rep(HALF, 3), WALK),
     },
     { id: 'lead', inst: 'flute', at: 0.35, pan: 0.1, vol: 1.4, bars: MELODY },

@@ -65,6 +65,12 @@ export const SFX_TRIM_DB: Readonly<Partial<Record<SfxId, number>>> = {
 
 /** dB per song, 0 when absent. */
 export const MUSIC_TRIM_DB: Readonly<Partial<Record<MusicId, number>>> = {
-  title: -1.2,
-  thread: 5.5,
+  title: -0.1,
+  thread: 5.6,
+  launch: 0.6,
+  awards: 4.1,
+  shop: 2.7,
+  win: -0.6,
+  lose: 6.4,
+  menu: -2,
 };
