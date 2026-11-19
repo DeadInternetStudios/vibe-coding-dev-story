@@ -24,6 +24,8 @@ export interface PixelFontSpec {
   threshold?: number;
   /** move the glyphs down (positive) or up (negative) inside the line */
   yShift?: number;
+  /** redraw single glyphs by hand, rows joined with "/", same size as the one they replace. For letters the font draws too oddly to read at this size. */
+  patch?: Record<string, string>;
 }
 
 const ASCII = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
@@ -94,6 +96,8 @@ function rasterize(spec: PixelFontSpec): { glyphs: Glyph[]; ascent: number; desc
     const h = maxY - minY + 1;
     const bits = new Uint8Array(w * h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) bits[y * w + x] = on[(minY + y) * cellW + (minX + x)] ?? 0;
+    const hand = spec.patch?.[ch]?.split('/');
+    if (hand && hand.length === h && hand.every((row) => row.length === w)) hand.forEach((row, y) => [...row].forEach((cell, x) => (bits[y * w + x] = cell === '#' ? 1 : 0)));
     // left is relative to the pen x, top is relative to the baseline row (negative above it)
     glyphs.push({ ch, adv, left: minX - pad, top: minY - pad - ascent, w, h, bits });
   }

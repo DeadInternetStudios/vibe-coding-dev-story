@@ -6,6 +6,7 @@ import '@fontsource/jersey-20/latin-400.css';
 import '@fontsource/tiny5/latin-400.css';
 import '@fontsource/vt323/latin-400.css';
 import { computeViewport } from './core/viewport';
+import { crispBitmapText } from './core/crispText';
 import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { NewGameScene } from './scenes/NewGameScene';
@@ -24,6 +25,7 @@ function currentViewport() {
 }
 
 const vp = currentViewport();
+crispBitmapText();
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

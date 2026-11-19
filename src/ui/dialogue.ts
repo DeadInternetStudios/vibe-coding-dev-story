@@ -46,17 +46,18 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   let speech: Speech | null = null;
   let closed = false;
   let keyOff = () => undefined as void;
+  let mouthTimer: Phaser.Time.TimerEvent | null = null;
   const close = () => {
     if (closed) return;
     closed = true;
     keyOff();
     speech?.stop();
+    mouthTimer?.remove();
     audio.stopVoice();
     release();
     root.destroy();
     onDone();
   };
-  let mouthTimer: Phaser.Time.TimerEvent | null = null;
   const next = () => {
     i += 1;
     speech?.stop();
@@ -104,5 +105,15 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
     kb?.off('keydown-ENTER', onAdvance);
     kb?.off('keydown-ESC', onSkip);
   };
+  // a window resize rebuilds the scene and destroys this box mid-sentence: stop talking, let go of the keys and the pause
+  root.once(Phaser.GameObjects.Events.DESTROY, () => {
+    if (closed) return;
+    closed = true;
+    keyOff();
+    speech?.stop();
+    mouthTimer?.remove();
+    audio.stopVoice();
+    release();
+  });
   next();
 }

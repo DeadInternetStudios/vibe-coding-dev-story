@@ -86,7 +86,17 @@ export class Modal {
     }
     // escape closes it, unless a story box is open on top: that one takes the key to skip itself
     if (opts.closable) this.key('ESC', () => !scene.children.getByName('dialogue') && this.close());
+    // a window resize rebuilds the scene and destroys the popup without closing it: let go of its keys and its pause
+    this.root.once(Phaser.GameObjects.Events.DESTROY, () => this.letGo());
     uiEvents.emit('open');
+  }
+
+  private letGo(): void {
+    this.closed = true;
+    this.keyOffs.forEach((off) => off());
+    this.keyOffs = [];
+    this.release?.();
+    this.release = null;
   }
 
   add<T extends Phaser.GameObjects.GameObject>(obj: T): T {
@@ -122,11 +132,7 @@ export class Modal {
   /** `instant` skips the fade, for a modal that something else is about to replace */
   close(instant = false): void {
     if (this.closed) return;
-    this.closed = true;
-    this.keyOffs.forEach((off) => off());
-    this.keyOffs = [];
-    this.release?.();
-    this.release = null;
+    this.letGo();
     this.freeze();
     const done = () => {
       this.root.destroy();

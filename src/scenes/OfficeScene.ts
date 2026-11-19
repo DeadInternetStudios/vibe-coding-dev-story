@@ -48,6 +48,7 @@ export class OfficeScene extends Phaser.Scene {
   private dragX = 0;
   private bannerObj: Phaser.GameObjects.Container | null = null;
   private introDone = false;
+  private introOpen = false;
   /** a brand new company waits, clock stopped, until the first project starts */
   private firstProjectWait = false;
   private launching = false;
@@ -96,6 +97,7 @@ export class OfficeScene extends Phaser.Scene {
     this.beatOpen = false;
     this.karmaSeen = karmaUnlocks(session.game, app.content);
     this.ctx = this.makeCtx();
+    this.introOpen = false;
     responsive(this, () => this.build(), () => this.teardown());
     this.installKeys();
     audio.music(session.s.company.crunch ? 'crunch' : 'office');
@@ -104,7 +106,20 @@ export class OfficeScene extends Phaser.Scene {
       this.hud?.destroy();
       session.save();
     });
-    if (data?.intro) this.time.delayedCall(450, () => showIntro(this.ctx, () => (this.introDone = true)));
+    this.startIntroSoon();
+  }
+
+  /** The opening scene plays once the office is on screen. A window resize destroys the story box mid-sentence, so the scene starts over in the new layout. */
+  private startIntroSoon(): void {
+    if (this.introDone) return;
+    this.time.delayedCall(450, () => {
+      if (this.introDone || this.introOpen) return;
+      this.introOpen = true;
+      showIntro(this.ctx, () => {
+        this.introOpen = false;
+        this.introDone = true;
+      });
+    });
   }
 
   private teardown(): void {
@@ -116,6 +131,13 @@ export class OfficeScene extends Phaser.Scene {
     this.room?.destroy();
     this.menuModal = null;
     this.promptOpen = false;
+    // story boxes die with the rebuild; whatever waited on them starts over (prompts reopen from the game's pending, tips come back from the director)
+    this.beats = [];
+    this.beatOpen = false;
+    if (this.introOpen) {
+      this.introOpen = false;
+      this.startIntroSoon();
+    }
   }
 
   private makeCtx(): UiCtx {
