@@ -3,10 +3,11 @@ import { computeViewport } from './viewport';
 
 /** [name, css width, css height, dpr, expected logical w, expected logical h] */
 const DEVICES: [string, number, number, number, number, number][] = [
-  // phones keep the sizes the layouts were drawn for
-  ['phone portrait 390x844@3', 390, 844, 3, 293, 633],
+  // phones get big pixels so the text reads and the office is the biggest thing on screen
+  ['phone portrait 390x844@3', 390, 844, 3, 234, 507],
   ['phone portrait 360x640@3', 360, 640, 3, 270, 480],
-  ['phone portrait 375x667@2', 375, 667, 2, 375, 667],
+  ['phone portrait 375x667@2', 375, 667, 2, 250, 445],
+  ['small phone portrait 360x640@2', 360, 640, 2, 240, 427],
   ['phone landscape 844x390@3', 844, 390, 3, 507, 234],
   ['phone landscape 667x375@2', 667, 375, 2, 445, 250],
   // tablets and squarish windows get the smaller scale so the log and the chart fit
