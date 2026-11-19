@@ -7,6 +7,7 @@ import type { AwardId, StatKey, ThreadComment } from '../content/types';
 import { shortMoney, shortNumber } from '../sim/format';
 import type { ShippedApp } from '../sim/types';
 import { confettiBurst } from '../ui/fx';
+import { BUZZ, buzz } from '../core/haptics';
 import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { Speech } from '../ui/speech';
@@ -664,6 +665,7 @@ export class ThreadScene extends Phaser.Scene {
       this.tweens.add({ targets: cont, alpha: 1, duration: 180 });
       audio.sfx(score >= 28 ? 'fanfare_big' : score >= 18 ? 'fanfare_small' : score >= 10 ? 'deny' : 'game_over');
       if (score >= 28) this.cameras.main.shake(160, 0.004);
+      if (score >= 28) buzz(BUZZ.win);
       if (score >= 28) confettiBurst(this, burstAt.x - 40, burstAt.y, { count: score >= 34 ? 44 : 28 });
       if (score >= 28) confettiBurst(this, burstAt.x + 40, burstAt.y, { count: score >= 34 ? 44 : 28 });
     };

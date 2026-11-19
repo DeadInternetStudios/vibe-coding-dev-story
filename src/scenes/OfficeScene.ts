@@ -21,6 +21,7 @@ import type { Modal } from '../ui/modal';
 import { Chatter } from '../ui/chatter';
 import { Dash, addLine, hash7, type TermKind, type TermLine } from '../ui/dash';
 import { coinShower, confettiBurst } from '../ui/fx';
+import { BUZZ, buzz } from '../core/haptics';
 import { Ticker } from '../ui/ticker';
 import { Toasts } from '../ui/toasts';
 import type { UiCtx } from '../ui/ctx';
@@ -140,6 +141,7 @@ export class OfficeScene extends Phaser.Scene {
       log: (kind: TermKind, head: string, text: string) => this.logLine(kind, head, text),
       shake: (power = 0.004) => {
         if (app.settings.shake && !app.settings.reducedMotion) this.cameras.main.shake(180, power);
+        buzz(power > 0.008 ? BUZZ.bad : BUZZ.bump);
       },
     };
   }
