@@ -14,8 +14,8 @@ A voiced line is `{ voice, text, delivery? }`.
 - `fnv1a32`: offset basis 2166136261, prime 16777619, XOR the byte first, then
   multiply, wrap at 2^32. `hex8` is 8 lowercase hex digits, zero padded.
 - Test vector: `voice="dave"`, `text="Did anyone actually read the diff?"`,
-  `delivery=""` must give the id printed by `tools/tts/idtest.py` and by
-  `npm run vo:idtest` (both must agree, the game checks this in its tests).
+  no delivery, must give the id `dave-f3434638`. `tools/tts/idtest.py` and
+  `npm run vo:idtest` both print it, and the game's tests check it.
 - Edit a line's text and its id changes, so old audio is never reused by
   accident and new audio is generated automatically. Never edit ids by hand.
 

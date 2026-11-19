@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#120f24" />
+    <meta name="description" content="Vibe Coding Dev Story. Run a startup where the AI writes the code and Reddit reads the reviews out loud." />
+    <title>Vibe Coding Dev Story</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #120f24; overflow: hidden; overscroll-behavior: contain; }
+      body { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; }
+      #game { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+      #game canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; outline: none; }
+      #boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #ffd2a8; font: 14px/1.4 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; transition: opacity 0.25s; }
+      #boot.done { opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="boot">booting vibes...</div>
+    <div id="game"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

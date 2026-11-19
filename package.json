@@ -1,0 +1,35 @@
+{
+  "name": "vibe-coding-dev-story",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A Game Dev Story style management game about vibe coding. Phaser 4, Reddit humor, Qwen3-TTS VoiceDesign voices.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "vo:export": "tsx tools/vo-export.ts",
+    "vo:idtest": "tsx tools/vo-idtest.ts"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "@fontsource/dotgothic16": "^5.3.1",
+    "@fontsource/jersey-10": "^5.3.0",
+    "@fontsource/jersey-15": "^5.3.0",
+    "@fontsource/jersey-20": "^5.3.0",
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
+    "@fontsource/tiny5": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
