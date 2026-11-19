@@ -13,6 +13,12 @@ import type { Px } from '../../src/art/pixel';
 import { BIG_ICON_NAMES, ICON_NAMES, iconPx } from '../../src/art/sprites/icons';
 import { DECOR, decorPx } from '../../src/art/sprites/decor';
 import { PORTRAIT_LOOKS, portraitPx } from '../../src/art/sprites/portraits';
+import { FX_NAMES, FX_THIN, fxPx } from '../../src/art/sprites/fx';
+import { LOGO_H, LOGO_W, logoPx } from '../../src/art/sprites/logo';
+import { WALL_H, roomBackdrop, wallBlocks } from '../../src/art/sprites/rooms';
+import { nightCity } from '../../src/art/sprites/scenery';
+import { roomSpec } from '../../src/game/roomSpecs';
+import { OFFICE_TIERS } from '../../src/sim/config';
 import { SHOP } from '../../src/sim/shop';
 import { bounds, lintDistinct, lintSprite, type Finding, type LintOpts } from './lint';
 
@@ -104,6 +110,71 @@ export function checkPortraits(): Finding[] {
   return out;
 }
 
+export function checkFx(): Finding[] {
+  const out: Finding[] = [];
+  const all: { name: string; px: Px }[] = [];
+  for (const name of FX_NAMES) {
+    const p = fxPx(name)!;
+    const thin = FX_THIN.includes(name);
+    out.push(...sizeFinding(name, p, 8, 8, false));
+    out.push(...lintSprite(name, p, { noOutline: thin, allowStray: thin, minColors: 2, minFill: 0.2 }));
+    all.push({ name, px: p });
+  }
+  for (const want of ['confetti', 'sparkle', 'steam', 'zzz', 'note', 'sweat', 'vein', 'heart', 'coin', 'puff', 'bulb']) {
+    if (!FX_NAMES.some((n) => n.startsWith(want))) out.push({ sprite: want, level: 'error', msg: 'the brief asks for this effect and there is none' });
+  }
+  out.push(...lintDistinct(all, 3));
+  return out;
+}
+
+export function checkLogo(): Finding[] {
+  const p = logoPx();
+  const out: Finding[] = [];
+  if (p.w !== LOGO_W || p.h !== LOGO_H) out.push({ sprite: 'logo', level: 'error', msg: `size ${p.w}x${p.h}, must be ${LOGO_W}x${LOGO_H}` });
+  if (Math.abs(p.w - 190) > 8 || Math.abs(p.h - 48) > 4) out.push({ sprite: 'logo', level: 'error', msg: `the brief asks for about 190x48, this is ${p.w}x${p.h}` });
+  out.push(...lintSprite('logo', p, { noOutline: true, allowStray: true, minColors: 12, minFill: 0.3 }));
+  return out;
+}
+
+/** The four office rooms: the picture is as big as the spec, and every wall item has a clear place to hang. */
+export function checkRooms(): Finding[] {
+  const out: Finding[] = [];
+  const wallItems = SHOP.filter((i) => i.spot === 'wall').length;
+  for (let tier = 0; tier < OFFICE_TIERS.length; tier++) {
+    const name = `room${tier}`;
+    const spec = roomSpec(tier);
+    const bd = roomBackdrop(spec.look);
+    if (bd.w !== spec.w || bd.h !== spec.h) out.push({ sprite: name, level: 'error', msg: `picture is ${bd.w}x${bd.h}, the spec says ${spec.w}x${spec.h}` });
+    let clear = 0;
+    for (let i = 0; i < bd.d.length; i++) if (bd.d[i] === 0) clear++;
+    if (clear > 0) out.push({ sprite: name, level: 'error', msg: `${clear} clear pixel(s), a room must be solid` });
+    if (spec.wallSpots.length < wallItems) out.push({ sprite: name, level: 'error', msg: `${spec.wallSpots.length} wall spot(s) for ${wallItems} wall item(s)` });
+    const blocks = wallBlocks(spec.look);
+    for (const s of spec.wallSpots) {
+      if (s.x - 16 < 0 || s.x + 16 > spec.w) out.push({ sprite: name, level: 'error', msg: `wall spot ${s.x} hangs off the room` });
+      for (const [a, b] of blocks) if (s.x + 16 > a && s.x - 16 < b) out.push({ sprite: name, level: 'error', msg: `wall spot ${s.x} covers a door, window or fixture (${a}..${b})` });
+    }
+    const spots = [...spec.wallSpots].sort((p, q) => p.x - q.x);
+    for (let i = 1; i < spots.length; i++) if (spots[i]!.x - spots[i - 1]!.x < 32) out.push({ sprite: name, level: 'error', msg: `wall spots ${spots[i - 1]!.x} and ${spots[i]!.x} overlap` });
+    const door = spec.door;
+    if (door.x < 0 || door.x > spec.w || door.y < WALL_H - 8 || door.y > spec.h) out.push({ sprite: name, level: 'error', msg: `door spot ${door.x},${door.y} is outside the room` });
+  }
+  return out;
+}
+
+/** The night city must fill any screen it is asked to. */
+export function checkBackdrop(): Finding[] {
+  const out: Finding[] = [];
+  for (const [w, h] of [[420, 232], [252, 440], [640, 232], [300, 200]] as const) {
+    const p = nightCity(w, h);
+    if (p.w !== w || p.h !== h) out.push({ sprite: `nightCity ${w}x${h}`, level: 'error', msg: `picture is ${p.w}x${p.h}` });
+    let clear = 0;
+    for (let i = 0; i < p.d.length; i++) if (p.d[i] === 0) clear++;
+    if (clear > 0) out.push({ sprite: `nightCity ${w}x${h}`, level: 'error', msg: `${clear} clear pixel(s), a backdrop must be solid` });
+  }
+  return out;
+}
+
 export function checkAll(): Finding[] {
-  return [...checkIcons(), ...checkDecor(), ...checkPortraits()];
+  return [...checkIcons(), ...checkDecor(), ...checkPortraits(), ...checkFx(), ...checkLogo(), ...checkRooms(), ...checkBackdrop()];
 }
