@@ -294,6 +294,94 @@ export function slider(scene: Scene, x: number, y: number, w: number, value: num
   return c;
 }
 
+export interface ChoiceObj extends Phaser.GameObjects.Container {
+  boxH: number;
+  setEnabled(on: boolean): void;
+}
+
+/** A wide two line button: a title, and under it a small hint. Used for event choices and offers. */
+export function choiceButton(scene: Scene, x: number, y: number, w: number, title: string, hint: string | undefined, enabled: boolean, onClick: () => void, kind: ButtonKind = 'cream'): ChoiceObj {
+  const hintLabel = hint ? label(scene, 6, 13, hint, { font: F.body, tint: C.ink3, maxWidth: w - 12 }) : null;
+  const h = hint ? 14 + (hintLabel?.height ?? 8) + 4 : 17;
+  const c = scene.add.container(Math.round(x), Math.round(y)) as ChoiceObj;
+  const mk = (name: BoxName) => scene.add.nineslice(0, 0, bakeBox(scene, name), undefined, w, h, BOX_INSET, BOX_INSET, BOX_INSET, BOX_INSET).setOrigin(0, 0);
+  const shadow = mk('night').setPosition(0, 2).setAlpha(0.5);
+  const face = mk(BTN_BOX[kind][0]);
+  const t = label(scene, 6, 3, title, { font: F.caps, tint: BTN_TEXT[kind] });
+  c.add([shadow, face, t]);
+  if (hintLabel) {
+    hintLabel.setTint(kind === 'cream' ? C.ink3 : C.cream);
+    c.add(hintLabel);
+  }
+  c.boxH = h;
+  c.setSize(w, h);
+  let on = enabled;
+  let down = false;
+  const paint = () => {
+    face.setTexture(bakeBox(scene, !on ? 'btnOff' : down ? BTN_BOX[kind][1] : BTN_BOX[kind][0]));
+    const dy = down && on ? 1 : 0;
+    face.y = dy;
+    t.y = 3 + dy;
+    if (hintLabel) hintLabel.y = 13 + dy;
+    t.setTint(on ? BTN_TEXT[kind] : C.ink3);
+  };
+  const zone = scene.add.zone(0, 0, w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+  c.add(zone);
+  zone.on('pointerdown', () => {
+    if (!on) return;
+    down = true;
+    paint();
+  });
+  zone.on('pointerout', () => {
+    down = false;
+    paint();
+  });
+  zone.on('pointerup', () => {
+    if (!down) {
+      if (!on) uiEvents.emit('deny');
+      return;
+    }
+    down = false;
+    paint();
+    uiEvents.emit('click');
+    onClick();
+  });
+  c.setEnabled = (v) => {
+    on = v;
+    paint();
+  };
+  paint();
+  return c;
+}
+
+const CHIP_ICON: Record<string, string> = {
+  cash: 'cash',
+  tokens: 'token',
+  karma: 'karma',
+  spaghetti: 'spaghetti',
+  mood: 'moodHappy',
+  stat: 'features',
+  progress: 'ship',
+  hype: 'star',
+  delay: 'clock',
+  fire: 'cross',
+  hire: 'hire',
+  skill: 'prompt',
+  xp: 'star',
+  flag: 'note',
+};
+
+/** A little pill with an icon and a number, good news green, bad news red. Returns the pill and its width. */
+export function chip(scene: Scene, x: number, y: number, kind: string, text: string, good: boolean): { c: Phaser.GameObjects.Container; w: number } {
+  const t = label(scene, 13, 3, text, { font: F.body, tint: good ? C.green2 : C.pink });
+  const w = Math.ceil(t.width) + 17;
+  const bg = scene.add.nineslice(0, 0, bakeBox(scene, 'chipDark'), undefined, w, 13, BOX_INSET, BOX_INSET, BOX_INSET, BOX_INSET).setOrigin(0, 0);
+  const iconName = kind === 'mood' ? (good ? 'moodHappy' : 'moodSad') : (CHIP_ICON[kind] ?? 'note');
+  const ic = iconImg(scene, iconName, 3, 2);
+  const c = scene.add.container(Math.round(x), Math.round(y), [bg, ic, t]);
+  return { c, w };
+}
+
 /** Floating text that rises and fades. Good for +$ and +karma. */
 export function pop(scene: Scene, x: number, y: number, text: string, tint: number = C.yellow, font: FontKey = F.caps, rise = 14): void {
   const t = label(scene, x, y, text, { font, tint, outline: true, origin: [0.5, 1], depth: DEPTH.fx + 50 });

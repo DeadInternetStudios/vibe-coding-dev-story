@@ -8,6 +8,8 @@ import { buildPerson, roleColorsFor, type Face, type Look, type Pose } from '../
 import { BOX_SLICE, BOX_SRC, BOX_STYLES, boxFor, type BoxName } from '../art/sprites/ui';
 import { iconPx } from '../art/sprites/icons';
 import { decorPx } from '../art/sprites/decor';
+import { PORTRAIT_LOOKS, portraitPx } from '../art/sprites/portraits';
+import type { VoiceId } from '../content/vo';
 
 export function pxToCanvas(p: Px, roles?: RoleColors): HTMLCanvasElement {
   const c = document.createElement('canvas');
@@ -78,4 +80,11 @@ export function bakeDecor(scene: Phaser.Scene, id: string): string | null {
   const p = decorPx(id);
   if (!p) return null;
   return bake(scene, key, () => p);
+}
+
+/** A speaker's face. Unknown speakers (the system) get a bell. */
+export function bakePortrait(scene: Phaser.Scene, voice: VoiceId | 'system'): string {
+  if (voice === 'system') return bakeIcon(scene, 'bell');
+  const spec = PORTRAIT_LOOKS[voice];
+  return bake(scene, `face:${voice}`, () => portraitPx(voice), roleColorsFor(spec.look));
 }

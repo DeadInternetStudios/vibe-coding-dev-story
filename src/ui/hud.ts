@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
 import { C, DEPTH, F } from '../core/theme';
 import { STAT_KEYS, type StatKey } from '../content/types';
-import { PHASES, SPEEDS, phaseAt } from '../sim/config';
+import { PHASES, SPEEDS, TOKEN_PLANS, phaseAt } from '../sim/config';
 import { dateLabel } from '../sim/format';
-import { monthlyBurn } from '../sim/economy';
 import { shortMoney } from '../sim/format';
 import { projectView } from '../sim/views';
 import type { Session } from '../game/session';
@@ -18,14 +17,6 @@ const STAT_COLORS: Record<StatKey, number> = {
   polish: C.yellow,
   stability: C.mint,
   security: C.violet2,
-};
-
-const STAT_SHORT: Record<StatKey, string> = {
-  vibes: 'VIB',
-  features: 'FEA',
-  polish: 'POL',
-  stability: 'STA',
-  security: 'SEC',
 };
 
 interface Meter {
@@ -207,7 +198,7 @@ export class Hud {
     const c = this.session.game.c;
     if (!p) {
       this.projectKey = 'none';
-      const burn = monthlyBurn(this.session.s, c);
+      const burn = this.session.game.monthlyBurn();
       const months = burn > 0 ? Math.max(0, this.session.s.company.cash / burn) : 99;
       const msg = this.session.s.shipped.length === 0 ? 'No project yet. Time to vibe.' : 'Nothing in the oven.';
       this.project.add(label(s, x + 6, y + 6, msg, { font: F.caps, tint: C.cream }));
@@ -221,7 +212,7 @@ export class Hud {
     const kind = c.kind(p.kind);
     const niche = c.niche(p.niche);
     this.project.add(label(s, x + 6, y + 4, p.name.length > 24 ? `${p.name.slice(0, 23)}~` : p.name, { font: F.caps, tint: C.yellow }));
-    const sub = `${kind.name} / ${niche.name}`;
+    const sub = `${kind.name} / ${niche.plural}`;
     this.project.add(label(s, x + 6, y + 14, sub.length > 40 ? `${sub.slice(0, 39)}~` : sub, { font: F.body, tint: C.ink4 }));
     if (p.status !== 'dev') {
       const b = button(s, x + 6, y + h - 22, Math.min(150, w - 12), 18, p.status === 'ready' ? 'LAUNCH IT' : 'WAITING FOR MONDAY', () => this.onMenu('launch'), { kind: p.status === 'ready' ? 'orange' : 'plum', icon: 'ship', disabled: p.status !== 'ready' });
@@ -291,7 +282,6 @@ export class Hud {
     this.setText('cash', this.cash.text, cashStr);
     this.cash.text.setTint(this.shownCash < 0 ? C.pink : Math.abs(diff) > 0.5 ? (diff > 0 ? C.green2 : C.pink) : C.cream);
     this.setText('karma', this.karma.text, `${Math.round(co.karma)}`);
-    const plan = this.session.game.c; void plan;
     const tokCap = this.tokenCap();
     this.tokens.bar?.set(Math.min(1, co.tokens / tokCap), true);
     this.setText('tokens', this.tokens.text, co.tokens >= 1000 ? `${(co.tokens / 1000).toFixed(1)}M` : `${Math.round(co.tokens)}K`);
@@ -323,7 +313,7 @@ export class Hud {
 
   private tokenCap(): number {
     const plan = this.session.s.company.tokenPlan;
-    const cfg = (this.session.game.c as unknown as { tokenPlans?: { id: string; tokens: number }[] }).tokenPlans?.find((t) => t.id === plan);
+    const cfg = TOKEN_PLANS.find((t) => t.id === plan);
     return Math.max(300, cfg?.tokens ?? 300);
   }
 
@@ -359,4 +349,3 @@ export class Hud {
   }
 }
 
-export { STAT_SHORT };

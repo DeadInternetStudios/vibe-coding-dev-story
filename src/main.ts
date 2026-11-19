@@ -16,6 +16,8 @@ import { TitleScene } from './scenes/TitleScene';
 import { NewGameScene } from './scenes/NewGameScene';
 import { OfficeScene } from './scenes/OfficeScene';
 import { app } from './core/app';
+import { audio } from './core/audio';
+import { uiEvents } from './ui/kit';
 
 const parent = document.getElementById('game')!;
 
@@ -35,6 +37,7 @@ const game = new Phaser.Game({
   render: { pixelArt: true, antialias: false, roundPixels: true },
   input: { activePointers: 3 },
   banner: false,
+  audio: { noAudio: true },
   scene: [BootScene, TitleScene, NewGameScene, OfficeScene],
 });
 
@@ -51,5 +54,12 @@ app.refreshViewport = onResize;
 window.addEventListener('resize', onResize);
 window.visualViewport?.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
+
+const unlock = () => audio.unlock();
+window.addEventListener('pointerdown', unlock);
+window.addEventListener('keydown', unlock);
+uiEvents.on('click', () => audio.sfx('click'));
+uiEvents.on('open', () => audio.sfx('open'));
+uiEvents.on('settings', () => audio.applySettings());
 
 (window as unknown as { __game: Phaser.Game }).__game = game;

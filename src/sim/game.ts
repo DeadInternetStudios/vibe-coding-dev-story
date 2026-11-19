@@ -30,6 +30,8 @@ export interface NewGameOptions {
 
 export const SAVE_VERSION = 1;
 
+const AWARD_PRIZE = { best: 60, crowd: 30, cash: 1500 };
+
 export function unlocked(game: Game, u: Unlock): boolean {
   const s = game.s;
   if (u.year !== undefined && yearOf(s.day) < u.year) return false;
@@ -283,8 +285,32 @@ export class Game {
     if (this.s.pending[0]?.t === 'payday') this.s.pending.shift();
   }
 
+  /** Who wins the Vibey Awards this year. Pure, the prizes are paid when the show ends. */
+  awardsFor(year: number): { id: string; title: string; app: ShippedApp | null; prize: string }[] {
+    const apps = this.s.shipped.filter((a) => yearOf(a.launchDay) === year);
+    const best = (f: (a: ShippedApp) => number) => apps.reduce<ShippedApp | null>((b, a) => (!b || f(a) > f(b) ? a : b), null);
+    const worst = apps.length >= 3 ? apps.reduce<ShippedApp | null>((b, a) => (!b || a.score < b.score ? a : b), null) : null;
+    const k = AWARD_PRIZE;
+    return [
+      { id: 'best', title: 'Best Vibes', app: best((a) => a.score), prize: `+${k.best} karma` },
+      { id: 'crowd', title: 'Most Upvoted', app: best((a) => a.karma), prize: `+${k.crowd} karma` },
+      { id: 'cash', title: 'Cash Cow', app: best((a) => a.earned), prize: `+$${Math.round(k.cash * cashScale(this.s)).toLocaleString('en-US')}` },
+      { id: 'worst', title: 'Participation Trophy', app: worst, prize: 'a hug' },
+    ];
+  }
+
   ackAwards(): void {
-    if (this.s.pending[0]?.t === 'awards') this.s.pending.shift();
+    if (this.s.pending[0]?.t !== 'awards') return;
+    const top = this.s.pending[0];
+    const won = this.awardsFor(top.year);
+    for (const w of won) {
+      if (!w.app) continue;
+      if (w.id === 'best') this.s.company.karma += AWARD_PRIZE.best;
+      if (w.id === 'crowd') this.s.company.karma += AWARD_PRIZE.crowd;
+      if (w.id === 'cash') addCash(this.ctx, Math.round(AWARD_PRIZE.cash * cashScale(this.s)), 'Vibey Award: Cash Cow');
+      if (w.id === 'worst') for (const m of this.s.staff) m.mood = clamp(m.mood + 3, 0, 100);
+    }
+    this.s.pending.shift();
   }
 
   fundingChoices() {
