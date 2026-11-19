@@ -7,7 +7,7 @@ import { C, DEPTH, F } from '../core/theme';
 import { landmarkSign, nightCity } from '../art/sprites/scenery';
 import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
 import { fxPx } from '../art/sprites/fx';
-import { button, label, panel, rect, uiEvents, type ButtonKind } from '../ui/kit';
+import { button, iconImg, label, panel, rect, uiEvents, type ButtonKind } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { wipeIn } from '../ui/wipe';
 import { openSettings } from '../ui/modals/settings';
@@ -17,7 +17,7 @@ import { Speech } from '../ui/speech';
 import { bandEnds, ScrollText } from '../ui/scrollText';
 import { VOICE_NAMES } from '../content/voiceNames';
 import { Rng } from '../sim/rng';
-import { BUTTON_H, BUTTON_W, STRIP_H, titleBlock } from './titleLayout';
+import { BUTTON_H, BUTTON_W, STRIP_H, freeSpot, titleBlock } from './titleLayout';
 
 interface Drifter {
   c: Phaser.GameObjects.Container;
@@ -30,6 +30,12 @@ interface Drifter {
   y1: number;
 }
 
+/** How long the notice about a run that was put aside stays. */
+const NOTICE_MS = 9000;
+
+/** How far above the news strip the floating comments stay: one fades in over the skyline, and none is ever seen against the strip. */
+const CARD_CLEAR = 16;
+
 /** The front door. A night city, a bouncing logo, and Reddit comments floating up past the skyline. */
 export class TitleScene extends Phaser.Scene {
   private logo: { img: Phaser.GameObjects.Image; y: number } | null = null;
@@ -37,6 +43,9 @@ export class TitleScene extends Phaser.Scene {
   private drifters: Drifter[] = [];
   private ticker: ScrollText | null = null;
   private tickerX = 0;
+  /** the notice that a saved run was put aside, while it shows, and the time (see `clock`) until which the floating comments stay out of its way */
+  private notice: Phaser.GameObjects.Container | null = null;
+  private noticeUntil = 0;
   /** 1 when the floating comments may show, 0 while a greeting has the stage: one voice at a time */
   private chatter = 1;
   private chatterTo = 1;
@@ -64,6 +73,8 @@ export class TitleScene extends Phaser.Scene {
     this.logo = null;
     this.twinkles = [];
     this.drifters = [];
+    this.notice = null;
+    this.noticeUntil = 0;
     const L = layoutOf(this);
     const { W, H } = L;
 
@@ -115,10 +126,7 @@ export class TitleScene extends Phaser.Scene {
         : problem === 'damaged'
           ? 'That save was damaged and could not be opened. Your hall of fame is safe.'
           : null;
-    if (why) {
-      const note = label(this, L.cx, H - stripH - 4, why, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 1], depth: DEPTH.hud, maxWidth: W - 12, align: 'center' });
-      this.tweens.add({ targets: note, alpha: 0, delay: 9000, duration: 600 });
-    }
+    if (why) this.showNotice(why, L, menuTop, menuBottom);
     this.buildDrifters(L, { half: bw / 2, top: subY + 14, menuBottom, stripH });
 
     // ticker: letters come out of the dark on the right and sink into the NEWS badge, whole
@@ -167,7 +175,7 @@ export class TitleScene extends Phaser.Scene {
         this.woke = true;
         hint.destroy();
         // a tap on empty sky: the first voice of the game says hello. A tap on a button just gets on with it.
-        if (over.length === 0) this.greet(L, stripH, menuTop, menuBottom);
+        if (over.length === 0) this.greet(L, menuTop, menuBottom);
       };
       this.input.once('pointerdown', (_p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => wake(over));
       this.input.keyboard?.once('keydown', () => wake([]));
@@ -183,6 +191,29 @@ export class TitleScene extends Phaser.Scene {
     // until the Office is built, an error means this run cannot be opened: main.ts puts it aside and reloads
     app.resuming = true;
     fadeTo(this, 'Office');
+  }
+
+  /**
+   * A small panel, in the look of the messages in the office, for the few seconds after a run was put aside. It stands where
+   * the greeting does (beside the buttons or under them), and the floating comments step aside meanwhile: one drifting
+   * through it made the words unreadable.
+   */
+  private showNotice(why: string, L: ReturnType<typeof layoutOf>, menuTop: number, menuBottom: number): void {
+    const at = { W: L.W, H: L.H, cx: L.cx, menuTop, menuBottom };
+    const room = freeSpot({ ...at, boxH: 0 });
+    const text = label(this, 14, 3, why, { font: F.body, tint: C.yellow, maxWidth: room.w - 20 });
+    const w = Math.min(room.w, Math.max(60, text.width + 22));
+    const h = text.height + 6;
+    const spot = freeSpot({ ...at, boxH: h });
+    const icon = iconImg(this, 'warn', 3, Math.floor((h - 8) / 2));
+    const note = this.add.container(spot.x + Math.floor((spot.w - w) / 2), spot.y, [panel(this, 0, 0, w, h, 'night', true), icon, text]).setDepth(DEPTH.hud + 5);
+    this.notice = note;
+    this.noticeUntil = this.clock + (NOTICE_MS + 600) / 1000;
+    // the comments are not there to begin with, rather than fading out as the title opens
+    this.chatter = 0;
+    // the comments are not there to begin with, rather than fading out as the title opens
+    this.chatter = 0;
+    this.tweens.add({ targets: note, alpha: 0, delay: NOTICE_MS, duration: 600 });
   }
 
   /** The wordmark, whole, at a whole-number scale. Returns half its width so other things can keep clear of it. */
@@ -215,7 +246,7 @@ export class TitleScene extends Phaser.Scene {
    * The first tap on empty sky wakes the sound and one of the voices of the game says hello. The box stands in the
    * free lane beside the buttons when the screen is wide, under the buttons when it is narrow, and never over them.
    */
-  private greet(L: ReturnType<typeof layoutOf>, stripH: number, menuTop: number, menuBottom: number): void {
+  private greet(L: ReturnType<typeof layoutOf>, menuTop: number, menuBottom: number): void {
     const lines = app.content.titleQuips;
     if (this.greeted || lines.length === 0) return;
     this.greeted = true;
@@ -223,23 +254,15 @@ export class TitleScene extends Phaser.Scene {
     const line = lines[Math.floor(Math.random() * lines.length)]!;
     const faceW = 40;
     const boxH = 54;
-    // beside the buttons (a button column is 128 wide, 8 clear on each side)
-    const laneL = { x: 4, w: L.cx - 64 - 8 - 4 };
-    const laneR = { x: L.cx + 64 + 8, w: W - 4 - (L.cx + 64 + 8) };
-    const lane = laneR.w >= 124 ? laneR : laneL.w >= 124 ? laneL : null;
-    let w: number;
-    let x: number;
-    let y: number;
-    if (lane) {
-      w = Math.min(176, lane.w);
-      x = lane.x;
-      y = menuTop + 6;
-    } else {
-      w = Math.min(W - 12, 224);
-      x = Math.floor((W - w) / 2);
-      y = menuBottom + 10;
-      if (y + boxH > H - stripH - 4) y = H - stripH - 4 - boxH;
+    // the notice, if it is still up, makes room: this is the one voice now
+    if (this.notice) {
+      const gone = this.notice;
+      this.tweens.killTweensOf(gone);
+      this.tweens.add({ targets: gone, alpha: 0, duration: 150, onComplete: () => gone.destroy() });
+      this.notice = null;
+      this.noticeUntil = 0;
     }
+    const { x, y, w } = freeSpot({ W, H, cx: L.cx, menuTop, menuBottom, boxH });
     const text = label(this, faceW + 12, 15, '', { font: F.body, tint: C.cream, maxWidth: w - faceW - 20 });
     const root = this.add.container(0, 0).setDepth(DEPTH.hud + 6);
     const name = label(this, faceW + 12, 4, `${VOICE_NAMES[line.voice] ?? line.voice}`.toUpperCase(), { font: F.caps, tint: C.orange2 });
@@ -300,7 +323,7 @@ export class TitleScene extends Phaser.Scene {
     const lanes: { x0: number; x1: number; y0: number; y1: number }[] = [];
     const leftMax = L.cx - at.half - gap - w;
     const rightMin = L.cx + at.half + gap;
-    const bottom = H - at.stripH - 4;
+    const bottom = H - at.stripH - CARD_CLEAR;
     if (leftMax >= 4 && W - w - 4 >= rightMin) {
       // beside the buttons, under the wordmark: the logo spans the screen, the buttons do not
       lanes.push({ x0: 4, x1: leftMax, y0: at.top, y1: bottom });
@@ -337,7 +360,9 @@ export class TitleScene extends Phaser.Scene {
     this.clock += dt / 1000;
     const reduce = app.settings.reducedMotion;
     if (this.logo) this.logo.img.y = this.logo.y + (reduce ? 0 : Math.round(Math.sin(this.clock * 2.2) * 2 - (this.greeting?.level ?? 0) * 3));
-    this.chatter += Math.sign(this.chatterTo - this.chatter) * Math.min(Math.abs(this.chatterTo - this.chatter), dt / 400);
+    // the comments step aside for a greeting and for the notice about a run that was put aside
+    const chatterTo = this.chatterTo === 0 || this.clock < this.noticeUntil ? 0 : 1;
+    this.chatter += Math.sign(chatterTo - this.chatter) * Math.min(Math.abs(chatterTo - this.chatter), dt / 400);
     for (const d of this.drifters) {
       d.y -= (dt / 1000) * d.speed;
       if (d.y + d.h < d.y0) d.y = d.y1;

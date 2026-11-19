@@ -11,6 +11,8 @@ export const TITLE_BAND = 22;
 export const STRIP_H = 13;
 export const BUTTON_W = 128;
 export const BUTTON_H = 22;
+/** The narrowest lane beside the buttons that can hold a box of words. */
+const LANE_MIN_W = 124;
 
 /**
  * Where the logo goes on the title, and how big. The logo, the tagline and the buttons are one block that starts a third
@@ -37,4 +39,18 @@ export function titleBlock(o: { W: number; H: number; cx: number; save: boolean;
   const underButtons = o.sign.x + o.sign.w + 6 > o.cx - BUTTON_W / 2;
   const logoY = underButtons ? Math.max(TITLE_BAND, Math.min(base, o.sign.y - 4 - blockH)) : base;
   return { scale, logoH, logoY, menuH, blockH };
+}
+
+/**
+ * Where a box goes on the title so that it never covers the buttons: in the free lane beside them when the screen is wide,
+ * centred under them when it is narrow. `menuTop` is the top of the first button, `menuBottom` the bottom of the last one.
+ */
+export function freeSpot(o: { W: number; H: number; cx: number; menuTop: number; menuBottom: number; boxH: number }): { x: number; y: number; w: number } {
+  const half = BUTTON_W / 2;
+  const left = { x: 4, w: o.cx - half - 8 - 4 };
+  const right = { x: o.cx + half + 8, w: o.W - 4 - (o.cx + half + 8) };
+  const lane = right.w >= LANE_MIN_W ? right : left.w >= LANE_MIN_W ? left : null;
+  if (lane) return { x: lane.x, y: o.menuTop + 6, w: Math.min(176, lane.w) };
+  const w = Math.min(o.W - 12, 224);
+  return { x: Math.floor((o.W - w) / 2), y: Math.min(o.menuBottom + 10, o.H - STRIP_H - 4 - o.boxH), w };
 }
