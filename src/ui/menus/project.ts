@@ -8,7 +8,7 @@ import { nicheFit, noveltyOf } from '../../sim/launch';
 import { productName } from '../../sim/names';
 import { Rng } from '../../sim/rng';
 import { qualityOf } from '../../sim/views';
-import { bar, button, iconImg, label, panel, rect } from '../kit';
+import { bar, button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
@@ -189,6 +189,7 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       repaint();
     });
     m.add(z);
+    m.add(hoverFrame(scene, z, fx, fy, 18, 22));
     faces.push({ id: mem.id, img, ring: ring as unknown as Phaser.GameObjects.Image });
     void bg;
   });

@@ -120,9 +120,11 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   const mk = (name: BoxName) => scene.add.nineslice(0, 0, bakeBox(scene, name), undefined, w, h, BOX_INSET, BOX_INSET, BOX_INSET, BOX_INSET).setOrigin(0, 0);
   const shadow = mk('night').setPosition(0, 2).setAlpha(0.55);
   const face = mk(BTN_BOX[kind][0]);
+  // under a mouse pointer the face brightens: the same picture added on top of itself
+  const glow = mk(BTN_BOX[kind][0]).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
   const font = o.font ?? F.caps;
   const lbl = label(scene, w / 2, h / 2 - 1, text, { font, tint: BTN_TEXT[kind], origin: [0.5, 0.5], shadow: kind !== 'cream' });
-  c.add([shadow, face, lbl]);
+  c.add([shadow, face, glow, lbl]);
   let ic: Phaser.GameObjects.Image | null = null;
   if (o.icon) {
     ic = iconImg(scene, o.icon, 0, 0);
@@ -141,11 +143,15 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   c.boxH = h;
   c.enabled = !o.disabled;
   let down = false;
+  let over = false;
   const paint = () => {
     const name = !c.enabled ? 'btnOff' : down ? BTN_BOX[kind][1] : BTN_BOX[kind][0];
     face.setTexture(bakeBox(scene, name));
     const dy = down && c.enabled ? 1 : 0;
     face.y = dy;
+    glow.setTexture(bakeBox(scene, name));
+    glow.y = dy;
+    glow.setAlpha(c.enabled && over && !down ? 0.22 : 0);
     lbl.y = (ic ? Math.round(h / 2) - 1 : h / 2 - 1) + dy;
     if (ic) ic.y = Math.round((h - ic.height) / 2) - 1 + dy;
     lbl.setTint(c.enabled ? BTN_TEXT[kind] : C.ink3);
@@ -163,7 +169,15 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
     down = false;
     paint();
   };
-  zone.on('pointerout', release);
+  zone.on('pointerover', () => {
+    over = true;
+    paint();
+  });
+  zone.on('pointerout', () => {
+    over = false;
+    down = false;
+    paint();
+  });
   zone.on('pointerup', () => {
     if (!down) return;
     release();
@@ -186,6 +200,15 @@ export function button(scene: Scene, x: number, y: number, w: number, h: number,
   c.textObj = lbl;
   paint();
   return c;
+}
+
+/** A one pixel frame that lights up while a mouse pointer is over `zone`. For tiles and rows that are not buttons. Add the result next to the zone. */
+export function hoverFrame(scene: Scene, zone: Phaser.GameObjects.Zone, x: number, y: number, w: number, h: number, tint: number = C.yellow): Phaser.GameObjects.Container {
+  const frame = scene.add.container(Math.round(x), Math.round(y)).setAlpha(0);
+  frame.add([rect(scene, 0, 0, w, 1, tint), rect(scene, 0, h - 1, w, 1, tint), rect(scene, 0, 0, 1, h, tint), rect(scene, w - 1, 0, 1, h, tint)]);
+  zone.on('pointerover', () => frame.setAlpha(1));
+  zone.on('pointerout', () => frame.setAlpha(0));
+  return frame;
 }
 
 /** Small icon-only button, square. */

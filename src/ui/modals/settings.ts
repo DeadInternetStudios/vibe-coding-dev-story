@@ -10,7 +10,7 @@ import { layoutOf } from '../layout';
 export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClose?: () => void): Modal {
   const L = layoutOf(scene);
   const w = Math.min(L.W - 8, 250);
-  const h = Math.min(L.H - 8, 196);
+  const h = Math.min(L.H - 8, 170);
   const m = new Modal(scene, { w, h, title: 'SETTINGS', closable: true, hold, onClose });
   const s = app.settings;
   const commit = () => {
@@ -39,22 +39,26 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
     y += rowH - 4;
   }
   y += 6;
-  const toggles: [string, 'subtitles' | 'reducedMotion' | 'shake' | 'muted', string, string][] = [
-    ['SUBTITLES', 'subtitles', 'ON', 'OFF'],
-    ['SCREEN SHAKE', 'shake', 'ON', 'OFF'],
-    ['CALM MODE', 'reducedMotion', 'ON', 'OFF'],
+  // four switches in two columns; SOUND is the one that is on while `muted` is off
+  const toggles: [string, 'subtitles' | 'reducedMotion' | 'shake' | 'muted', boolean][] = [
+    ['SUBTITLES', 'subtitles', false],
+    ['SCREEN SHAKE', 'shake', false],
+    ['CALM MODE', 'reducedMotion', false],
+    ['SOUND', 'muted', true],
   ];
-  for (const [name, key, on, off] of toggles) {
-    m.add(label(scene, 10, y + 4, name, { font: F.caps, tint: C.ink1 }));
-    const b = button(scene, w - 58, y, 48, 14, s[key] ? on : off, () => {
+  const colW = Math.floor((w - 24) / 2);
+  toggles.forEach(([name, key, inverted], i) => {
+    const on = () => (inverted ? !s[key] : s[key]);
+    const text = () => `${name} ${on() ? 'ON' : 'OFF'}`;
+    const b = button(scene, 10 + (i % 2) * (colW + 4), y + Math.floor(i / 2) * 17, colW, 14, text(), () => {
       s[key] = !s[key];
-      b.setText(s[key] ? on : off);
-      b.setKind(s[key] ? 'teal' : 'plum');
+      b.setText(text());
+      b.setKind(on() ? 'teal' : 'plum');
       commit();
-    }, { kind: s[key] ? 'teal' : 'plum' });
+    }, { kind: on() ? 'teal' : 'plum' });
     m.add(b);
-    y += 17;
-  }
+  });
+  y += 34;
   m.add(label(scene, 10, y + 4, 'UI SIZE', { font: F.caps, tint: C.ink1 }));
   const sizeNames = ['SMALL', 'NORMAL', 'BIG'];
   const sizeBtn = button(scene, w - 78, y, 68, 14, sizeNames[s.uiSize + 1]!, () => {

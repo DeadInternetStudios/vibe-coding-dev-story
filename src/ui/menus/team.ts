@@ -5,7 +5,7 @@ import { C, F } from '../../core/theme';
 import { SKILL_KEYS, type SkillKey } from '../../content/types';
 import { money, shortMoney } from '../../sim/format';
 import type { Staff } from '../../sim/types';
-import { bar, button, iconImg, label, panel, rect, type ButtonKind } from '../kit';
+import { bar, button, hoverFrame, iconImg, label, panel, rect, type ButtonKind } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
@@ -56,6 +56,7 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
       paint();
     });
     m.add(z);
+    m.add(hoverFrame(scene, z, x, y, tile, tile + 2));
     tiles.push({ bg: bg as unknown as Phaser.GameObjects.Image });
   });
   const free = game.freeDesks();

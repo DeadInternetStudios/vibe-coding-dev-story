@@ -29,6 +29,8 @@ export class StaffSprite {
   private bubble: Phaser.GameObjects.Container | null = null;
   private bubbleUntil = 0;
   private tag: Phaser.GameObjects.Container | null = null;
+  /** the tag on show is the name under a mouse pointer, not a reason to be away */
+  private hoverTag = false;
   mode: Mode = 'desk';
   /** the desk seat, bottom center of the person image */
   seat = { x: 0, y: 0 };
@@ -65,6 +67,14 @@ export class StaffSprite {
     this.root.setSize(18, 22);
     this.img.setInteractive({ useHandCursor: true });
     this.img.on('pointerup', () => this.onTap?.());
+    this.img.on('pointerover', () => {
+      if (this.mode === 'away' || this.tag) return;
+      this.showTag(this.staff.name);
+      this.hoverTag = true;
+    });
+    this.img.on('pointerout', () => {
+      if (this.hoverTag) this.clearTag();
+    });
   }
 
   setSeat(x: number, y: number): void {
@@ -124,6 +134,7 @@ export class StaffSprite {
   private clearTag(): void {
     this.tag?.destroy();
     this.tag = null;
+    this.hoverTag = false;
   }
 
   setDepth(d: number): void {

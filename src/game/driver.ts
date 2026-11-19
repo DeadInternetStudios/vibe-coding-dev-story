@@ -90,6 +90,17 @@ export function installDriver(game: Phaser.Game): void {
     return true;
   };
 
+  /** Put a mouse pointer over a control without pressing it, to look at the hover look. */
+  const hover = (match: string | RegExp): boolean => {
+    const sc = active();
+    if (!sc) return false;
+    const re = typeof match === 'string' ? new RegExp(match, 'i') : match;
+    const hit = collect(sc).find((c) => !c.dim && re.test(c.label));
+    if (!hit) return false;
+    hit.obj.emit('pointerover', { x: hit.x, y: hit.y, worldX: hit.x, worldY: hit.y } as unknown as Phaser.Input.Pointer);
+    return true;
+  };
+
   /** Tap through the dialogue that is on screen, one step. */
   const next = (): boolean => {
     const sc = active();
@@ -236,6 +247,7 @@ export function installDriver(game: Phaser.Game): void {
   const api = {
     list: () => list().map((c) => ({ label: c.label, depth: c.depth, x: Math.round(c.x), y: Math.round(c.y), dim: c.dim })),
     click,
+    hover,
     next,
     scene: () => active()?.scene.key ?? null,
     /** the running game's state, for probes that need real data */

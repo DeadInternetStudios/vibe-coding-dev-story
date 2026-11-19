@@ -3,12 +3,12 @@ import { app } from '../core/app';
 import { bake } from '../core/bake';
 import { dailyKey } from '../core/daily';
 import { feature } from '../core/features';
-import { loadHall, loadSave } from '../core/save';
+import { loadHall, loadSave, saveSettings } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
 import { nightCity } from '../art/sprites/scenery';
 import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
 import { fxPx } from '../art/sprites/fx';
-import { button, label, panel, rect, type ButtonKind } from '../ui/kit';
+import { button, label, panel, rect, uiEvents, type ButtonKind } from '../ui/kit';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { openSettings } from '../ui/modals/settings';
 import { openHall } from '../ui/modals/hall';
@@ -121,6 +121,18 @@ export class TitleScene extends Phaser.Scene {
       chip.setDepth(DEPTH.hud);
       label(this, 10, 8, `BEST  ${best.rank}  $${Math.round(best.score / 1000)}K`, { font: F.caps, tint: C.yellow, depth: DEPTH.hud + 1 });
     }
+
+    // the sound switch: the first tap anywhere wakes the sound up, this one turns it off and on again
+    const soundText = () => (app.settings.muted ? 'SOUND OFF' : 'SOUND ON');
+    const soundKind = (): ButtonKind => (app.settings.muted ? 'berry' : 'teal');
+    const sound = button(this, W - 62, 4, 58, 14, soundText(), () => {
+      app.settings.muted = !app.settings.muted;
+      saveSettings(app.settings);
+      uiEvents.emit('settings');
+      sound.setText(soundText());
+      sound.setKind(soundKind());
+    }, { kind: soundKind(), icon: 'speaker', font: F.body });
+    sound.setDepth(DEPTH.hud);
 
     this.input.keyboard?.on('keydown-ENTER', () => (save ? this.continueGame() : fadeTo(this, 'NewGame')));
   }

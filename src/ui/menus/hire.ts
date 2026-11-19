@@ -4,7 +4,7 @@ import { bakePerson } from '../../core/bake';
 import { C, F } from '../../core/theme';
 import { SKILL_KEYS } from '../../content/types';
 import { money, shortMoney } from '../../sim/format';
-import { button, iconImg, label, panel, rect } from '../kit';
+import { button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
@@ -71,6 +71,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
         draw();
       });
       r.add(hit);
+      r.add(hoverFrame(scene, hit, 0, 0, 140, rowH));
       r.add(label(scene, 25, 3, cand.name.toUpperCase(), { font: F.caps, tint: C.ink1, maxWidth: 110 }));
       r.add(label(scene, 25, 13, arch.role, { font: F.body, tint: C.orange1 }));
       // skills

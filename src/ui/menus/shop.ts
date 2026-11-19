@@ -5,7 +5,7 @@ import { OFFICE_TIERS } from '../../sim/config';
 import { money, shortMoney } from '../../sim/format';
 import { SHOP, type ShopItem } from '../../sim/shop';
 import { unlocked } from '../../sim/game';
-import { button, iconImg, label, panel, rect } from '../kit';
+import { button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import type { UiCtx } from '../ctx';
@@ -77,6 +77,7 @@ export function openShop(ctx: UiCtx, onClose: () => void): Modal {
       paint();
     });
     m.add(z);
+    m.add(hoverFrame(scene, z, x, y, tile, tile));
     tileObjs.push({ ring, badge, price });
   });
 

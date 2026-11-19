@@ -10,7 +10,7 @@ import { DIFFICULTIES, FOUNDER_ORIGINS, type FounderOriginId } from '../sim/conf
 import { Rng } from '../sim/rng';
 import type { Look } from '../sim/types';
 import { Session } from '../game/session';
-import { button, label, panel, rect, type ButtonObj } from '../ui/kit';
+import { button, hoverFrame, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { editText } from '../ui/domInput';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { nightSky } from '../art/sprites/scenery';
@@ -150,7 +150,16 @@ export class NewGameScene extends Phaser.Scene {
     label(this, rightX, ry, 'WHERE DID YOU COME FROM?', { font: F.caps, tint: C.cream });
     ry += 10;
     const cards: { box: ReturnType<typeof panel>; id: number }[] = [];
-    const cardH = 31;
+    // every card is as tall as the longest blurb needs, so two lines never run into the border
+    const blurbH = Math.max(
+      ...FOUNDER_ORIGINS.map((o) => {
+        const probe = label(this, -999, -999, o.blurb, { font: F.body, maxWidth: rightW - 10 });
+        const h = probe.height;
+        probe.destroy();
+        return h;
+      }),
+    );
+    const cardH = Math.max(31, 14 + blurbH + 5);
     FOUNDER_ORIGINS.forEach((o, i) => {
       const on = i === f.origin;
       const box = panel(this, rightX, ry, rightW, cardH, on ? 'btnTeal' : 'paperDim');
@@ -163,28 +172,34 @@ export class NewGameScene extends Phaser.Scene {
         f.origin = i;
         this.refresh();
       });
+      hoverFrame(this, z, rightX, ry, rightW, cardH);
       cards.push({ box, id: i });
       ry += cardH + 3;
     });
 
     // ------------------------------------------------------ difficulty
-    ry += 3;
-    label(this, rightX, ry, 'DIFFICULTY', { font: F.caps, tint: C.cream });
-    ry += 10;
+    // under the cards on a tall screen; on a wide one the cards use the whole right column, so it sits under the avatar
+    const dX = wide ? x0 : rightX;
+    const dTotal = wide ? leftW : rightW;
+    let dY = wide ? ay + 6 : ry + 3;
+    label(this, dX, dY, 'DIFFICULTY', { font: F.caps, tint: C.cream });
+    dY += 10;
     const gap = 3;
-    const dw = Math.floor((rightW - gap * 2) / 3);
+    const dw = Math.floor((dTotal - gap * 2) / 3);
     const dbtns: ButtonObj[] = [];
     DIFFICULTIES.forEach((d, i) => {
-      const b = button(this, rightX + i * (dw + gap), ry, dw, 15, d.id.toUpperCase(), () => {
+      const b = button(this, dX + i * (dw + gap), dY, dw, 15, d.id.toUpperCase(), () => {
         f.difficulty = i;
         dbtns.forEach((bb, j) => bb.setKind(j === i ? 'teal' : 'plum'));
         blurb.setText(DIFFICULTIES[i]!.blurb);
       }, { kind: i === f.difficulty ? 'teal' : 'plum' });
       dbtns.push(b);
     });
-    ry += 18;
-    const blurb = label(this, rightX, ry, DIFFICULTIES[f.difficulty]!.blurb, { font: F.body, tint: C.cream, maxWidth: rightW });
-    ry += 12;
+    dY += 18;
+    const blurb = label(this, dX, dY, DIFFICULTIES[f.difficulty]!.blurb, { font: F.body, tint: C.cream, maxWidth: dTotal });
+    dY += 12;
+    if (!wide) ry = dY;
+    const contentBottom = wide ? dY : ry;
 
     // ------------------------------------------------------ start, and the daily challenge beside it
     // the start row keeps its old place on every screen. The daily takes the left of it, and wide screens
@@ -199,7 +214,7 @@ export class NewGameScene extends Phaser.Scene {
     if (withDaily) {
       button(this, x0, startY, dailyW, 24, dailyW >= DAILY_FULL_W ? 'DAILY CHALLENGE' : 'DAILY', () => this.start(true), { kind: 'violet', icon: 'calendar' });
       // two lines above it say what it is, if the screen has the room
-      if (startY - DAILY_NOTE >= (wide ? ay : ry) + 2) {
+      if (startY - DAILY_NOTE >= contentBottom + 2) {
         const today = dailyKey();
         const best = loadDailyBest(today);
         label(this, x0, startY - DAILY_NOTE, dailyTag(today), { font: F.caps, tint: C.yellow });
