@@ -85,6 +85,9 @@ window.addEventListener('resize', onResize);
 window.visualViewport?.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', onResize);
 
+// the list of voice clips is big: fetch it once the game is up, before the first spoken line needs it
+window.setTimeout(() => audio.warm(), 1200);
+
 const unlock = () => audio.unlock();
 window.addEventListener('pointerdown', unlock);
 window.addEventListener('keydown', unlock);

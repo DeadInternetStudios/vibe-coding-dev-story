@@ -24,6 +24,7 @@ import { Modal, NUMBER_KEYS } from './modal';
 import { Speech } from './speech';
 import { beat, scene as playScene } from './story';
 import { dialogue } from './dialogue';
+import { threadLines } from './threadLines';
 import type { UiCtx } from './ctx';
 
 export type Follow = { t: 'thread'; appId: number } | { t: 'ending' } | undefined;
@@ -433,6 +434,8 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
       ctx.sfx('deploy_go');
       const toThread = () => done({ t: 'thread', appId: r.app.id });
       deployBeats(ctx, () => (r.incident ? incidentBeat(ctx, toThread) : toThread()));
+      // the thread is made the moment the app ships: its voices load while the deploy jokes play
+      void audio.preload(threadLines(ctx.content, r.app.thread));
       return;
     }
     m.close();

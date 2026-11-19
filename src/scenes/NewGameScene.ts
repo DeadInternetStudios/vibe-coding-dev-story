@@ -53,6 +53,8 @@ export class NewGameScene extends Phaser.Scene {
   create(): void {
     wipeIn(this);
     audio.music('title', { fadeMs: 400 });
+    // the opening scene is spoken the moment the office appears: fetch it while the founder is being made
+    void audio.preload(app.content.story.intro.flatMap((step) => (step.speaker === 'system' ? [] : [step.line])));
     const rng = new Rng(Math.floor(Math.random() * 1e9));
     this.seed = rng.state;
     const c = app.content;

@@ -5,6 +5,7 @@
  */
 import { SoundEngine, type MusicId, type SfxId, type SfxOpts } from '../audio';
 import { quietRun, silentSink } from '../audio/quiet';
+import { ClipCache } from './clipCache';
 import type { VoiceLine } from '../content/vo';
 import { app } from './app';
 
@@ -39,6 +40,11 @@ export interface VoiceHandle {
 
 const WORDS_PER_SEC = 4.2;
 
+/** How long a line waits for its clip to arrive before it is said without one. A slow connection must never hold the words back. */
+const CLIP_PATIENCE_MS = 600;
+/** How many clips are fetched at once when a scene asks for its lines ahead of time, in the order they will be said. */
+const PRELOAD_LANES = 3;
+
 export function wordCount(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
 }
@@ -49,13 +55,14 @@ class AudioHub {
   private voiceGain: GainNode | null = null;
   private manifest: Manifest | null = null;
   private manifestLoading: Promise<void> | null = null;
-  private buffers = new Map<string, AudioBuffer | null>();
+  private clips = new ClipCache<AudioBuffer>((id) => this.fetchClip(id), 60);
   private active: { stop: () => void } | null = null;
+  /** counts every voice request and every stop, so a line that was waiting for its clip knows it was replaced */
+  private turn = 0;
   private unlocked = false;
   /** a test run: everything plays inside the page and nothing reaches the speakers */
   private quiet = false;
   private wantMusic: MusicId | null = null;
-  private base = '';
 
   /** Create the context. Safe to call many times. Nothing plays until a gesture unlocks it. */
   init(): void {
@@ -69,7 +76,6 @@ class AudioHub {
       this.engine = new SoundEngine(this.ctx, speakers);
       this.voiceGain = this.ctx.createGain();
       this.voiceGain.connect(speakers);
-      this.base = import.meta.env.BASE_URL ?? '/';
       this.applySettings();
       document.addEventListener('visibilitychange', () => this.followTab());
     } catch {
@@ -130,11 +136,15 @@ class AudioHub {
     this.engine?.setTempoScale(n);
   }
 
+  private get root(): string {
+    return import.meta.env.BASE_URL ?? '/';
+  }
+
   private async loadManifest(): Promise<void> {
     if (this.manifest) return;
     this.manifestLoading ??= (async () => {
       try {
-        const res = await fetch(`${this.base}audio/vo/manifest.json`);
+        const res = await fetch(`${this.root}audio/vo/manifest.json`);
         if (res.ok) this.manifest = (await res.json()) as Manifest;
       } catch {
         /* no voices yet */
@@ -144,41 +154,42 @@ class AudioHub {
     await this.manifestLoading;
   }
 
-  /** Is there a recorded clip for this line. Needs the manifest loaded. */
-  has(line: VoiceLine): boolean {
-    return !!this.manifest?.lines[line.id];
+  /** Start fetching the list of voice clips now, so the first spoken line does not wait for it. */
+  warm(): void {
+    void this.loadManifest();
   }
 
-  /** Fetch the manifest and clips ahead of time so the first line does not stutter. */
+  /**
+   * Fetch and decode the clips of lines that will be said soon, in the order they will be said, so each is ready when its
+   * turn comes. Does nothing when no voice would play, or when the player asked the browser to save data.
+   */
   async preload(lines: readonly VoiceLine[]): Promise<void> {
-    await this.loadManifest();
-    await Promise.all(lines.map((l) => this.buffer(l)));
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (saveData || app.settings.muted || app.settings.volVoice <= 0) return;
+    await this.clips.preload(
+      lines.map((l) => l.id),
+      PRELOAD_LANES,
+    );
   }
 
-  private async buffer(line: VoiceLine): Promise<AudioBuffer | null> {
-    if (this.buffers.has(line.id)) return this.buffers.get(line.id) ?? null;
-    const m = this.manifest?.lines[line.id];
-    if (!m || !this.ctx) {
-      this.buffers.set(line.id, null);
-      return null;
-    }
+  private async fetchClip(id: string): Promise<AudioBuffer | null | undefined> {
+    await this.loadManifest();
+    const ctx = this.ctx;
+    // before the first tap there is no sound system to decode with: ask again later
+    if (!ctx) return undefined;
+    const m = this.manifest?.lines[id];
+    if (!m) return null;
     try {
-      const res = await fetch(`${this.base}audio/vo/${m.file}`);
-      if (!res.ok) throw new Error('missing');
-      const buf = await this.ctx.decodeAudioData(await res.arrayBuffer());
-      this.buffers.set(line.id, buf);
-      if (this.buffers.size > 60) {
-        const first = this.buffers.keys().next().value;
-        if (first !== undefined) this.buffers.delete(first);
-      }
-      return buf;
+      const res = await fetch(`${this.root}audio/vo/${m.file}`);
+      if (!res.ok) return undefined;
+      return await ctx.decodeAudioData(await res.arrayBuffer());
     } catch {
-      this.buffers.set(line.id, null);
-      return null;
+      return undefined;
     }
   }
 
   stopVoice(): void {
+    this.turn++;
     this.active?.stop();
     this.active = null;
   }
@@ -189,26 +200,30 @@ class AudioHub {
    * themselves the same way either way.
    */
   async voice(line: VoiceLine): Promise<VoiceHandle> {
-    await this.loadManifest();
     this.stopVoice();
-    const m = this.manifest?.lines[line.id];
+    const turn = this.turn;
     const ctx = this.ctx;
     const guess = Math.max(1.2, wordCount(line.text) / WORDS_PER_SEC);
     let resolve!: () => void;
     const done = new Promise<void>((r) => (resolve = r));
-    const t0 = performance.now();
     let src: AudioBufferSourceNode | null = null;
     let stopped = false;
     let buf: AudioBuffer | null = null;
-    if (m && ctx && this.unlocked && !app.settings.muted && app.settings.volVoice > 0) buf = await this.buffer(line);
+    // A clip that is slow to arrive is not waited for: the line is said silently and the clip keeps coming for next time.
+    if (ctx && this.unlocked && !app.settings.muted && app.settings.volVoice > 0) {
+      buf = await this.clips.within(line.id, CLIP_PATIENCE_MS);
+    }
+    // asked to stop, or another line took over, while this one waited: it is not said aloud
+    const current = turn === this.turn;
+    if (!current) buf = null;
+    const m = buf ? this.manifest?.lines[line.id] : undefined;
     const real = !!buf;
     const dur = real ? buf!.duration : guess;
     const startedAt = performance.now();
-    void t0;
     const finish = () => {
       if (stopped) return;
       stopped = true;
-      this.engine?.unduck(350);
+      if (current) this.engine?.unduck(350);
       if (this.active === handleStop) this.active = null;
       resolve();
     };
@@ -232,7 +247,7 @@ class AudioHub {
         finish();
       },
     };
-    this.active = handleStop;
+    if (current) this.active = handleStop;
     const env = m?.env ?? '';
     const words = m?.words;
     const nWords = wordCount(line.text);

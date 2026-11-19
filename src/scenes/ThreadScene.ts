@@ -17,6 +17,7 @@ import { wipeIn } from '../ui/wipe';
 import { REMOVED_BELOW, SOLID_FROM, VIRAL_FROM } from '../sim/config';
 import { Speech } from '../ui/speech';
 import { beat } from '../ui/story';
+import { threadLines } from '../ui/threadLines';
 import type { StageCtx } from '../ui/ctx';
 
 const AWARD_ICON: Record<AwardId, string> = {
@@ -338,6 +339,8 @@ export class ThreadScene extends Phaser.Scene {
 
   private async play(): Promise<void> {
     const sctx: StageCtx = { scene: this, session: current(), hold: () => () => undefined };
+    // every comment is spoken: ask for the clips in the order they will be said, before the first one is due
+    void audio.preload(threadLines(app.content, this.rec.thread));
     await this.addOp();
     let narrated = false;
     if (!this.instant && !this.replay) {

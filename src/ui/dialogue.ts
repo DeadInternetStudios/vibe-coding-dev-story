@@ -19,6 +19,8 @@ export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => voi
   const scene = ctx.scene;
   const L = layoutOf(scene);
   const release = ctx.hold('dialogue');
+  // the whole scene is fetched while the first line is spoken, so no later line waits for its clip
+  void audio.preload(steps.flatMap((step) => (step.speaker === 'system' ? [] : [step.line])));
   // a card that is open (the new project card, the hire list) waits behind the box instead of being talked over
   const bringBack = tuckPopups(scene);
   const root = scene.add.container(0, 0).setDepth(DEPTH.modal + 20).setName('dialogue');
