@@ -10,6 +10,9 @@ import { decorPx } from './sprites/decor';
 import { BOX_STYLES, box, type BoxName } from './sprites/ui';
 import { ACCESSORIES, HAIR, buildPerson, roleColorsFor, type Face, type Look, type Pose } from './sprites/people';
 import { PORTRAIT_LOOKS, portraitPx } from './sprites/portraits';
+import { FX_NAMES, fxPx } from './sprites/fx';
+import { nightCity } from './sprites/scenery';
+import { logoPx } from './sprites/logo';
 import type { VoiceId } from '../content/vo';
 
 export interface CatalogItem {
@@ -81,11 +84,14 @@ export const CATALOG: Record<string, CatalogItem[]> = {
   channels: bigGroup('chan_'),
   cards: bigGroup('card_'),
   portraits: (Object.keys(PORTRAIT_LOOKS) as VoiceId[]).map((name) => ({ name, make: () => portraitPx(name) })),
+  fx: FX_NAMES.map((name) => ({ name, make: () => fxPx(name)! })),
   decorDesk: decorGroup(['duck', 'monitor', 'keyboard', 'standing', 'key', 'chair']),
   decorWall: decorGroup(['whiteboard', 'neon', 'trophy']),
   decorFloor: decorGroup(['plant', 'coffee', 'cooler', 'beanbag', 'fridge', 'couch', 'arcade', 'pingpong', 'massage']),
   decorCorner: decorGroup(['rack', 'barista']),
   boxes: (Object.keys(BOX_STYLES) as BoxName[]).map((name) => ({ name, make: () => box(28, 16, BOX_STYLES[name]) })),
+  logo: [{ name: 'logo', make: logoPx }],
+  backdrop: [{ name: 'night-city', make: () => nightCity(420, 232) }, { name: 'night-city-tall', make: () => nightCity(252, 440) }],
   mock: [{ name: 'office-carpet', make: () => mockOffice('carpet') }, { name: 'office-wood', make: () => mockOffice('wood') }],
   people: LOOKS.map((look, i) => person(`look${i}`, look, 'stand', 'normal')),
   poses: POSES.map((pose, i) => person(pose, LOOKS[i % LOOKS.length]!, pose, 'normal')),

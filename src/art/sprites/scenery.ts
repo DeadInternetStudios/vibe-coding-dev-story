@@ -4,6 +4,7 @@
  */
 import { Px, type InkName } from '../pixel';
 import { Rng } from '../../sim/rng';
+import { glyphs } from '../glyphs';
 
 /** Banded night sky, dark at the top, plum and orange glow at the horizon, with dithered seams. */
 export function nightSky(w: number, h: number): Px {
@@ -84,5 +85,85 @@ export function skyline(w: number, h: number, seed: number, layer: 0 | 1): Px {
     }
     x += bw + rng.int(0, 2);
   }
+  return c;
+}
+
+/** A tall building with a billboard on the roof, so the skyline has one thing to look at. */
+function landmark(h: number): Px {
+  const bw = 28;
+  const signH = 17;
+  const c = new Px(bw, h + signH);
+  const top = signH;
+  c.rect(0, top, bw, h, 'ink1');
+  c.hline(0, top, bw, 'ink2');
+  c.vline(0, top, h, 'ink2');
+  const rng = new Rng(77);
+  let row = 0;
+  for (let wy = top + 4; wy < top + h - 4; wy += 5, row++) {
+    for (let wx = 3; wx < bw - 3; wx += 5) {
+      const lit = rng.chance(0.4);
+      c.rect(wx, wy, 3, 2, lit ? (rng.chance(0.2) ? 'mint' : 'yellow') : 'ink2');
+    }
+  }
+  // the one window that is still lit at 3am: blue monitor glow and a head
+  c.rect(13, top + 14, 3, 2, 'blue2');
+  c.set(14, top + 14, 'ink0');
+  // billboard on two posts
+  c.vline(5, 9, signH - 9, 'ink3').vline(bw - 6, 9, signH - 9, 'ink3');
+  c.rect(1, 0, bw - 2, 10, 'ink0');
+  c.rect(2, 1, bw - 4, 8, 'teal1');
+  c.hline(2, 1, bw - 4, 'teal2');
+  glyphs(c, 'LGTM', 6, 3, 'mint');
+  // a red light on the corner, for planes
+  c.set(bw - 1, top - 1, 'berry1');
+  return c;
+}
+
+/** A taxi, parked with its light on, because it is that kind of city. */
+function taxi(): Px {
+  const c = new Px(14, 6);
+  c.rect(0, 2, 14, 3, 'yellow');
+  c.rect(3, 0, 7, 2, 'yellow');
+  c.rect(4, 1, 2, 1, 'sky').rect(7, 1, 2, 1, 'sky');
+  c.hline(0, 4, 14, 'orange3');
+  c.rect(6, 0, 2, 1, 'orange1');
+  c.set(13, 3, 'white').set(0, 3, 'berry1');
+  c.rect(2, 5, 3, 1, 'ink0').rect(9, 5, 3, 1, 'ink0');
+  return c.halo('ink0');
+}
+
+/** A street lamp: a bright head with a halo, and a pool of light on the road. */
+function lamp(c: Px, x: number, groundY: number): void {
+  const head = groundY - 15;
+  c.vline(x, head, 15, 'ink3');
+  c.hline(x - 3, head - 1, 4, 'ink3');
+  c.rect(x - 5, head, 4, 2, 'yellow');
+  for (const [dx, dy] of [[-6, 0], [-6, 1], [0, 0], [0, 1], [-4, -1], [-3, -1], [-4, 2], [-3, 2]] as const) c.set(x + dx, head + dy, 'orange3');
+  c.hline(x - 9, groundY + 1, 10, 'orange0');
+  c.hline(x - 7, groundY + 2, 6, 'orange0');
+}
+
+/**
+ * The whole night in one picture for behind the office room: sky, stars, moon, a far and a
+ * near skyline, one billboard, a taxi and a street with lamps. `w` and `h` are the screen.
+ */
+export function nightCity(w: number, h: number): Px {
+  const c = nightSky(w, h);
+  c.blit(stars(w, h, 3, Math.floor((w * h) / 420)), 0, 0);
+  c.blit(stars(w, h, 9, Math.floor((w * h) / 520)), 0, 0);
+  c.blit(moon(), w - 44, Math.max(4, Math.round(h * 0.09)));
+  const street = 8;
+  const farH = Math.round(h * 0.34);
+  const nearH = Math.round(h * 0.22);
+  c.blit(skyline(w, farH, 21, 0), 0, h - street - farH - 8);
+  const lmH = Math.round(h * 0.4);
+  c.blit(landmark(lmH), Math.round(w * 0.12), h - street - lmH - 17 - 2);
+  c.blit(skyline(w, nearH, 5, 1), 0, h - street - nearH);
+  // the street
+  c.rect(0, h - street, w, street, 'ink0');
+  c.hline(0, h - street, w, 'ink2');
+  for (let x = 4; x < w; x += 12) c.hline(x, h - 3, 6, 'orange3');
+  for (let x = 70; x < w - 20; x += 150) lamp(c, x, h - street);
+  c.blit(taxi(), Math.round(w * 0.62), h - street - 3);
   return c;
 }

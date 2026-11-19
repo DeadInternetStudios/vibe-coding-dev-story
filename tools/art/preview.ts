@@ -3,7 +3,7 @@
  * can be looked at (the Read tool opens images). Nothing here makes sound or
  * opens a window.
  *
- *   npx tsx tools/art/preview.ts <group> [--zoom 6] [--bg plum] [--cols 8] [--names a,b] [--label] [--out file]
+ *   npx tsx tools/art/preview.ts <group> [--zoom 6] [--bg plum] [--cols 8] [--names a,b] [--crop x,y,w,h] [--label] [--out file]
  *   npx tsx tools/art/preview.ts list
  *
  * --bg      plum | cream | checker | both | any palette color name | #rrggbb.
@@ -11,6 +11,7 @@
  *           surfaces the UI really uses.
  * --label   writes each sprite's name under it. `--label idx` writes its number.
  * --names   only these sprites, in this order.
+ * --crop    x,y,w,h: show only this part of every sprite (for looking at big backdrops up close).
  *
  * Writes tools/art/out/<group>.png and prints the order of the sprites.
  */
@@ -50,7 +51,9 @@ const only = flag('names', '');
 const labelMode = args.includes('--label') ? flag('label', 'name') : '';
 const pick = only ? only.split(',').map((n) => items.find((i) => i.name === n)).filter((i): i is NonNullable<typeof i> => !!i) : items;
 
-const rendered = pick.map((i) => ({ name: i.name, px: i.make(), roles: i.roles }));
+const crop = flag('crop', '').split(',').map(Number);
+const view = (p: Px): Px => (crop.length === 4 ? p.crop(crop[0]!, crop[1]!, crop[2]!, crop[3]!) : p);
+const rendered = pick.map((i) => ({ name: i.name, px: view(i.make()), roles: i.roles }));
 const LABEL_SCALE = 2;
 const LABEL_H = labelMode ? 5 * LABEL_SCALE + 4 : 0;
 const longest = Math.max(0, ...rendered.map((r) => (labelMode === 'idx' ? String(rendered.indexOf(r)) : r.name).length));
