@@ -3,6 +3,19 @@
 The voice checks so far are machine checks (speech to text, loudness). This is the human one: you listen, flag the bad
 takes, get them re-rendered, and sign off. The page lets you stop and resume. It plays nothing until you press Play, Space or N.
 
+## Three minutes, one clip per voice
+
+Short on time? `docs/voice-spot-check.html` has one clip for each of the 20 voices, about two minutes of audio, and a sign-off line
+at the end. It is a spot check, not the pass: it can show that a voice is wrong, it cannot show that every clip of that voice is right.
+It leaves README's "end to end" line alone and has its own line below it.
+
+```sh
+npx tsx tools/listen/spot.ts         # writes docs/voice-spot-check.html, same file every time
+open docs/voice-spot-check.html
+```
+
+Flags from it export as `flagged-lines.json`, the same shape as below, so `flags-to-redo.ts` reads both.
+
 ## Build and open
 
 ```sh

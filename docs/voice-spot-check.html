@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<title>Voice spot check - Vibe Coding Dev Story</title>
+<style>
+:root{color-scheme:dark;--bg:#120f24;--card:#1d1838;--line:#3a3166;--ink:#f4efe4;--dim:#b3a9d4;--ok:#52d6a4;--bad:#ff6b8b;--hot:#ff8a3d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;max-width:760px;margin-inline:auto}
+h1{font-size:1.6rem;margin:.2em 0}
+p{margin:.4em 0}
+.dim{color:var(--dim)}
+.top{display:grid;gap:10px;margin-bottom:16px}
+label{font-weight:600}
+input[type=text],select{width:100%;min-height:44px;background:#0e0b1f;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit}
+.bar{height:10px;background:#0e0b1f;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--ok)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0}
+.card.ok{border-color:var(--ok)}
+.card.flag{border-color:var(--bad)}
+.card h2{margin:0;font-size:1.1rem}
+.meant{font-size:.9rem;color:var(--dim)}
+.says{font-size:1.05rem;margin:.5em 0;font-style:italic}
+audio{width:100%;margin:.4em 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+button{font:inherit;font-weight:700;border:2px solid var(--line);background:#0e0b1f;color:var(--ink);border-radius:10px;padding:10px 14px;min-height:44px;cursor:pointer}
+button.ok.on{background:var(--ok);color:#0b1a14;border-color:var(--ok)}
+button.flag.on{background:var(--bad);color:#2a0711;border-color:var(--bad)}
+button.main{background:var(--hot);color:#241006;border-color:var(--hot)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,audio:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.why{display:none;gap:8px;margin-top:8px}
+.card.flag .why{display:grid}
+.signoff{display:none;border:2px solid var(--ok);border-radius:12px;padding:14px;margin:16px 0;background:#10261f}
+.signoff.show{display:block}
+.line{font-family:ui-monospace,Menlo,monospace;background:#0b1a14;border-radius:8px;padding:10px;word-break:break-word}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Voice spot check</h1>
+  <p>20 clips, one for each voice, about 2 minutes. Headphones on. Nothing plays until you press play.</p>
+  <p class="dim">Listen for: a word that turns into a note, a joke that lands on the wrong word, a click or a gasp, the wrong kind of voice, a last word that is cut off. The whole pass is <a href="listening-pass.html" style="color:var(--hot)">listening-pass.html</a>, about an hour.</p>
+  <div><label for="name">Your name</label><input id="name" type="text" autocomplete="name" maxlength="60" placeholder="Your name"></div>
+  <div><span id="count" aria-live="polite">0 of 20 marked</span><div class="bar"><i id="fill"></i></div></div>
+</header>
+<main>
+<section class="card" id="card-clod-557b8db6">
+  <h2>Clod</h2>
+  <p class="meant">AI pair programmer. Meant to sound like: A warm, smooth, gender-neutral young adult voice with a medium pitch, between a typical male and female voice.</p>
+  <p class="says">&ldquo;Great catch! I apologize for the confusion. Let me fix that right away.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/clod-557b8db6.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-clod-557b8db6">What is wrong</label>
+    <select id="why-clod-557b8db6"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Clod">
+  </div>
+</section>
+<section class="card" id="card-chad-e9a08c26">
+  <h2>Chad</h2>
+  <p class="meant">Co-founder and CEO. Meant to sound like: A deep, confident American baritone in his thirties with strong chest resonance and a low pitch, calm and assured.</p>
+  <p class="says">&ldquo;Listen. We're not just building an app. We're building a feeling.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/chad-e9a08c26.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-chad-e9a08c26">What is wrong</label>
+    <select id="why-chad-e9a08c26"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Chad">
+  </div>
+</section>
+<section class="card" id="card-dave-d918910f">
+  <h2>Senior Dev Dave</h2>
+  <p class="meant">Senior developer. Meant to sound like: A tired American man in his mid fifties with a low, gravelly baritone voice and a rough, smoky texture, speaking slowly in a flat, dry deadpan with the occasional weary sigh.</p>
+  <p class="says">&ldquo;I've been writing code for thirty years. I have never been this tired.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/dave-d918910f.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-dave-d918910f">What is wrong</label>
+    <select id="why-dave-d918910f"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Senior Dev Dave">
+  </div>
+</section>
+<section class="card" id="card-jenny-8308c811">
+  <h2>Jenny the Intern</h2>
+  <p class="meant">The intern. Meant to sound like: A young American woman in her early twenties with a light, breathy voice at a medium-high pitch, like a mezzo-soprano.</p>
+  <p class="says">&ldquo;I pressed Accept All and now the screen is on fire. Is that normal?&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/jenny-8308c811.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-jenny-8308c811">What is wrong</label>
+    <select id="why-jenny-8308c811"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Jenny the Intern">
+  </div>
+</section>
+<section class="card" id="card-automod-7202c11d">
+  <h2>AutoModerator</h2>
+  <p class="meant">Subreddit moderator bot. Meant to sound like: A flat, emotionless, monotone robotic voice at a steady mid pitch with no pitch variation, genderless like a vocoder.</p>
+  <p class="says">&ldquo;Your submission has been removed. Reason: low effort. Also, vibes.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/automod-7202c11d.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-automod-7202c11d">What is wrong</label>
+    <select id="why-automod-7202c11d"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for AutoModerator">
+  </div>
+</section>
+<section class="card" id="card-announcer-d27c5d11">
+  <h2>The Announcer</h2>
+  <p class="meant">Awards show announcer. Meant to sound like: A deep, warm, velvety baritone radio host in his fifties, smooth and grand, announcing everything as if it were the most important event in history, unhurried and resonant, low pitch throughout.</p>
+  <p class="says">&ldquo;Ladies and gentlemen! Developers of all ages! Welcome to the Vibey Awards!&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/announcer-d27c5d11.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-announcer-d27c5d11">What is wrong</label>
+    <select id="why-announcer-d27c5d11"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for The Announcer">
+  </div>
+</section>
+<section class="card" id="card-narrator-d4c1efb1">
+  <h2>The Narrator</h2>
+  <p class="meant">Nature documentary narrator. Meant to sound like: An elderly British man with a soft, hushed, warm baritone voice.</p>
+  <p class="says">&ldquo;The senior developer sighs. It is the sound of a thousand merged pull requests.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/narrator-d4c1efb1.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-narrator-d4c1efb1">What is wrong</label>
+    <select id="why-narrator-d4c1efb1"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for The Narrator">
+  </div>
+</section>
+<section class="card" id="card-vc-bc0b70e9">
+  <h2>The VC</h2>
+  <p class="meant">Venture capitalist. Meant to sound like: A smooth, low-pitched American man in his forties, unhurried and calm, condescending and amused, with lazy drawn-out vowels.</p>
+  <p class="says">&ldquo;So, it's a wrapper. But it's a wrapper with, how shall I say, energy.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/vc-bc0b70e9.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-vc-bc0b70e9">What is wrong</label>
+    <select id="why-vc-bc0b70e9"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for The VC">
+  </div>
+</section>
+<section class="card" id="card-karen-3aebfe5b">
+  <h2>Karen</h2>
+  <p class="meant">Entitled customer. Meant to sound like: A harsh, strident American woman in her late forties with a nasal, clipped, indignant voice at a normal adult pitch, a low mezzo alto, not high-pitched.</p>
+  <p class="says">&ldquo;Your app deleted my to-do list! I had one thing on it! It was very important!&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/karen-3aebfe5b.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-karen-3aebfe5b">What is wrong</label>
+    <select id="why-karen-3aebfe5b"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Karen">
+  </div>
+</section>
+<section class="card" id="card-bro-ef3f6e95">
+  <h2>Crypto Bro</h2>
+  <p class="meant">Crypto and hustle bro. Meant to sound like: A cocky American man in his twenties with a deep, rough, gravelly gym bro voice and strong vocal fry, a low bass-baritone.</p>
+  <p class="says">&ldquo;Bro! Bro! This is going to ten X! Let's go!&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/bro-ef3f6e95.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-bro-ef3f6e95">What is wrong</label>
+    <select id="why-bro-ef3f6e95"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Crypto Bro">
+  </div>
+</section>
+<section class="card" id="card-pedant-2db20af0">
+  <h2>Well Actually Guy</h2>
+  <p class="meant">Well-actually guy. Meant to sound like: A smug, nasal American man in his thirties with a light, high tenor voice.</p>
+  <p class="says">&ldquo;Well, actually, that's not vibe coding. That's just coding with extra steps.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/pedant-2db20af0.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-pedant-2db20af0">What is wrong</label>
+    <select id="why-pedant-2db20af0"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Well Actually Guy">
+  </div>
+</section>
+<section class="card" id="card-doomer-e668d144">
+  <h2>The Doomer</h2>
+  <p class="meant">Doom poster. Meant to sound like: A monotone, defeated American adult with a mid-range pitch like an ordinary tired guy, not deep.</p>
+  <p class="says">&ldquo;Great. Now the robot writes the code, and the robot also writes the rejection email.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/doomer-e668d144.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-doomer-e668d144">What is wrong</label>
+    <select id="why-doomer-e668d144"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for The Doomer">
+  </div>
+</section>
+<section class="card" id="card-linkedin-f3b1e771">
+  <h2>LinkedIn Influencer</h2>
+  <p class="meant">LinkedIn influencer. Meant to sound like: A breathy, over-emotional American woman in her thirties, soft and sincere.</p>
+  <p class="says">&ldquo;I'm humbled and thrilled to announce that I deleted my production database. Here are five leadership lessons.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/linkedin-f3b1e771.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-linkedin-f3b1e771">What is wrong</label>
+    <select id="why-linkedin-f3b1e771"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for LinkedIn Influencer">
+  </div>
+</section>
+<section class="card" id="card-arch-cedefa57">
+  <h2>I Use Arch Guy</h2>
+  <p class="meant">I-use-Arch guy. Meant to sound like: A nasal, mumbling American man in his late twenties with a mid-high tenor voice, smug and tired, slow flat delivery with minimal pitch variation, sounds like he is about to mention that he uses Arch, btw.</p>
+  <p class="says">&ldquo;I use Arch, by the way. I also vibe code on Arch. Nobody asked.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/arch-cedefa57.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-arch-cedefa57">What is wrong</label>
+    <select id="why-arch-cedefa57"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for I Use Arch Guy">
+  </div>
+</section>
+<section class="card" id="card-ghost-5f0d0272">
+  <h2>Stack Overflow Ghost</h2>
+  <p class="meant">The Stack Overflow ghost. Meant to sound like: A hollow, airy, whispering voice, quiet and breathy with an eerie ghostly echo, slow and mournful, disappointed in you from beyond the grave.</p>
+  <p class="says">&ldquo;This question has been closed as a duplicate.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/ghost-5f0d0272.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-ghost-5f0d0272">What is wrong</label>
+    <select id="why-ghost-5f0d0272"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Stack Overflow Ghost">
+  </div>
+</section>
+<section class="card" id="card-duck-b39e28c8">
+  <h2>Rubber Duck</h2>
+  <p class="meant">Rubber duck. Meant to sound like: A tiny, squeaky cartoon rubber duck voice, extremely high pitched and nasal, comical, deadly serious about being a duck, with a strong quacking quality.</p>
+  <p class="says">&ldquo;Quack. Quack quack quack quack. Quack!&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/duck-b39e28c8.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-duck-b39e28c8">What is wrong</label>
+    <select id="why-duck-b39e28c8"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Rubber Duck">
+  </div>
+</section>
+<section class="card" id="card-hacker-0a86d4b7">
+  <h2>The Hacker</h2>
+  <p class="meant">Hooded hacker. Meant to sound like: An extremely deep, slow, villainous male voice, sub-bass, pitched far down with a low raspy growl and a slightly distorted, menacing edge.</p>
+  <p class="says">&ldquo;Thanks for the API key. I've been mining on your cloud bill all week.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/hacker-0a86d4b7.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-hacker-0a86d4b7">What is wrong</label>
+    <select id="why-hacker-0a86d4b7"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for The Hacker">
+  </div>
+</section>
+<section class="card" id="card-wholesome-8596b70d">
+  <h2>Wholesome Redditor</h2>
+  <p class="meant">Wholesome redditor. Meant to sound like: A warm, soft-spoken American man in his thirties with a gentle baritone voice, tender and kind, a little teary with emotion, slow and caring, sounding like a hug.</p>
+  <p class="says">&ldquo;This is so cool! You made my day. Keep building, friend.&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/wholesome-8596b70d.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-wholesome-8596b70d">What is wrong</label>
+    <select id="why-wholesome-8596b70d"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Wholesome Redditor">
+  </div>
+</section>
+<section class="card" id="card-grandma-1b7a11fc">
+  <h2>Grandma</h2>
+  <p class="meant">Grandma who discovered vibe coding. Meant to sound like: A sweet elderly American woman in her late seventies with a warm, slightly raspy, low-pitched grandmotherly voice.</p>
+  <p class="says">&ldquo;My grandson showed me the vibe coding. Now I have seven apps. None of them work, but I'm having a ball!&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/grandma-1b7a11fc.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-grandma-1b7a11fc">What is wrong</label>
+    <select id="why-grandma-1b7a11fc"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Grandma">
+  </div>
+</section>
+<section class="card" id="card-kid-7af10611">
+  <h2>Ten Year Old</h2>
+  <p class="meant">Ten year old who vibe coded a game. Meant to sound like: A ten year old American boy with a natural, slightly husky, low-for-his-age voice, like a boy at the end of the school year.</p>
+  <p class="says">&ldquo;I made a whole game with just words! You are a pizza, and you eat other pizzas!&rdquo;</p>
+  <audio controls preload="none" src="../public/audio/vo/kid-7af10611.mp3"></audio>
+  <div class="row">
+    <button type="button" class="ok" aria-pressed="false">Sounds right</button>
+    <button type="button" class="flag" aria-pressed="false">Sounds wrong</button>
+  </div>
+  <div class="why">
+    <label for="why-kid-7af10611">What is wrong</label>
+    <select id="why-kid-7af10611"><option value="sung">Sung or musical word</option><option value="stress">Wrong stress</option><option value="glitch">Glitch or breath</option><option value="voice">Wrong voice or accent</option><option value="level">Too quiet or too loud</option><option value="cutoff">Cut off</option><option value="other">Other</option></select>
+    <input class="note" type="text" maxlength="200" placeholder="A few words, if you want" aria-label="Note for Ten Year Old">
+  </div>
+</section>
+</main>
+<section class="signoff" id="signoff" aria-live="polite">
+  <h2>Done</h2>
+  <p>Send this line back to the run, or paste it into <code>README.md</code> in &ldquo;The voices&rdquo;, in place of the &ldquo;spot-checked&rdquo; line.</p>
+  <p class="line" id="line"></p>
+  <div class="row"><button type="button" class="main" id="copy">Copy line</button><button type="button" id="export" hidden>Export flags</button><span id="copied" class="dim"></span></div>
+</section>
+<p><button type="button" id="reset">Clear all marks</button></p>
+<script type="application/json" id="spot-data">{"picks":[{"id":"clod-557b8db6","voice":"clod","name":"Clod","text":"Great catch! I apologize for the confusion. Let me fix that right away."},{"id":"chad-e9a08c26","voice":"chad","name":"Chad","text":"Listen. We're not just building an app. We're building a feeling."},{"id":"dave-d918910f","voice":"dave","name":"Senior Dev Dave","text":"I've been writing code for thirty years. I have never been this tired."},{"id":"jenny-8308c811","voice":"jenny","name":"Jenny the Intern","text":"I pressed Accept All and now the screen is on fire. Is that normal?"},{"id":"automod-7202c11d","voice":"automod","name":"AutoModerator","text":"Your submission has been removed. Reason: low effort. Also, vibes."},{"id":"announcer-d27c5d11","voice":"announcer","name":"The Announcer","text":"Ladies and gentlemen! Developers of all ages! Welcome to the Vibey Awards!"},{"id":"narrator-d4c1efb1","voice":"narrator","name":"The Narrator","text":"The senior developer sighs. It is the sound of a thousand merged pull requests."},{"id":"vc-bc0b70e9","voice":"vc","name":"The VC","text":"So, it's a wrapper. But it's a wrapper with, how shall I say, energy."},{"id":"karen-3aebfe5b","voice":"karen","name":"Karen","text":"Your app deleted my to-do list! I had one thing on it! It was very important!"},{"id":"bro-ef3f6e95","voice":"bro","name":"Crypto Bro","text":"Bro! Bro! This is going to ten X! Let's go!"},{"id":"pedant-2db20af0","voice":"pedant","name":"Well Actually Guy","text":"Well, actually, that's not vibe coding. That's just coding with extra steps."},{"id":"doomer-e668d144","voice":"doomer","name":"The Doomer","text":"Great. Now the robot writes the code, and the robot also writes the rejection email."},{"id":"linkedin-f3b1e771","voice":"linkedin","name":"LinkedIn Influencer","text":"I'm humbled and thrilled to announce that I deleted my production database. Here are five leadership lessons."},{"id":"arch-cedefa57","voice":"arch","name":"I Use Arch Guy","text":"I use Arch, by the way. I also vibe code on Arch. Nobody asked."},{"id":"ghost-5f0d0272","voice":"ghost","name":"Stack Overflow Ghost","text":"This question has been closed as a duplicate."},{"id":"duck-b39e28c8","voice":"duck","name":"Rubber Duck","text":"Quack. Quack quack quack quack. Quack!"},{"id":"hacker-0a86d4b7","voice":"hacker","name":"The Hacker","text":"Thanks for the API key. I've been mining on your cloud bill all week."},{"id":"wholesome-8596b70d","voice":"wholesome","name":"Wholesome Redditor","text":"This is so cool! You made my day. Keep building, friend."},{"id":"grandma-1b7a11fc","voice":"grandma","name":"Grandma","text":"My grandson showed me the vibe coding. Now I have seven apps. None of them work, but I'm having a ball!"},{"id":"kid-7af10611","voice":"kid","name":"Ten Year Old","text":"I made a whole game with just words! You are a pizza, and you eat other pizzas!"}],"reasons":{"sung":"sung or musical word","stress":"wrong stress","glitch":"glitch or breath","voice":"wrong voice or accent","level":"too quiet or too loud","cutoff":"cut off","other":"other"}}</script>
+<script>
+(function(){
+  var KEY="vcds-spot-check-v1";
+  var data=JSON.parse(document.getElementById('spot-data').textContent);
+  var picks=data.picks, reasons=data.reasons;
+  var state={name:'',marks:{}};
+  try{var saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved&&typeof saved==='object'){state.name=String(saved.name||'');state.marks=saved.marks&&typeof saved.marks==='object'?saved.marks:{};}}catch(e){}
+  var $=function(id){return document.getElementById(id)};
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function counts(){var ok=0,fl=0;picks.forEach(function(p){var m=state.marks[p.id];if(m&&m.s==='ok')ok++;else if(m&&m.s==='flag')fl++;});return{ok:ok,flag:fl,open:picks.length-ok-fl};}
+  function render(){
+    var c=counts();
+    $('count').textContent=(c.ok+c.flag)+' of '+picks.length+' marked'+(c.flag?', '+c.flag+' flagged':'');
+    $('fill').style.width=Math.round(((c.ok+c.flag)/picks.length)*100)+'%';
+    picks.forEach(function(p){
+      var m=state.marks[p.id]||null, card=$('card-'+p.id);
+      card.className='card'+(m?(' '+m.s):'');
+      card.querySelector('button.ok').className='ok'+(m&&m.s==='ok'?' on':'');
+      card.querySelector('button.flag').className='flag'+(m&&m.s==='flag'?' on':'');
+      card.querySelector('button.ok').setAttribute('aria-pressed',m&&m.s==='ok'?'true':'false');
+      card.querySelector('button.flag').setAttribute('aria-pressed',m&&m.s==='flag'?'true':'false');
+      if(m&&m.s==='flag'){card.querySelector('select').value=m.r||'other';card.querySelector('input.note').value=m.n||'';}
+    });
+    var done=c.open===0;
+    var bad=picks.filter(function(p){return state.marks[p.id]&&state.marks[p.id].s==='flag';});
+    var line='Voices spot-checked by '+(state.name.trim()||'<your name>')+' on '+today()+': '+picks.length+' clips, one per voice, '+(bad.length?bad.length+' flagged ('+bad.map(function(p){return p.name}).join(', ')+')':'none flagged')+'.';
+    $('signoff').className='signoff'+(done?' show':'');
+    $('line').textContent=line;
+    $('export').hidden=bad.length===0;
+    var named=state.name.trim()!=='';
+    $('copy').disabled=!named;
+    $('copied').textContent=named?'':'Type your name at the top first.';
+  }
+  function mark(id,s){
+    var cur=state.marks[id];
+    if(cur&&cur.s===s){delete state.marks[id];}
+    else{state.marks[id]={s:s,r:(cur&&cur.r)||'other',n:(cur&&cur.n)||''};}
+    save();render();
+  }
+  picks.forEach(function(p){
+    var card=$('card-'+p.id);
+    card.querySelector('button.ok').addEventListener('click',function(){mark(p.id,'ok')});
+    card.querySelector('button.flag').addEventListener('click',function(){mark(p.id,'flag')});
+    card.querySelector('select').addEventListener('change',function(e){var m=state.marks[p.id];if(m){m.r=e.target.value;save();}});
+    card.querySelector('input.note').addEventListener('input',function(e){var m=state.marks[p.id];if(m){m.n=e.target.value;save();}});
+  });
+  $('name').value=state.name;
+  $('name').addEventListener('input',function(e){state.name=e.target.value;save();render();});
+  $('copy').addEventListener('click',function(){var t=$('line').textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){$('copied').textContent='Copied.'},function(){var r=document.createRange();r.selectNodeContents($('line'));var s=getSelection();s.removeAllRanges();s.addRange(r);$('copied').textContent='Press copy on your keyboard.';});});
+  $('export').addEventListener('click',function(){
+    var out=picks.filter(function(p){return state.marks[p.id]&&state.marks[p.id].s==='flag'}).map(function(p){var m=state.marks[p.id];return{clip:p.id,voice:p.voice,text:p.text,reasons:[m.r?reasons[m.r]||m.r:'other'],note:m.n||''};});
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));a.download='flagged-lines.json';document.body.appendChild(a);a.click();a.remove();
+  });
+  $('reset').addEventListener('click',function(){if(confirm('Clear every mark on this page?')){state.marks={};save();render();}});
+  render();
+})();
+</script>
+</body>
+</html>

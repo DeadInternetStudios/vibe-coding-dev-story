@@ -58,7 +58,7 @@ src/scenes     Title, New Game, Office, Thread, Ending
 src/ui         buttons, popups, the pixel-perfect viewport, the dashboard, the thread view
 src/audio      the chiptune engine, songs, effects, and the voice player
 tools/tts      the offline voice pipeline (Python, MLX), see tools/tts/README.md
-tools/listen   the listening pass for a human: builds docs/listening-pass.html, turns flagged clips into re-render commands
+tools/listen   the listening passes for a human: builds docs/listening-pass.html and the three minute docs/voice-spot-check.html, turns flagged clips into re-render commands
 tools/art      sprite drawing, checks and previews
 docs           design notes, the voice contract, the art brief
 ```
@@ -79,9 +79,11 @@ with a speech-to-text check on every clip (the words you read are the words you 
 a coding assistant that agrees with everything, a founder who ships on Fridays, a senior dev who has seen it all,
 an AutoModerator, a crypto bro, a pedant, a doomer, a LinkedIn poster, a rubber duck and more.
 Every clip is checked by machine, speech to text and loudness, and none of that is the same as a person listening.
-`docs/listening-pass.md` is the one-hour pass that closes the gap. Until someone has done it and signed here, treat the voices as unheard:
+`docs/listening-pass.md` is the one-hour pass that closes the gap, and `docs/voice-spot-check.html` is the three minute version: one clip for
+each of the 20 voices. Until a person has done either and signed here, treat the voices as unheard:
 
 > Voices heard end to end by: nobody yet.
+> Voices spot-checked (one clip each) by: nobody yet.
 
 ## Balance
 
