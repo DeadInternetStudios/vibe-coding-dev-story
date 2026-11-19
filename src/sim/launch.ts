@@ -48,12 +48,21 @@ function toneFit(tone: Vignette['tone'], roast: number): number {
   }
 }
 
-/** Picks the vignettes for a thread: varied topics, a mix of tones, never the same set twice in a row. */
+/** The first launches get the full show, four threads of comments. After that a thread is three, so a long run does not become a lot of waiting. */
+export const FULL_THREADS = 5;
+
+/**
+ * Picks the vignettes for a thread: varied topics, a mix of tones, and every one a player has already read
+ * is less likely each time, so a three year run keeps finding new ones before it repeats an old one.
+ */
 export function pickVignettes(ctx: Ctx, tctx: ThreadCtx, roast: number, want = 4): Vignette[] {
   const { s, c, rng } = ctx;
   const pool = c.vignettes.filter((v) => safeWhen(v, tctx));
   const recent = (v: Vignette) => (s.seenVignettes[v.id] !== undefined && s.day - s.seenVignettes[v.id]! < 140 ? 0.2 : 1);
-  const weight = (v: Vignette) => Math.max(0.01, v.weight) * toneFit(v.tone, roast) * recent(v);
+  const timesRead = new Map<string, number>();
+  for (const app of s.shipped) for (const v of app.thread.vignettes) timesRead.set(v.id, (timesRead.get(v.id) ?? 0) + 1);
+  const stale = (v: Vignette) => Math.pow(0.25, timesRead.get(v.id) ?? 0);
+  const weight = (v: Vignette) => Math.max(0.01, v.weight) * toneFit(v.tone, roast) * recent(v) * stale(v);
   const picked: Vignette[] = [];
   const topics = new Set<string>();
   const take = (v: Vignette | undefined) => {
@@ -120,9 +129,11 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
   const bar = MARKET_BAR[Math.min(2, yearOf(s.day) - 1)]!;
   const pv = projectView(c, p, channelId);
   const tctx: ThreadCtx = { company: companyView(s), project: pv, rand: () => rng.next() };
-  const vignettes = pickVignettes(ctx, tctx, ch.roast);
+  const vignettes = pickVignettes(ctx, tctx, ch.roast, s.shipped.length < FULL_THREADS ? 4 : 3);
 
   const reach = 0.6 + p.hype / 100;
+  // a short thread draws a bigger crowd per comment, so the karma of a launch does not depend on how many comments are read
+  const crowd = 4 / vignettes.length;
   const ratings: number[] = [];
   const records: ThreadRecord['vignettes'] = [];
   const awards: ThreadRecord['awards'] = [];
@@ -133,7 +144,7 @@ export function launchProject(ctx: Ctx, channelId: string): LaunchResult {
     const rating = clamp(Math.round(raw), 1, 10);
     ratings.push(rating);
     const t = clamp(0.25 + pv.quality / 200 + pv.hype / 400 + rng.bell() * 0.25, 0, 1);
-    const votes = v.comments.map((cm) => Math.round(lerp(cm.votes[0], cm.votes[1], t) * reach * ch.karmaMult));
+    const votes = v.comments.map((cm) => Math.round(lerp(cm.votes[0], cm.votes[1], t) * reach * ch.karmaMult * crowd));
     rootVotes += Math.max(0, votes[0] ?? 0);
     records.push({ id: v.id, rating, judges: v.judges, votes });
     v.comments.forEach((cm, index) => {

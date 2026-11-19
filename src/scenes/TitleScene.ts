@@ -2,9 +2,7 @@ import Phaser from 'phaser';
 import { app } from '../core/app';
 import { audio } from '../core/audio';
 import { bake, bakePortrait } from '../core/bake';
-import { dailyKey } from '../core/daily';
-import { feature } from '../core/features';
-import { loadHall, loadSave, saveSettings } from '../core/save';
+import { hasOutdatedSave, loadHall, loadSave, saveSettings } from '../core/save';
 import { C, DEPTH, F } from '../core/theme';
 import { nightCity } from '../art/sprites/scenery';
 import { LOGO_H, LOGO_W, logoPx } from '../art/sprites/logo';
@@ -110,10 +108,13 @@ export class TitleScene extends Phaser.Scene {
     }
     add('HALL OF FAME', 'cream', () => openHall(this), 'trophy');
     add('SETTINGS', 'plum', () => openSettings(this), 'gear');
-    // in the gap under the last button, so nothing above it moves
-    if (feature('daily')) label(this, L.cx, y - 3, `daily: ${dailyKey()}`, { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 0], depth: DEPTH.hud });
     const menuBottom = y;
     const menuTop = subY + 16;
+    // a run saved by another version of the game cannot be opened: say so for a few seconds instead of quietly starting over
+    if (!save && hasOutdatedSave()) {
+      const note = label(this, L.cx, H - stripH - 4, 'An older save could not be opened. Your hall of fame is safe.', { font: F.body, tint: C.yellow, outline: true, origin: [0.5, 1], depth: DEPTH.hud, maxWidth: W - 12, align: 'center' });
+      this.tweens.add({ targets: note, alpha: 0, delay: 9000, duration: 600 });
+    }
     this.buildDrifters(L, { half: bw / 2, top: subY + 14, menuBottom, stripH });
 
     // ticker: letters come out of the dark on the right and sink into the NEWS badge, whole

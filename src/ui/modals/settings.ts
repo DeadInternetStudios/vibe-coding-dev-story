@@ -6,6 +6,7 @@ import { decodeSave, encodeSave } from '../../core/saveCode';
 import { C, F } from '../../core/theme';
 import { button, label, slider, uiEvents } from '../kit';
 import { Modal } from '../modal';
+import { openAbout } from './about';
 import { layoutOf } from '../layout';
 
 /** Volume sliders, a few switches, and the UI size. Works from the title and from inside the game. */
@@ -70,6 +71,7 @@ export function openSettings(scene: Phaser.Scene, hold?: () => () => void, onClo
     app.refreshViewport?.();
   }, { kind: 'cream' });
   m.add(sizeBtn);
+  m.add(button(scene, 58, y, 54, 14, 'ABOUT', () => openAbout(scene, hold), { kind: 'cream' }));
   y += 20;
   // the save as one line of text: copy it here, paste it on another device
   const FOOT = 'tap anywhere outside to close';

@@ -70,10 +70,20 @@ export function saveSettings(s: Settings): void {
   writeJson(SETTINGS_KEY, s);
 }
 
+/**
+ * The saved run, or null. A save from another version of the game is not opened here: when SAVE_VERSION
+ * changes, turn the old shape into the new one in this function first, or those players lose their run.
+ */
 export function loadSave(): GameState | null {
   const s = readJson<GameState>(SAVE_KEY);
   if (!s || s.v !== SAVE_VERSION) return null;
   return s;
+}
+
+/** True when the browser holds a run this version cannot open, so the title can say so instead of silently starting over. */
+export function hasOutdatedSave(): boolean {
+  const s = readJson<{ v?: unknown }>(SAVE_KEY);
+  return !!s && typeof s === 'object' && s.v !== SAVE_VERSION;
 }
 
 export function writeSave(state: GameState): boolean {

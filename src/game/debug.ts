@@ -37,6 +37,8 @@ const MOMENTS: Record<string, { scene: string; pick: Pick; data?: (s: GameState)
       if (edit) a.thread.edit = edit;
     },
   },
+  /** a late launch: three threads of comments instead of four */
+  thread3: { scene: 'Thread', pick: (g) => g.s.shipped.length === 7 && !g.pending, data: (s) => ({ appId: s.shipped[s.shipped.length - 1]!.id }) },
   thread1: { scene: 'Thread', pick: (g) => g.s.shipped.length === 1 && !g.pending, data: (s) => ({ appId: s.shipped[0]!.id }) },
   ready: { scene: 'Office', pick: (g) => g.pending?.t === 'ready' },
   payday: { scene: 'Office', pick: (g) => g.pending?.t === 'payday' && g.s.shipped.length >= 2 },

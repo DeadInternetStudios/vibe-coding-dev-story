@@ -221,7 +221,7 @@ export class NewGameScene extends Phaser.Scene {
         const today = dailyKey();
         const best = loadDailyBest(today);
         label(this, x0, startY - DAILY_NOTE, dailyTag(today), { font: F.caps, tint: C.yellow });
-        label(this, x0, startY - 12, best ? `Normal difficulty. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'Normal difficulty. Same chaos for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: wide ? leftW : cw });
+        label(this, x0, startY - 12, best ? `A full run. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'A full 3-year run. Same market for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: wide ? leftW : cw });
       }
     }
     const back = button(this, 4, 4, 30, 14, 'BACK', () => {
