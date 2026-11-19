@@ -9,12 +9,12 @@ const s = (voice: VoiceId, text: string, delivery?: string): DialogueStep => ({
 });
 
 /**
- * The first minute. A nature documentary opens on a garage, the founder says
- * nothing in particular, the AI agrees, the intern asks about the database,
- * and the narrator already knows what happened to it.
+ * The first half minute. The narrator sets up a founder with a garage and no plan, the founder
+ * says nothing in particular, the AI agrees, the intern asks about the database, the narrator
+ * already knows what happened to it, and the AI gets to work. The documentary opening and the
+ * runway line that used to frame it now come round later, as month narration.
  */
 export const INTRO: DialogueStep[] = [
-  s('narrator', 'And here, in the glow of the monitor, we observe the vibe coder in its natural habitat.'),
   s('narrator', 'This one quit a stable job. It owns forty thousand dollars, a garage, and no plan.'),
   s('chad', "Listen. We're not just building an app. We're building a feeling."),
   s('clod', "You're absolutely right! A feeling is a great product! I will agree with everything you say. Forever."),
@@ -22,7 +22,6 @@ export const INTRO: DialogueStep[] = [
   s('narrator', 'Little does the founder know, the database is already gone.'),
   s('chad', 'Clod, build me an app.'),
   s('clod', "I'm sorry, I can't help with that. Just kidding! Doing it now!"),
-  s('narrator', 'The runway is three months long. The optimism is infinite.'),
 ];
 
 /**
@@ -201,6 +200,8 @@ export const DEPLOY: DialogueStep[] = [
 
 /** narrator lines at the start of a new month, independent, pick at random without repeats */
 export const MONTH_NARRATION: DialogueStep[] = [
+  s('narrator', 'And here, in the glow of the monitor, we observe the vibe coder in its natural habitat.'),
+  s('narrator', 'The runway is three months long. The optimism is infinite.'),
   s('narrator', 'A new month begins. The founder checks the balance twice, as if it might change its mind.'),
   s('narrator', 'The senior developer sighs. It is the sound of a thousand merged pull requests.'),
   s('narrator', 'Many weeks later, the app was shipped. Nobody could say how.'),

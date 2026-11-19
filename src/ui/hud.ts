@@ -8,6 +8,7 @@ import type { Session } from '../game/session';
 import { hasIcon } from '../art/sprites/icons';
 import { bar, button, fit, iconImg, label, panel, rect, type BarObj, type ButtonObj } from './kit';
 import type { Layout } from './layout';
+import { STAT_WORD_7 } from './text';
 
 export type MenuId = 'hire' | 'team' | 'shop' | 'tools' | 'room' | 'menu' | 'apps' | 'project' | 'launch';
 
@@ -247,10 +248,14 @@ export class Hud {
     // five stats and hype in a grid of three columns, the same in every layout
     const cols = 3;
     const colW = Math.floor((w - 12) / cols);
-    const sy0 = pipY + 13;
-    const cell = (i: number) => ({ cx: x + 6 + (i % cols) * colW, cy: sy0 + Math.floor(i / cols) * 9 });
+    // the tall card of a portrait screen has room for a word over every stat; the wide layout has to make do with the icons
+    const named = portrait;
+    const sy0 = pipY + (named ? 14 : 13);
+    const rowH = named ? 17 : 9;
+    const cell = (i: number) => ({ cx: x + 6 + (i % cols) * colW, cy: sy0 + (named ? 8 : 0) + Math.floor(i / cols) * rowH });
     STAT_KEYS.forEach((k, i) => {
       const { cx, cy } = cell(i);
+      if (named) this.project.add(label(s, cx, cy - 9, STAT_WORD_7[k], { font: F.body, tint: STAT_COLORS[k] }));
       this.project.add(iconImg(s, k, cx, cy - 1));
       const bb = bar(s, cx + 10, cy, colW - 36, 5, STAT_COLORS[k], 0);
       this.project.add(bb);
@@ -260,8 +265,8 @@ export class Hud {
       this.statVals.set(k, v);
     });
     const hype = cell(STAT_KEYS.length);
-    this.project.add(label(s, hype.cx, hype.cy - 1, 'HYPE', { font: F.body, tint: C.pink }));
-    this.hypeBar = bar(s, hype.cx + 22, hype.cy, colW - 48, 5, C.pink, 0);
+    this.project.add(label(s, hype.cx, named ? hype.cy - 9 : hype.cy - 1, 'HYPE', { font: F.body, tint: C.pink }));
+    this.hypeBar = bar(s, hype.cx + (named ? 10 : 22), hype.cy, colW - (named ? 36 : 48), 5, C.pink, 0);
     this.project.add(this.hypeBar);
     this.hypeVal = label(s, hype.cx + colW - 24, hype.cy - 1, '0', { font: F.body, tint: C.cream });
     this.project.add(this.hypeVal);

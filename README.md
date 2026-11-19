@@ -39,7 +39,7 @@ Keyboard on desktop: `SPACE` pauses and `1` to `4` set the speed. `H` `T` `S` `O
 | Words | 178 launch-thread comments, 111 random events, 69 trophies, 84 news headlines, 73 loading lines, 16 title-screen quips |
 | Art | one pixel sprite set (people, room, items, icons, avatars), bitmap fonts baked from open pixel fonts, no emoji, no stock UI |
 | Sound | 9 songs and 55 effects, all synthesized in code by our own tiny chiptune engine. Nothing to download |
-| Extras | trophy case, daily challenge (same seed for everyone each day), share card, hall of fame, save codes (copy a run as text), install and offline play |
+| Extras | trophy case, daily challenge (the same seed for everyone each day, still a full run), share card, hall of fame, save codes (copy a run as text), install and offline play |
 
 ## Switch things off
 
@@ -77,9 +77,24 @@ The game never calls a model. `tools/tts` turns `src/content` into `public/audio
 with a speech-to-text check on every clip (the words you read are the words you hear). The cast:
 a coding assistant that agrees with everything, a founder who ships on Fridays, a senior dev who has seen it all,
 an AutoModerator, a crypto bro, a pedant, a doomer, a LinkedIn poster, a rubber duck and more.
-We measured the voices and never heard them. Please do listen.
+Every clip is checked by machine, speech to text and loudness, and none of that is the same as a person listening.
+`docs/listening-pass.md` is the one-hour pass that closes the gap. Until someone has done it and signed here, treat the voices as unheard:
 
-## Credits
+> Voices heard end to end by: nobody yet.
+
+## Balance
+
+The bots in `src/sim/bot.ts` are the acceptance test for the money. `npx tsx tools/balance.ts 48 normal smart,casual,yolo` plays whole
+three year games: the careful bot finishes ahead of the casual one, which finishes ahead of the reckless one that spams weekend hacks
+and Friday deploys (48 seeds, normal: 39.6M, 36.7M and 36.0M), and on Ramen the reckless one goes bankrupt. A bot that only mashes
+buttons loses the company by the end of the first year.
+
+## Credits, licence, privacy
 
 Phaser 4 for the engine. Pixel fonts from the open Fontsource packages (Jersey, VT323, Tiny5, Silkscreen), all under the SIL Open Font License.
 Voices by Qwen3-TTS-12Hz-1.7B-VoiceDesign. Every joke is about you, kindly.
+
+The game's own code, art, music, writing and voices are covered by `LICENSE`. The parts it is built from keep their licences in
+`THIRD-PARTY-NOTICES.md`, which also ships with the game as `/third-party-notices.txt` and shows under Settings, About.
+No accounts, no analytics, no requests to anyone but the server the game came from. Saves, settings and the hall of fame stay in your browser.
+A save from another version of the game is not opened, and the title says so. Changing `SAVE_VERSION` means writing the migration in `src/core/save.ts` first.

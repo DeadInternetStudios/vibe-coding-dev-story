@@ -31,7 +31,7 @@ export function openAbout(scene: Phaser.Scene, hold?: () => () => void): Modal {
   const h = Math.min(L.H - 8, Math.ceil(22 + 11 + rowsH + 22));
   const m = new Modal(scene, { w, h, title: 'ABOUT', closable: true, hold });
   let y = 21;
-  m.add(label(scene, 10, y, `VIBE CODING DEV STORY  v${VERSION}`, { font: F.caps, tint: C.orange3 }));
+  m.add(label(scene, 10, y, `VIBE CODING DEV STORY  v${VERSION}`, { font: F.caps, tint: C.orange0 }));
   y += 11;
   for (const [name, body] of ROWS) {
     m.add(label(scene, 10, y, name, { font: F.caps, tint: C.ink1 }));
