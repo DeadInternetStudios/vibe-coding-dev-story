@@ -58,6 +58,7 @@ src/scenes     Title, New Game, Office, Thread, Ending
 src/ui         buttons, popups, the pixel-perfect viewport, the dashboard, the thread view
 src/audio      the chiptune engine, songs, effects, and the voice player
 tools/tts      the offline voice pipeline (Python, MLX), see tools/tts/README.md
+tools/listen   the listening pass for a human: builds docs/listening-pass.html, turns flagged clips into re-render commands
 tools/art      sprite drawing, checks and previews
 docs           design notes, the voice contract, the art brief
 ```
