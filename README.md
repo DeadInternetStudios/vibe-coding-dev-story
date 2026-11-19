@@ -35,7 +35,7 @@ Keyboard on desktop: `SPACE` pauses and `1` to `4` set the speed. `H` `T` `S` `O
 
 | | |
 |---|---|
-| Voices | 20 characters, **863 spoken lines**, each voice invented from a text description by Qwen3-TTS 1.7B VoiceDesign, rendered offline to small MP3s |
+| Voices | 20 characters, **863 spoken lines**, each voice invented from a text description by Qwen3-TTS 1.7B VoiceDesign, rendered offline to small MP3s (the audio folder also holds 65 audition takes from casting the voices, which nothing plays) |
 | Words | 178 launch-thread comments, 111 random events, 69 trophies, 84 news headlines, 73 loading lines, 16 title-screen quips |
 | Art | one pixel sprite set (people, room, items, icons, avatars), bitmap fonts baked from open pixel fonts, no emoji, no stock UI |
 | Sound | 9 songs and 55 effects, all synthesized in code by our own tiny chiptune engine. Nothing to download |

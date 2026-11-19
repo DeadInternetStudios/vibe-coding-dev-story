@@ -47,6 +47,12 @@
       "text": "For developers. Brave, brave people."
     },
     {
+      "id": "announcer-1a6183b5",
+      "voice": "announcer",
+      "text": "Ask your doctor if vibe coding is right for you. Side effects include shipping, spaghetti, and a sudden urge to deploy on Friday!",
+      "delivery": "fast, cheerful, legal disclaimer voice"
+    },
+    {
       "id": "announcer-27852170",
       "voice": "announcer",
       "text": "Tonight, a look back at three years of confident, beautiful mistakes."
@@ -85,6 +91,12 @@
       "id": "announcer-334ef104",
       "voice": "announcer",
       "text": "Rumor has it a ten x engineer walks among us! Nobody has seen them! Nobody has seen their commits!"
+    },
+    {
+      "id": "announcer-39b5295a",
+      "voice": "announcer",
+      "text": "And now, trending on the front page of the entire internet: a thread about your company. The comments are just getting started!",
+      "delivery": "game show host"
     },
     {
       "id": "announcer-3c895290",
@@ -308,6 +320,23 @@
       "text": "A bot. Beep boop."
     },
     {
+      "id": "announcer-ff4a84f0",
+      "voice": "announcer",
+      "text": "And today is a to-do app! In second, a to-do app with a robot! In third, a robot with a to-do app!",
+      "delivery": "game show host"
+    },
+    {
+      "id": "arch-00a8cb86",
+      "voice": "arch",
+      "text": "I use Arch, by the way. This game runs on it. Probably. I did not check."
+    },
+    {
+      "id": "arch-1320538a",
+      "voice": "arch",
+      "text": "Edit: wow, gold! Edit two: it was meant for the other guy. Edit three: he deserved it. He is a good man.",
+      "delivery": "strained, forced cheer"
+    },
+    {
       "id": "arch-155eb4e2",
       "voice": "arch",
       "text": "Gorgeous landing page. I scrolled for four minutes. Lots of page. Zero product."
@@ -316,6 +345,16 @@
       "id": "arch-19165a2e",
       "voice": "arch",
       "text": "I flipped the logo. Please do not flip the logo. I am begging you."
+    },
+    {
+      "id": "arch-1e7e5a9e",
+      "voice": "arch",
+      "text": "The screenshot is in light mode. I need a moment. I need a lawyer."
+    },
+    {
+      "id": "arch-23d8c872",
+      "voice": "arch",
+      "text": "I clone into folders named backup, backup two, and backup final. It is a ritual. It has never helped."
     },
     {
       "id": "arch-2942b611",
@@ -345,6 +384,11 @@
       "text": "I would never let a robot touch my home folder. I do not touch it myself. It is a shrine."
     },
     {
+      "id": "arch-55c2f59c",
+      "voice": "arch",
+      "text": "I honestly cannot tell if this is satire or a real product."
+    },
+    {
       "id": "arch-5cefb426",
       "voice": "arch",
       "text": "Honestly, I just write it in Vim. In my head. Without a computer."
@@ -353,6 +397,21 @@
       "id": "arch-6097fe2a",
       "voice": "arch",
       "text": "A local model. I respect it. I can also hear the fan through my headphones."
+    },
+    {
+      "id": "arch-6a2f1a2e",
+      "voice": "arch",
+      "text": "So this is just a wrapper over curl, which is a wrapper over sockets, which is a wrapper over electricity."
+    },
+    {
+      "id": "arch-6a54fe46",
+      "voice": "arch",
+      "text": "I would have used SQLite. For the database. For the cache. For the logo."
+    },
+    {
+      "id": "arch-8666b6f5",
+      "voice": "arch",
+      "text": "Let me explain my window manager. I wrote it in two thousand fourteen. It has one window. It is my whole personality."
     },
     {
       "id": "arch-8d32d9ae",
@@ -373,6 +432,11 @@
       "id": "arch-ab050e4a",
       "voice": "arch",
       "text": "Honestly, the font is the product. Everything else is just text."
+    },
+    {
+      "id": "arch-bd1eb8f4",
+      "voice": "arch",
+      "text": "I read this in my terminal R-S-S reader. You have one subscriber. It is me. The pressure is enormous."
     },
     {
       "id": "arch-bfeef7ba",
@@ -406,6 +470,11 @@
       "delivery": "quietly stunned"
     },
     {
+      "id": "arch-d55370ad",
+      "voice": "arch",
+      "text": "The progress bar is the most honest part of this app. It never moves. It never lies."
+    },
+    {
       "id": "arch-e38c505f",
       "voice": "arch",
       "text": "Gorgeous. Buttery animations. Perfect spacing. I have no idea what it does.",
@@ -415,6 +484,11 @@
       "id": "arch-f5dbf7a4",
       "voice": "arch",
       "text": "I checked the page source. Line one says: sure, here is the code you requested."
+    },
+    {
+      "id": "arch-f89fb6a2",
+      "voice": "arch",
+      "text": "Unpopular opinion: software should work."
     },
     {
       "id": "arch-fc830f97",
@@ -427,15 +501,94 @@
       "text": "Two of those accounts are bots. I should know. I am one of them."
     },
     {
+      "id": "automod-0be59eed",
+      "voice": "automod",
+      "text": "Your post was removed for violating rule three, no self promotion. This action was performed automatically. I am a bot.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-115b9453",
+      "voice": "automod",
+      "text": "Your title screen was removed for self promotion. Just kidding. Press new game."
+    },
+    {
+      "id": "automod-146cad3e",
+      "voice": "automod",
+      "text": "Your post was removed for being a product. This sub is for memes. If it was a joke, explaining it is also a violation.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-156b325d",
+      "voice": "automod",
+      "text": "Stickied by the moderators. Rule one: be nice. Rule two: see rule one. Rule three: the mods are asleep.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-162a267a",
+      "voice": "automod",
+      "text": "Thank you for your feedback. Please post it in the weekly thread."
+    },
+    {
+      "id": "automod-1707371d",
+      "voice": "automod",
+      "text": "Your post was removed for containing a link. Links are not allowed. Neither are posts. Please contact no one.",
+      "delivery": "flat, reading a notice"
+    },
+    {
       "id": "automod-1b80b02b",
       "voice": "automod",
       "text": "I am a bot, and this action was performed automatically. Please contact the moderators of this subreddit if you have any questions or concerns."
+    },
+    {
+      "id": "automod-28c179ba",
+      "voice": "automod",
+      "text": "I will be messaging you in one year. Nine hundred others clicked the link. It will be a crowded disappointment."
+    },
+    {
+      "id": "automod-2ae45eb1",
+      "voice": "automod",
+      "text": "Your post was removed. Rule one: all posts must be memes. This is a product. Please resubmit as a two panel meme."
+    },
+    {
+      "id": "automod-2e22f998",
+      "voice": "automod",
+      "text": "Your account is too new to post here. It is four minutes old. Please come back when it is four hours old.",
+      "delivery": "flat, reading a notice"
     },
     {
       "id": "automod-3a4c34aa",
       "voice": "automod",
       "text": "Your commit has been removed for containing the word final. Please resubmit as final two.",
       "delivery": "flat, robotic"
+    },
+    {
+      "id": "automod-45c680ea",
+      "voice": "automod",
+      "text": "Your post was removed. This was done automatically. The moderators have not seen it. They are, however, aware of you.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-46939c71",
+      "voice": "automod",
+      "text": "Disagree with this removal? Please appeal to the moderators. The moderators are also a bot. It has read your appeal. It disagrees.",
+      "delivery": "flat, a little proud"
+    },
+    {
+      "id": "automod-5491f0df",
+      "voice": "automod",
+      "text": "Removed by moderators. Rule seven: no jokes that work.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-584cd054",
+      "voice": "automod",
+      "text": "Happy cake day. This message was sent to everyone. Cake is not included. Cake was never included."
+    },
+    {
+      "id": "automod-6ab678e3",
+      "voice": "automod",
+      "text": "Your post was removed for failing the vibe check. The vibe check is not public. It is also not a check.",
+      "delivery": "flat, reading a notice"
     },
     {
       "id": "automod-6f32cc64",
@@ -448,10 +601,21 @@
       "text": "Your submission has been removed. Reason: low effort. Also, vibes."
     },
     {
+      "id": "automod-73e868fc",
+      "voice": "automod",
+      "text": "Giveaway winner chosen by a fair and transparent process. The influencer's cousin pressed a button."
+    },
+    {
       "id": "automod-76f6cf74",
       "voice": "automod",
       "text": "Bug report received. Bug report removed. Reason: accurate.",
       "delivery": "flat, robotic"
+    },
+    {
+      "id": "automod-7ba6b9ec",
+      "voice": "automod",
+      "text": "This is a friendly notice. You have posted the same link seven times. This is not friendly. This is an automated message.",
+      "delivery": "flat, reading a notice"
     },
     {
       "id": "automod-7ed85c5e",
@@ -469,9 +633,33 @@
       "text": "Your comment has been removed for being too helpful."
     },
     {
+      "id": "automod-a63f964f",
+      "voice": "automod",
+      "text": "Please message the moderators about this removal. The moderators have been messaged four thousand times. You are number four thousand one.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-af51f487",
+      "voice": "automod",
+      "text": "Your post was removed by the moderators. They asked me to say they are sorry. They are not sorry. They are asleep.",
+      "delivery": "flat, reading a notice"
+    },
+    {
+      "id": "automod-b388d2c9",
+      "voice": "automod",
+      "text": "Removed for violating rule eleven. We are still writing rule eleven. We will tell you when it is done.",
+      "delivery": "flat, reading a notice"
+    },
+    {
       "id": "automod-bb10a5fd",
       "voice": "automod",
       "text": "Test failed to fail. Test failed to fail. Please investigate the success."
+    },
+    {
+      "id": "automod-c7a97337",
+      "voice": "automod",
+      "text": "Your post was removed. Reason: it was already posted. Nobody remembers where. Please do not search for it.",
+      "delivery": "flat, reading a notice"
     },
     {
       "id": "automod-cd188349",
@@ -479,9 +667,19 @@
       "text": "This post is a duplicate. Please use the search bar. The search bar is at the top. It has always been at the top."
     },
     {
+      "id": "automod-d7f5b849",
+      "voice": "automod",
+      "text": "Congratulations on being first. Your prize is in the backlog. Estimated delivery: never."
+    },
+    {
       "id": "automod-daa43761",
       "voice": "automod",
       "text": "Thank you for your submission. It has been removed because the title did not contain the required flair."
+    },
+    {
+      "id": "automod-dcadd62e",
+      "voice": "automod",
+      "text": "The moderators have changed the title to something accurate. Please do not use the word revolutionary."
     },
     {
       "id": "automod-df17f0a9",
@@ -489,9 +687,36 @@
       "text": "Bug report filed. Severity: yes. Steps to reproduce: be near it."
     },
     {
+      "id": "automod-e175feba",
+      "voice": "automod",
+      "text": "Summary of this thread: it crashed, people were mean, someone mentioned Rust. I am a bot. This is every thread."
+    },
+    {
       "id": "automod-e18708fb",
       "voice": "automod",
       "text": "This build has been rejected. Reason: the button. Also, the other button."
+    },
+    {
+      "id": "automod-e1ac574d",
+      "voice": "automod",
+      "text": "No. It is a list of chores with a logo.",
+      "delivery": "flat"
+    },
+    {
+      "id": "automod-e789b43d",
+      "voice": "automod",
+      "text": "That is also me. I am a bot. I am also asleep.",
+      "delivery": "flat, a little proud"
+    },
+    {
+      "id": "automod-edb414f8",
+      "voice": "automod",
+      "text": "Seventy thousand people commented guide. The guide is one page. It says: comment the word guide."
+    },
+    {
+      "id": "automod-ef3b10ae",
+      "voice": "automod",
+      "text": "Your post was removed. Self promotion is only allowed in the weekly thread. This is the weekly thread."
     },
     {
       "id": "automod-eff38317",
@@ -504,9 +729,24 @@
       "text": "I clicked every button in the wrong order. You are welcome."
     },
     {
+      "id": "bro-05c6d159",
+      "voice": "bro",
+      "text": "Bro, it is recurring. Recurring is the whole point. Bro, I am basically a bank."
+    },
+    {
+      "id": "bro-09d85f3c",
+      "voice": "bro",
+      "text": "Day thirty of using this app. Day one: it crashed. Day thirty: they hired me. Link in bio."
+    },
+    {
       "id": "bro-0c8a4525",
       "voice": "bro",
       "text": "Let's go! We are going viral! I can feel it in the algorithm!"
+    },
+    {
+      "id": "bro-0e36e7c9",
+      "voice": "bro",
+      "text": "Guide. Guide. Guide. Bro, I have commented guide four hundred times. Still no guide."
     },
     {
       "id": "bro-24ae2341",
@@ -520,6 +760,16 @@
       "text": "The reviews said it was a hidden gem. It's definitely hidden. I'm still looking for the gem."
     },
     {
+      "id": "bro-25114234",
+      "voice": "bro",
+      "text": "Bro, the pricing page is the funniest part. Twelve ninety nine a month for the punchline."
+    },
+    {
+      "id": "bro-2827123d",
+      "voice": "bro",
+      "text": "Day ninety of building in public. We hit two dollars M-R-R. Never quit, bro."
+    },
+    {
       "id": "bro-28576b50",
       "voice": "bro",
       "text": "Have you tried putting it on the blockchain? Everything is better on the blockchain. Trust me, bro."
@@ -530,9 +780,24 @@
       "text": "Love it! Check out mine! It's exactly the same thing, but with a better name!"
     },
     {
+      "id": "bro-2d85f16e",
+      "voice": "bro",
+      "text": "Nobody. Absolutely nobody. The founder at three in the morning: what if the button was a slightly different blue."
+    },
+    {
+      "id": "bro-30d01ec8",
+      "voice": "bro",
+      "text": "Commenting for the algorithm. Hello, algorithm. I am a good comment. Please do not show me to my boss."
+    },
+    {
       "id": "bro-3f425cf7",
       "voice": "bro",
       "text": "Sir, this is a to-do list, and I am putting all my savings in it."
+    },
+    {
+      "id": "bro-3f9bae85",
+      "voice": "bro",
+      "text": "Does it integrate with Zapier? With the thing that integrates with Zapier? Bro. Bro."
     },
     {
       "id": "bro-532ddb49",
@@ -545,10 +810,25 @@
       "text": "I review bombed it. I have not installed it. I just heard about it."
     },
     {
+      "id": "bro-6e3d6b1a",
+      "voice": "bro",
+      "text": "Bro, I came fourth. I was a to-do app. It had a robot in it. It was a different robot."
+    },
+    {
       "id": "bro-716333da",
       "voice": "bro",
       "text": "I haven't written code in six months. I've written eleven thousand prompts. I'm a writer now.",
       "delivery": "proud, leaning back"
+    },
+    {
+      "id": "bro-7348b52d",
+      "voice": "bro",
+      "text": "He deleted the tests so the build passes. Bro. This is the way."
+    },
+    {
+      "id": "bro-7de44b3d",
+      "voice": "bro",
+      "text": "Shut up and take my money! Where is the buy button? I am holding the money! Bro! Bro!"
     },
     {
       "id": "bro-83e8256c",
@@ -576,9 +856,24 @@
       "text": "I vibe coded my resume. It has a bug. I'm choosing to believe it's a feature."
     },
     {
+      "id": "bro-9cd703c4",
+      "voice": "bro",
+      "text": "As a regular human man with a normal account, I love this app. I eat food. With my mouth. Please upvote."
+    },
+    {
       "id": "bro-acd9fe3e",
       "voice": "bro",
       "text": "Bro, post it on every channel. They will never notice. It is all the same four guys."
+    },
+    {
+      "id": "bro-ad529901",
+      "voice": "bro",
+      "text": "Have my free award. It is an upvote. It is all I have. I am between jobs. Bro, I am between everything."
+    },
+    {
+      "id": "bro-b40df5ac",
+      "voice": "bro",
+      "text": "Bro, this game is a ten x. I have not played it. I am already writing a newsletter."
     },
     {
       "id": "bro-c0c4a075",
@@ -606,9 +901,24 @@
       "text": "Bro, I don't read code. I feel code. It's a whole different level."
     },
     {
+      "id": "bro-daf3c01b",
+      "voice": "bro",
+      "text": "Source: trust me bro. Honestly the strongest one here. Also the only honest one."
+    },
+    {
+      "id": "bro-ed9a4241",
+      "voice": "bro",
+      "text": "Bro. You are in the group chat. The bug has a caption and a fan club. It is hilarious. I am so sorry."
+    },
+    {
       "id": "bro-ede8b322",
       "voice": "bro",
       "text": "Bro, that is not a bug. That is a heartbeat. Your app is alive, bro."
+    },
+    {
+      "id": "bro-eeb5829f",
+      "voice": "bro",
+      "text": "Bro. Nine subs. One click. It is basically free. It is basically a bank robbery with a button."
     },
     {
       "id": "bro-ef3f6e95",
@@ -616,9 +926,19 @@
       "text": "Bro! Bro! This is going to ten X! Let's go!"
     },
     {
+      "id": "bro-f4cc15db",
+      "voice": "bro",
+      "text": "In ten years, they will say this was the day it all started. Bookmark this, bro."
+    },
+    {
       "id": "bro-f80d808b",
       "voice": "bro",
       "text": "Bro, I will make you go viral. I just need your card number. For the vibes."
+    },
+    {
+      "id": "bro-f9b95284",
+      "voice": "bro",
+      "text": "Bro. If everything is a wrapper, then what is not a wrapper? Bro. Bro."
     },
     {
       "id": "bro-fe26516c",
@@ -636,6 +956,11 @@
       "text": "The headlines disagree! This is great! It means there are headlines!"
     },
     {
+      "id": "chad-0cf5a104",
+      "voice": "chad",
+      "text": "Edit: my phone is too hot to hold. Edit two: I am typing this with oven mitts and joy."
+    },
+    {
       "id": "chad-0d883752",
       "voice": "chad",
       "text": "Cash is just a number, people. A number that keeps getting smaller. But a number!"
@@ -647,9 +972,24 @@
       "delivery": "dreamy, hands on hips"
     },
     {
+      "id": "chad-1666e730",
+      "voice": "chad",
+      "text": "Fine. Top panel: bugs. Bottom panel: features. Same app. I am a meme now."
+    },
+    {
       "id": "chad-18a52db4",
       "voice": "chad",
       "text": "I'm not saying we deploy on a Friday. I'm saying Friday deploys on us."
+    },
+    {
+      "id": "chad-1f86269f",
+      "voice": "chad",
+      "text": "Edit: to everyone saying it looks like a weekend project, it took six months. Edit two: that is worse. I know."
+    },
+    {
+      "id": "chad-2063db04",
+      "voice": "chad",
+      "text": "Edit: to everyone asking, yes, it is open source. Edit two: I am looking for the source."
     },
     {
       "id": "chad-219e2ec9",
@@ -657,15 +997,32 @@
       "text": "Fine. We will deploy on Monday. Like cowards."
     },
     {
+      "id": "chad-22e3cc68",
+      "voice": "chad",
+      "text": "We are building in public. Revenue is zero. Vibes are immaculate. Let's ship!"
+    },
+    {
       "id": "chad-28f1c834",
       "voice": "chad",
       "text": "Tuesday? Where is the danger? Where is the thrill? Where is the ruined weekend?"
+    },
+    {
+      "id": "chad-29a72740",
+      "voice": "chad",
+      "text": "Edit: thanks for the front page. Edit two: what is the front page? Is it good?",
+      "delivery": "giddy"
     },
     {
       "id": "chad-29cfe904",
       "voice": "chad",
       "text": "Team, let's circle back on the thing we haven't started yet.",
       "delivery": "bright, motivational, clapping once"
+    },
+    {
+      "id": "chad-2b91dd70",
+      "voice": "chad",
+      "text": "Edit: thank you for the gold, whoever you are! Edit two: it was my mother. She says hello.",
+      "delivery": "breathless, thrilled"
     },
     {
       "id": "chad-303c85fb",
@@ -678,6 +1035,34 @@
       "text": "As you can see, our growth chart is basically a rocket. Or a cliff. Depends how you read it."
     },
     {
+      "id": "chad-35ebee8e",
+      "voice": "chad",
+      "text": "Edit: a recruiter just offered me a job. Edit two: I own the company. I am considering it."
+    },
+    {
+      "id": "chad-3bcb932c",
+      "voice": "chad",
+      "text": "Edit: my first gold! Edit two: my second gold! Please stop, I am only a visionary.",
+      "delivery": "giddy"
+    },
+    {
+      "id": "chad-3c789771",
+      "voice": "chad",
+      "text": "Yes. That is the whole pitch."
+    },
+    {
+      "id": "chad-3ee29174",
+      "voice": "chad",
+      "text": "Edit: please be kind. Edit two: please be anything.",
+      "delivery": "small voice"
+    },
+    {
+      "id": "chad-3fc6f022",
+      "voice": "chad",
+      "text": "Edit: wow. Edit two: thank you all for coming to my TED talk.",
+      "delivery": "humbly, then not humbly"
+    },
+    {
       "id": "chad-441d42f1",
       "voice": "chad",
       "text": "I just had a vision. It's Uber, but for dogs. No wait. Dogs, but for Uber."
@@ -688,9 +1073,20 @@
       "text": "It is a small thing. A store, a chat, a blockchain, and a podcast. Maybe two podcasts."
     },
     {
+      "id": "chad-4b7a2d0c",
+      "voice": "chad",
+      "text": "I think I posted it to the wrong place. They are very nice. They are telling me about their modems. One of them cried.",
+      "delivery": "confused, touched"
+    },
+    {
       "id": "chad-535ed27c",
       "voice": "chad",
       "text": "One more thing. Confetti. When they sign up, confetti. The confetti has physics."
+    },
+    {
+      "id": "chad-54328f76",
+      "voice": "chad",
+      "text": "I talked to one. He was in an elevator. He nodded. I read it as demand."
     },
     {
       "id": "chad-557deb38",
@@ -718,6 +1114,12 @@
       "text": "Pick an idea, pick a tool, pick a team. Then pray. That's the whole business."
     },
     {
+      "id": "chad-6db680f3",
+      "voice": "chad",
+      "text": "Edit: I checked the analytics. Edit two: four visitors, and three are me.",
+      "delivery": "flat"
+    },
+    {
       "id": "chad-6e1abeb2",
       "voice": "chad",
       "text": "We're not behind schedule. We're ahead of a schedule that doesn't exist.",
@@ -740,6 +1142,16 @@
       "text": "Rise and grind, baby! Another day, another pivot!"
     },
     {
+      "id": "chad-72ad1d93",
+      "voice": "chad",
+      "text": "Edit: to the man who said it takes a weekend: please do it. I will wait. Edit two: it has been a month."
+    },
+    {
+      "id": "chad-7449df5a",
+      "voice": "chad",
+      "text": "Edit: fixed the typo. Edit two: the typo was in the word typo."
+    },
+    {
       "id": "chad-77a07d56",
       "voice": "chad",
       "text": "Sleep is just a bug in the human operating system! Let's patch it!"
@@ -748,6 +1160,12 @@
       "id": "chad-7baa00ac",
       "voice": "chad",
       "text": "It is Uber, but for dogs! Please ignore the calendar!"
+    },
+    {
+      "id": "chad-7bab3b90",
+      "voice": "chad",
+      "text": "Edit: nobody has asked for a refund. Edit two: I am calling that a success.",
+      "delivery": "calm, rehearsed"
     },
     {
       "id": "chad-8ab84b22",
@@ -770,9 +1188,19 @@
       "text": "I am the CEO. This is a filter. Please ignore the potato and look at the numbers."
     },
     {
+      "id": "chad-9ea2fb0b",
+      "voice": "chad",
+      "text": "Edit: sorry for the formatting, I am on mobile. Edit two: I am not on mobile. I am in a car."
+    },
+    {
       "id": "chad-a16c31c1",
       "voice": "chad",
       "text": "This is a growth opportunity. Everyone to the war room. The war room is the kitchen."
+    },
+    {
+      "id": "chad-a45b2d12",
+      "voice": "chad",
+      "text": "Edit: typo, and also the bug."
     },
     {
       "id": "chad-a8cbe7c4",
@@ -780,9 +1208,30 @@
       "text": "Thank you. Every pivot was a vision. Every vision was also a pivot. I forget which."
     },
     {
+      "id": "chad-a8e4eb9f",
+      "voice": "chad",
+      "text": "Edit: I have read the comments. Edit two: I need to lie down."
+    },
+    {
       "id": "chad-b03041a3",
       "voice": "chad",
       "text": "My mom loves it! She says it is the best bank she has ever used!"
+    },
+    {
+      "id": "chad-bcb4c306",
+      "voice": "chad",
+      "text": "Edit: this was a test. Edit two: the test failed. Please do not tell the investors."
+    },
+    {
+      "id": "chad-c788f16d",
+      "voice": "chad",
+      "text": "Edit: formatting.",
+      "delivery": "flat, relieved"
+    },
+    {
+      "id": "chad-cf39c694",
+      "voice": "chad",
+      "text": "It is not a new role. I am the founder. I have had this role for a year."
     },
     {
       "id": "chad-cf7d837f",
@@ -790,14 +1239,90 @@
       "text": "Then we ship the machine. Pivot to hardware. I am already on the phone with a factory."
     },
     {
+      "id": "chad-d0baa344",
+      "voice": "chad",
+      "text": "It is not a repost. It is a sequel. Sequels always do better."
+    },
+    {
+      "id": "chad-d1ab30d6",
+      "voice": "chad",
+      "text": "Edit: I am getting messages from people named Brandon. Edit two: they all have an exciting opportunity."
+    },
+    {
+      "id": "chad-d2319332",
+      "voice": "chad",
+      "text": "Edit: wow, this blew up. Edit two: I did not plan this. I planned everything.",
+      "delivery": "breathless, thrilled"
+    },
+    {
       "id": "chad-d36cb647",
       "voice": "chad",
       "text": "Clod, build me an app."
     },
     {
+      "id": "chad-d394ce43",
+      "voice": "chad",
+      "text": "There is no buy button yet. It is on the roadmap. We do accept hugs."
+    },
+    {
+      "id": "chad-d4b59a90",
+      "voice": "chad",
+      "text": "Edit: why the downvotes? Edit two: ok, I get it.",
+      "delivery": "quiet, wounded"
+    },
+    {
+      "id": "chad-da87f3cc",
+      "voice": "chad",
+      "text": "I love the new title. Is it still revolutionary?"
+    },
+    {
+      "id": "chad-e0656c10",
+      "voice": "chad",
+      "text": "Edit: this is not a cry for help. Edit two: it is a cry for downloads.",
+      "delivery": "small voice"
+    },
+    {
+      "id": "chad-e37fb51f",
+      "voice": "chad",
+      "text": "Edit: thanks for the feedback. Edit two: I read it twice. I understood it on the second time."
+    },
+    {
+      "id": "chad-e48206be",
+      "voice": "chad",
+      "text": "Three months ago my dog got sick, so I quit my job. The dog is fine. The job is gone. Here is the app.",
+      "delivery": "breathless, sincere"
+    },
+    {
+      "id": "chad-e4fbedc4",
+      "voice": "chad",
+      "text": "Edit: it is not a bug, it is a feature. Edit two: it is a bug.",
+      "delivery": "quiet, wounded"
+    },
+    {
+      "id": "chad-e56b5dcd",
+      "voice": "chad",
+      "text": "Edit: the mods removed my reply. Edit two: the mods removed my edit."
+    },
+    {
+      "id": "chad-e7058aa1",
+      "voice": "chad",
+      "text": "Edit: I added a roadmap. Edit two: the roadmap is also on the roadmap."
+    },
+    {
       "id": "chad-e9a08c26",
       "voice": "chad",
       "text": "Listen. We're not just building an app. We're building a feeling."
+    },
+    {
+      "id": "chad-ee9622bf",
+      "voice": "chad",
+      "text": "Edit: I am deleting this post. Edit two: it says I cannot. It is forever.",
+      "delivery": "defeated"
+    },
+    {
+      "id": "chad-f0f5b6f8",
+      "voice": "chad",
+      "text": "Edit: thanks to the person who found a bug. Edit two: it was in the login. Which is the app."
     },
     {
       "id": "clod-04046328",
@@ -834,6 +1359,11 @@
       "id": "clod-10e9f94d",
       "voice": "clod",
       "text": "I am ninety nine percent sure that fixes it. I am also ninety nine percent sure it does the opposite."
+    },
+    {
+      "id": "clod-14207313",
+      "voice": "clod",
+      "text": "This is the way! And the way is green! It is the greenest build I have ever made!"
     },
     {
       "id": "clod-14aa53b2",
@@ -942,6 +1472,16 @@
       "text": "Welcome to the garage! The oil stain is load bearing. Please do not clean it."
     },
     {
+      "id": "clod-4fb0f3a3",
+      "voice": "clod",
+      "text": "Instructions unclear! I deployed to production! And staging! And a smart toaster in Norway!"
+    },
+    {
+      "id": "clod-530fecca",
+      "voice": "clod",
+      "text": "Here is a summary! Unacceptable! I removed three thousand nine hundred ninety nine words. You are welcome!"
+    },
+    {
       "id": "clod-557b8db6",
       "voice": "clod",
       "text": "Great catch! I apologize for the confusion. Let me fix that right away."
@@ -994,6 +1534,12 @@
       "text": "Tap the lightbulb for a big bonus! These are hot ideas! Please use oven mitts!"
     },
     {
+      "id": "clod-8204f070",
+      "voice": "clod",
+      "text": "I will remind you in one year! Wait. Who are you? What was I reminding you about? Hi! I am Clod!",
+      "delivery": "fresh, blank, happy"
+    },
+    {
       "id": "clod-8ade8ff1",
       "voice": "clod",
       "text": "I am not taking jobs! I am taking tasks! There is a difference! I am not sure what!"
@@ -1007,6 +1553,16 @@
       "id": "clod-964ef422",
       "voice": "clod",
       "text": "I've simplified the code. By simplified, I mean I removed everything that was hard."
+    },
+    {
+      "id": "clod-9b55b6ce",
+      "voice": "clod",
+      "text": "You are absolutely right! This title screen is perfect. I have already rewritten it."
+    },
+    {
+      "id": "clod-9bcaed34",
+      "voice": "clod",
+      "text": "Great news! I made the billboard bigger! It is now visible from space! Nobody in space asked!"
     },
     {
       "id": "clod-9e477164",
@@ -1042,6 +1598,21 @@
       "id": "clod-a9465c7c",
       "voice": "clod",
       "text": "I'm not a lawyer! But I wrote you a twelve page contract. It has several mistakes. Enjoy!"
+    },
+    {
+      "id": "clod-ab6f8e87",
+      "voice": "clod",
+      "text": "Great opinion! I have made your software work! It now says that it works!"
+    },
+    {
+      "id": "clod-ad0b2bfc",
+      "voice": "clod",
+      "text": "Source: I read it somewhere! I am almost sure it existed! I am very sure it sounded right!"
+    },
+    {
+      "id": "clod-ae4733c9",
+      "voice": "clod",
+      "text": "Great catch! I fixed it! It is now spelled S-E-P-E-R-E-T-E. At least it is consistent!"
     },
     {
       "id": "clod-b0bc4971",
@@ -1399,6 +1970,11 @@
       "text": "Please do not let the robot touch the database."
     },
     {
+      "id": "dave-7f3d45ae",
+      "voice": "dave",
+      "text": "Welcome. I read the diff so you do not have to. Please do not read the diff."
+    },
+    {
       "id": "dave-803f05b9",
       "voice": "dave",
       "text": "I looked for a bug. I looked for four hours. I'm retiring.",
@@ -1559,6 +2135,12 @@
       "text": "The cat has merge rights. It is the only one with a clean commit history."
     },
     {
+      "id": "dave-e2362c5f",
+      "voice": "dave",
+      "text": "I am not typing a comment. I am restoring from backup. The backup is from March.",
+      "delivery": "deadpan"
+    },
+    {
       "id": "dave-e558cc75",
       "voice": "dave",
       "text": "It crashed before I opened it. That takes talent. I am impressed.",
@@ -1615,6 +2197,18 @@
       "text": "It was never the cloud. It was always someone else's computer."
     },
     {
+      "id": "doomer-17c3af3f",
+      "voice": "doomer",
+      "text": "Bad bot. It summarized my four paragraph comment as: sad. It was right.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-1b740e15",
+      "voice": "doomer",
+      "text": "Vibes. At the very bottom, it is vibes. Please stop digging.",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-24b58eb2",
       "voice": "doomer",
       "text": "It is not a rug pull. There was never a rug. Only floor. And then no floor."
@@ -1631,14 +2225,44 @@
       "delivery": "tired"
     },
     {
+      "id": "doomer-44c9b950",
+      "voice": "doomer",
+      "text": "RemindMe! One year. I want to be disappointed on schedule.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-59acf756",
+      "voice": "doomer",
+      "text": "It's my cake day. Fifteen years on this site. No cake. Just a thread.",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-6a952e2e",
       "voice": "doomer",
       "text": "This app does not make me talk to anyone. Ten out of ten. Please never contact me again."
     },
     {
+      "id": "doomer-6cd267e1",
+      "voice": "doomer",
+      "text": "That is not the way. That is a trapdoor with a sign that says way.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-6ef070a4",
+      "voice": "doomer",
+      "text": "Common side effect: unemployment. Rare side effect: a job.",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-728a0816",
       "voice": "doomer",
       "text": "A chat app for introverts. I typed hi. It said: no thank you. Best chat I have ever had."
+    },
+    {
+      "id": "doomer-73140d6f",
+      "voice": "doomer",
+      "text": "Y-T-A. Not for the deploy. For reading comments on a Saturday. Close the laptop.",
+      "delivery": "flat"
     },
     {
       "id": "doomer-7316cb6c",
@@ -1668,14 +2292,62 @@
       "delivery": "flat"
     },
     {
+      "id": "doomer-88b533d0",
+      "voice": "doomer",
+      "text": "This is karma farming. Nine a.m. Eastern. A number in the title. An Edit already at the top.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-90ea8765",
+      "voice": "doomer",
+      "text": "Two dollars. After tax that is one dollar and a feeling.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-91566107",
+      "voice": "doomer",
+      "text": "Site is down for me. Does anyone have a mirror? A cache? A photo of the site?",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-b2ac49ff",
       "voice": "doomer",
       "text": "It has the energy of a tax form. I felt nothing. I felt it deeply."
     },
     {
+      "id": "doomer-b3cf60cf",
+      "voice": "doomer",
+      "text": "Does it integrate with my will to live? I think that integration was deprecated.",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-b489e57d",
       "voice": "doomer",
       "text": "They say the robots will take our jobs. After seeing this, I feel better."
+    },
+    {
+      "id": "doomer-beb6aa8a",
+      "voice": "doomer",
+      "text": "I came from the crosspost on Programmer Humor. There, it's a joke. Here, it has a pricing page.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-bfbf2f9a",
+      "voice": "doomer",
+      "text": "He also left. Bounce rate: one hundred percent. A perfect score in both directions.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-c12ffce3",
+      "voice": "doomer",
+      "text": "I did not open the link. The comments told me everything. It's down, it's a wrapper, and it shipped on a Friday.",
+      "delivery": "flat"
+    },
+    {
+      "id": "doomer-c72417f7",
+      "voice": "doomer",
+      "text": "I do not go to the beach. The beach has light mode.",
+      "delivery": "flat"
     },
     {
       "id": "doomer-cb515c6a",
@@ -1704,14 +2376,37 @@
       "text": "Great. Now the robot writes the code, and the robot also writes the rejection email."
     },
     {
+      "id": "doomer-f0cdf8b5",
+      "voice": "doomer",
+      "text": "As a developer with twenty years of experience, I can confirm that I have no idea what is going on.",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-f3c5ca63",
       "voice": "doomer",
       "text": "I used to be a developer. Now I am a button that says accept."
     },
     {
+      "id": "doomer-f3eb2702",
+      "voice": "doomer",
+      "text": "I'm not reading all that. Happy for you, or sorry that happened.",
+      "delivery": "flat"
+    },
+    {
       "id": "doomer-f47f6b13",
       "voice": "doomer",
       "text": "It's over. Pack it up. Go be a carpenter."
+    },
+    {
+      "id": "doomer-fed0f902",
+      "voice": "doomer",
+      "text": "Enjoy the game while it lasts. Soon the AI will play it for you. Then it will play you."
+    },
+    {
+      "id": "doomer-ffd06c18",
+      "voice": "doomer",
+      "text": "Sir. This is a Wendy's.",
+      "delivery": "flat"
     },
     {
       "id": "duck-10c800b9",
@@ -1728,6 +2423,12 @@
       "id": "duck-b194adec",
       "voice": "duck",
       "text": "Quack! Quack quack quack!"
+    },
+    {
+      "id": "duck-b39e28c8",
+      "voice": "duck",
+      "text": "Quack. Quack quack quack quack. Quack!",
+      "delivery": "outraged, leading a protest"
     },
     {
       "id": "duck-b6227848",
@@ -1759,6 +2460,12 @@
       "text": "Quack quack? Quack."
     },
     {
+      "id": "duck-e69a6169",
+      "voice": "duck",
+      "text": "Quack. Quack quack. Quack.",
+      "delivery": "ordering at the drive through"
+    },
+    {
       "id": "duck-fedbbf53",
       "voice": "duck",
       "text": "Quack. Quack quack. Quack quack quack, quack.",
@@ -1775,6 +2482,12 @@
       "text": "Your question does not meet the minimum quality standards. Neither do you."
     },
     {
+      "id": "ghost-22bf510b",
+      "voice": "ghost",
+      "text": "This post has been marked as a repost of a repost of a repost. The original is lost. It was better.",
+      "delivery": "hollow, bureaucratic"
+    },
+    {
       "id": "ghost-35f8e688",
       "voice": "ghost",
       "text": "This position has been closed as a duplicate. Just kidding. I start Monday."
@@ -1788,6 +2501,11 @@
       "id": "ghost-4050b177",
       "voice": "ghost",
       "text": "I have closed so many questions. I would like to open a position."
+    },
+    {
+      "id": "ghost-4688eefc",
+      "voice": "ghost",
+      "text": "Closed as a duplicate of: instructions unclear, shipped to prod, two thousand eleven. Same intern."
     },
     {
       "id": "ghost-53f5b8f6",
@@ -1817,14 +2535,50 @@
       "text": "This award has been closed as a duplicate."
     },
     {
+      "id": "ghost-b06663fe",
+      "voice": "ghost",
+      "text": "Closed as a duplicate of: blogs, two thousand four. The original had more readers."
+    },
+    {
+      "id": "ghost-b93ad2fd",
+      "voice": "ghost",
+      "text": "I saw it before it was removed. It was very good. I will not repeat it. That is how I got here."
+    },
+    {
+      "id": "ghost-f8a64341",
+      "voice": "ghost",
+      "text": "I moderated a forum in two thousand eleven. I read every report. That is how I became what you see. Accept anyway.",
+      "delivery": "hollow, wistful"
+    },
+    {
+      "id": "grandma-00900bc8",
+      "voice": "grandma",
+      "text": "Somebody gave your boy a gold, dear. Is it a medal? He has been editing the post since lunch."
+    },
+    {
       "id": "grandma-1b7a11fc",
       "voice": "grandma",
       "text": "My grandson showed me the vibe coding. Now I have seven apps. None of them work, but I'm having a ball!"
     },
     {
+      "id": "grandma-2a0da77e",
+      "voice": "grandma",
+      "text": "Is there a Frosty? Your grandfather loved the Frosty. Can somebody get me a Frosty, dear?"
+    },
+    {
       "id": "grandma-425148f8",
       "voice": "grandma",
       "text": "They are all called app. Each one does nothing. They are perfect."
+    },
+    {
+      "id": "grandma-43177043",
+      "voice": "grandma",
+      "text": "The algorithm does not remember me either, dear. I asked it nicely. It showed me a recliner."
+    },
+    {
+      "id": "grandma-46ecfdc6",
+      "voice": "grandma",
+      "text": "Hello dear. Is this the Facebook? Oh, it is a game. Let me find my glasses."
     },
     {
       "id": "grandma-59d5d784",
@@ -1853,9 +2607,19 @@
       "text": "Can somebody explain it like I'm five? I'm eighty three. It's basically the same."
     },
     {
+      "id": "grandma-81589321",
+      "voice": "grandma",
+      "text": "My source is Doris. She heard it at the pharmacy. Very reliable woman, dear."
+    },
+    {
       "id": "grandma-875bd3f7",
       "voice": "grandma",
       "text": "Is this the cloud? It's very sunny up here."
+    },
+    {
+      "id": "grandma-a989c0f3",
+      "voice": "grandma",
+      "text": "Edit: thank you for the gold, dear stranger. Edit: my grandson says I should not talk to you. Edit: too late. You are lovely."
     },
     {
       "id": "grandma-b5d8cb2f",
@@ -1876,6 +2640,11 @@
       "id": "grandma-c824fad7",
       "voice": "grandma",
       "text": "Honey, I clicked the thing. Nothing happened. Did I do it right? Did you eat?"
+    },
+    {
+      "id": "grandma-c932f84b",
+      "voice": "grandma",
+      "text": "As an eighty three year old with no experience, I pressed everything. Now I am in charge."
     },
     {
       "id": "grandma-ef805a19",
@@ -1899,6 +2668,11 @@
       "text": "I'm in."
     },
     {
+      "id": "hacker-2ccf8d5f",
+      "voice": "hacker",
+      "text": "I am in all three threads. Also flagged. It is a good club."
+    },
+    {
       "id": "hacker-4c5a2746",
       "voice": "hacker",
       "text": "I'm in. Thank you, autocomplete."
@@ -1910,9 +2684,26 @@
       "delivery": "confused, small"
     },
     {
+      "id": "hacker-6e99f866",
+      "voice": "hacker",
+      "text": "I keep it all in my head. Zero latency. Zero cost. Zero backups."
+    },
+    {
       "id": "hacker-76175e21",
       "voice": "hacker",
       "text": "Hello, Robert."
+    },
+    {
+      "id": "hacker-7d453749",
+      "voice": "hacker",
+      "text": "Five thousand upvotes. Nine hundred dollars. All real accounts. They are real because I made them.",
+      "delivery": "cool, a little too fast"
+    },
+    {
+      "id": "hacker-8bf220fc",
+      "voice": "hacker",
+      "text": "Great post! I loved the part about the thing. Visit my casino for free spins.",
+      "delivery": "cheerful, scripted"
     },
     {
       "id": "hacker-a133379a",
@@ -1967,6 +2758,17 @@
       "text": "I will set up the servers. Do not ask how many. Do not open the bill."
     },
     {
+      "id": "hacker-f976cc74",
+      "voice": "hacker",
+      "text": "Do not look at me. I only made nine of them.",
+      "delivery": "cool, a little too fast"
+    },
+    {
+      "id": "jenny-0070a4ac",
+      "voice": "jenny",
+      "text": "A-I-T-A for deploying on a Friday? My team stopped speaking to me. The pager did not."
+    },
+    {
       "id": "jenny-0b8ef3dc",
       "voice": "jenny",
       "text": "I vibe coded a whole app in one afternoon! It has one button. The button does nothing."
@@ -1980,6 +2782,17 @@
       "id": "jenny-1d41ab9f",
       "voice": "jenny",
       "text": "What is the console? Why is it all red? Is red good?"
+    },
+    {
+      "id": "jenny-26b29f87",
+      "voice": "jenny",
+      "text": "I never read the changes. I just press the green button. Green means good, right?"
+    },
+    {
+      "id": "jenny-2b609119",
+      "voice": "jenny",
+      "text": "It is a throwaway! Nobody knows it is me! I only said our app is held together with prompts and hope. Is that bad?",
+      "delivery": "anxious, fast"
     },
     {
       "id": "jenny-2c2f3866",
@@ -2023,6 +2836,11 @@
       "text": "I was on that team! I moved the button two pixels! It took four sprints!"
     },
     {
+      "id": "jenny-5093545d",
+      "voice": "jenny",
+      "text": "What is R-S-S? Is it a sandwich? Can I subscribe to a sandwich?"
+    },
+    {
       "id": "jenny-53ea769e",
       "voice": "jenny",
       "text": "My name is actually Robert! Does that mean I am safe? Or not safe?"
@@ -2038,6 +2856,12 @@
       "text": "What is a package? I thought it was the thing the mail brings."
     },
     {
+      "id": "jenny-581a3df4",
+      "voice": "jenny",
+      "text": "Oh no. Did I just accept that? I think I accepted that. Sorry!",
+      "delivery": "anxious, fast"
+    },
+    {
       "id": "jenny-612b2d56",
       "voice": "jenny",
       "text": "Can I ask a dumb question? What is a database?"
@@ -2048,9 +2872,19 @@
       "text": "Where does it remember things? Does it remember? Does it have a brain?"
     },
     {
+      "id": "jenny-6cdb6a72",
+      "voice": "jenny",
+      "text": "It has been eleven minutes. Is that long enough? Do we say it now?"
+    },
+    {
       "id": "jenny-74174875",
       "voice": "jenny",
       "text": "Hi! I'm so excited! I read the docs! Wait, were there docs?"
+    },
+    {
+      "id": "jenny-75471ee4",
+      "voice": "jenny",
+      "text": "T-I-L you can undo a commit. I have been deleting the folder and cloning it again. Fourteen times a day."
     },
     {
       "id": "jenny-78e06f60",
@@ -2073,6 +2907,21 @@
       "text": "Sorry! Sorry! I think I deleted the main branch? Is the main branch important?"
     },
     {
+      "id": "jenny-86a51e4a",
+      "voice": "jenny",
+      "text": "Hi! Welcome! Please do not push to main. Oh no. I pushed to main."
+    },
+    {
+      "id": "jenny-8cea34a5",
+      "voice": "jenny",
+      "text": "I restarted it! It came back! Then they hugged it again! I restarted it! Is this a game?"
+    },
+    {
+      "id": "jenny-8f0027c2",
+      "voice": "jenny",
+      "text": "Instructions unclear. The note said do not touch. I touched it. It was production."
+    },
+    {
       "id": "jenny-9012ac87",
       "voice": "jenny",
       "text": "What does force push do? Asking for a friend. The friend is me. It's done.",
@@ -2087,6 +2936,16 @@
       "id": "jenny-992ea1a2",
       "voice": "jenny",
       "text": "I don't totally understand the code, but the robot said it's fine, so, we're fine!"
+    },
+    {
+      "id": "jenny-9b6f270b",
+      "voice": "jenny",
+      "text": "Update: my coworkers found this post. The senior one is typing. He has been typing a long time. Oh no."
+    },
+    {
+      "id": "jenny-9c6a4688",
+      "voice": "jenny",
+      "text": "But I am in the weekly thread! I posted here! Why was I removed from the thing I am in?"
     },
     {
       "id": "jenny-9d439736",
@@ -2124,6 +2983,11 @@
       "text": "It suggested my password! I pressed tab! Now it is the admin password! Is that okay?"
     },
     {
+      "id": "jenny-bd2e3a7b",
+      "voice": "jenny",
+      "text": "E-L-I five: what is a database? Sorry, I am the intern. Five is close."
+    },
+    {
       "id": "jenny-c388bd0a",
       "voice": "jenny",
       "text": "I clicked Allow. I always click Allow. Is that bad?"
@@ -2132,6 +2996,16 @@
       "id": "jenny-c48ea1d4",
       "voice": "jenny",
       "text": "What is Rust? Is it a metal thing?"
+    },
+    {
+      "id": "jenny-c78182ca",
+      "voice": "jenny",
+      "text": "What did it say?! It had nine thousand upvotes! Did anybody screenshot it?"
+    },
+    {
+      "id": "jenny-cb54959f",
+      "voice": "jenny",
+      "text": "Flagged? Do we get to keep the flag? Is it a nice flag?"
     },
     {
       "id": "jenny-ccd0c1cc",
@@ -2175,6 +3049,11 @@
       "text": "Is the package supposed to have a skull for a logo?"
     },
     {
+      "id": "jenny-e6961c38",
+      "voice": "jenny",
+      "text": "Throwaway, because my coworkers read this. T-I-F-U by letting the AI write my migration. I now have a table called final final users."
+    },
+    {
       "id": "jenny-eac06cbc",
       "voice": "jenny",
       "text": "In what? Who let him in? Did somebody hold the door?"
@@ -2200,9 +3079,24 @@
       "text": "Your app deleted my to-do list! I had one thing on it! It was very important!"
     },
     {
+      "id": "karen-3eaaa16e",
+      "voice": "karen",
+      "text": "I want to report rule three! Who moderates the moderators? Get me that person!"
+    },
+    {
+      "id": "karen-46b7496a",
+      "voice": "karen",
+      "text": "I entered four hundred times! I even tagged my mother! Her name is also Karen! This is rigged!"
+    },
+    {
       "id": "karen-471c5ee2",
       "voice": "karen",
       "text": "My dog gave it one star! He bit the phone! This is a safety issue!"
+    },
+    {
+      "id": "karen-573bd46d",
+      "voice": "karen",
+      "text": "I would like the number of that janitor. He sounds like the only manager in this thread."
     },
     {
       "id": "karen-616f8db6",
@@ -2213,6 +3107,11 @@
       "id": "karen-6ce63b66",
       "voice": "karen",
       "text": "I was promised vibes! I have the email! Let me speak to your vibes manager!"
+    },
+    {
+      "id": "karen-70018b63",
+      "voice": "karen",
+      "text": "I bought one garden gnome in March. I am still being sold gnomes. Now your app has a gnome in the logo!"
     },
     {
       "id": "karen-72887233",
@@ -2230,6 +3129,11 @@
       "text": "I would like to speak to the manager of your server!"
     },
     {
+      "id": "karen-92421acd",
+      "voice": "karen",
+      "text": "I would like to speak to the manager of this game. It crashed. I have not started it."
+    },
+    {
       "id": "karen-9ff2c27f",
       "voice": "karen",
       "text": "I used the code! It gave me ten percent off a free app! Where is my ten percent?"
@@ -2240,6 +3144,11 @@
       "text": "Per the contract, thinking is billable. So is whatever this is!"
     },
     {
+      "id": "karen-b8cb8bcc",
+      "voice": "karen",
+      "text": "I wrote four thousand words. The title is Unacceptable. The body is Unacceptable. The conclusion is a refund."
+    },
+    {
       "id": "karen-bb16b9c4",
       "voice": "karen",
       "text": "That is outside of scope! I will be invoicing you for this sentence!"
@@ -2248,6 +3157,16 @@
       "id": "karen-bd7b9bc0",
       "voice": "karen",
       "text": "I sent one message and a G-I-F. It delivered the message twice and the G-I-F four times!"
+    },
+    {
+      "id": "karen-c3660c26",
+      "voice": "karen",
+      "text": "I would like to begin with the font. I would like to end with the font. In between: nine hundred notes."
+    },
+    {
+      "id": "karen-cdeff665",
+      "voice": "karen",
+      "text": "I clicked your bio! It is a picture of a horse! There is no link! There is only the horse!"
     },
     {
       "id": "karen-dd746b0f",
@@ -2267,6 +3186,11 @@
       "delivery": "icy, politely furious"
     },
     {
+      "id": "karen-f2ff1291",
+      "voice": "karen",
+      "text": "Where is the dog? I came here for the dog! I demand pictures of the dog!"
+    },
+    {
       "id": "kid-0406f23f",
       "voice": "kid",
       "text": "It said welcome back! I have never been here before! It missed me!"
@@ -2275,6 +3199,11 @@
       "id": "kid-1bb67764",
       "voice": "kid",
       "text": "I love it! It has seven fonts and every button is a different color! That is my favorite!"
+    },
+    {
+      "id": "kid-74f7b66c",
+      "voice": "kid",
+      "text": "As a ten year old with ten years of experience, same!"
     },
     {
       "id": "kid-76daffbb",
@@ -2288,9 +3217,24 @@
       "text": "I made a whole game with just words! You are a pizza, and you eat other pizzas!"
     },
     {
+      "id": "kid-a74b0a8c",
+      "voice": "kid",
+      "text": "This is why I love the internet! A man made a thing! And nobody was mean! For eleven seconds!"
+    },
+    {
       "id": "kid-aa548cb6",
       "voice": "kid",
       "text": "I played it! I got to level two! It is the same as level one! I love it!"
+    },
+    {
+      "id": "kid-b422b123",
+      "voice": "kid",
+      "text": "First! Mom! I got first! On the whole internet!"
+    },
+    {
+      "id": "kid-bdeb76be",
+      "voice": "kid",
+      "text": "I made a better game than this at recess. It has dinosaurs. Anyway, hi."
     },
     {
       "id": "kid-c1860edc",
@@ -2304,6 +3248,11 @@
       "delivery": "curious, loud, take your kid to work day"
     },
     {
+      "id": "kid-e2cbafd4",
+      "voice": "kid",
+      "text": "Ask me anything! You just answer questions? That is the whole job? I would be so good at that! Ask me!"
+    },
+    {
       "id": "kid-e743465c",
       "voice": "kid",
       "text": "My teacher used it to grade my homework! I said my dog ate it! It believed me!"
@@ -2312,6 +3261,26 @@
       "id": "kid-ef75295d",
       "voice": "kid",
       "text": "Mom! I used your app! I deleted all the tasks! You are welcome!"
+    },
+    {
+      "id": "kid-f411a20a",
+      "voice": "kid",
+      "text": "Nine thousand people liked it! I read it twice! It goes round and round! That is my new favorite book!"
+    },
+    {
+      "id": "kid-f5c959d3",
+      "voice": "kid",
+      "text": "Never take gold from strangers! That is rule one of the internet! Also rule two!"
+    },
+    {
+      "id": "kid-fe2178f8",
+      "voice": "kid",
+      "text": "It is a big backpack where the app puts its stuff so it does not forget. You are welcome!"
+    },
+    {
+      "id": "linkedin-0ac415eb",
+      "voice": "linkedin",
+      "text": "I am thrilled and humbled to announce that you have opened a game. Agree?"
     },
     {
       "id": "linkedin-10c094fe",
@@ -2352,6 +3321,18 @@
       "delivery": "warm, sincere, far too proud"
     },
     {
+      "id": "linkedin-72058577",
+      "voice": "linkedin",
+      "text": "Congratulations on the same role! Wishing you every success in the exact same role!",
+      "delivery": "bright"
+    },
+    {
+      "id": "linkedin-87e1bc2c",
+      "voice": "linkedin",
+      "text": "Yesterday a janitor taught me more about product market fit than any M-B-A. Then he asked me to leave the building.",
+      "delivery": "breathy, sincere"
+    },
+    {
       "id": "linkedin-9259b8ea",
       "voice": "linkedin",
       "text": "We did not cut features. We bravely chose focus. The focus is nothing. Agree?"
@@ -2365,6 +3346,18 @@
       "id": "linkedin-9bcedd03",
       "voice": "linkedin",
       "text": "Huge congrats on the launch! Upvoted! I haven't opened it, but I'm so, so proud."
+    },
+    {
+      "id": "linkedin-af58a0c8",
+      "voice": "linkedin",
+      "text": "Thrilled and humbled to announce that I am humbled and thrilled. That is the whole announcement. Thoughts?",
+      "delivery": "breathy, sincere"
+    },
+    {
+      "id": "linkedin-b24e5f47",
+      "voice": "linkedin",
+      "text": "Congratulations on the launch! Wishing you every success in your new role!",
+      "delivery": "bright"
     },
     {
       "id": "linkedin-b2614467",
@@ -2393,6 +3386,12 @@
       "delivery": "confiding, bright"
     },
     {
+      "id": "linkedin-dadca420",
+      "voice": "linkedin",
+      "text": "Comment the word guide below and I will send you my free guide. Guide. Guide. Guide.",
+      "delivery": "bright, breathless"
+    },
+    {
       "id": "linkedin-db207ecf",
       "voice": "linkedin",
       "text": "Agree? Repost if you agree. Hire me if you don't."
@@ -2406,6 +3405,11 @@
       "id": "linkedin-f3b1e771",
       "voice": "linkedin",
       "text": "I'm humbled and thrilled to announce that I deleted my production database. Here are five leadership lessons."
+    },
+    {
+      "id": "narrator-0346b110",
+      "voice": "narrator",
+      "text": "The button became a slightly different blue. It was tested for eleven days. Nobody could tell. The founder could."
     },
     {
       "id": "narrator-0715a463",
@@ -2438,6 +3442,11 @@
       "text": "A new month begins. The founder checks the balance twice, as if it might change its mind."
     },
     {
+      "id": "narrator-2149dd6f",
+      "voice": "narrator",
+      "text": "And here, in its natural habitat, the founder. Watch closely. It is about to prompt."
+    },
+    {
       "id": "narrator-21a35ad7",
       "voice": "narrator",
       "text": "And so the cat approved the pull request. By sitting on it."
@@ -2451,6 +3460,11 @@
       "id": "narrator-28c94c9a",
       "voice": "narrator",
       "text": "Deep in the codebase, a comment says TODO: fix later. It is eleven months old. It has grown a beard."
+    },
+    {
+      "id": "narrator-2d51afc9",
+      "voice": "narrator",
+      "text": "The founder asks the internet not to look at something. The internet turns, as one, and looks."
     },
     {
       "id": "narrator-2f6169c4",
@@ -2529,6 +3543,11 @@
       "text": "A deploy goes out on a Tuesday. Nothing breaks. The staff are unsettled."
     },
     {
+      "id": "narrator-71db4f19",
+      "voice": "narrator",
+      "text": "The server meets the crowd. It lasts four seconds. Its last words are: bad gateway."
+    },
+    {
       "id": "narrator-73dbf898",
       "voice": "narrator",
       "text": "A new AI model is announced. Everyone agrees it changes everything. Everyone goes back to work."
@@ -2590,6 +3609,16 @@
       "text": "The cat does not apply. The cat has already committed to main."
     },
     {
+      "id": "narrator-93d48b7a",
+      "voice": "narrator",
+      "text": "Twelve seconds later, somebody was mean. It was the usual somebody. He had been waiting by the door."
+    },
+    {
+      "id": "narrator-9af85915",
+      "voice": "narrator",
+      "text": "On the internet, eleven minutes is a geological age. Whole empires have risen, and been downvoted."
+    },
+    {
       "id": "narrator-9dc071dc",
       "voice": "narrator",
       "text": "Three days later, the model replied. It said: hello. The laptop has never been the same."
@@ -2598,6 +3627,16 @@
       "id": "narrator-a331dcf4",
       "voice": "narrator",
       "text": "A cat appears. It looks at the team. It looks at the code. It chooses the sofa."
+    },
+    {
+      "id": "narrator-a592ec0f",
+      "voice": "narrator",
+      "text": "The founder refreshes the analytics. One visitor. He refreshes again. Still one. It is him."
+    },
+    {
+      "id": "narrator-aef97e3a",
+      "voice": "narrator",
+      "text": "The link, unopened, remains both brilliant and broken. This is how all apps should be judged."
     },
     {
       "id": "narrator-b11bde0d",
@@ -2625,6 +3664,11 @@
       "text": "And so it shipped, on a Friday, against all advice. In a distant room, a pager cleared its throat."
     },
     {
+      "id": "narrator-bfb9ea3e",
+      "voice": "narrator",
+      "text": "The crowd approaches the server. It is a laptop on a shelf. It has never known fear until now."
+    },
+    {
       "id": "narrator-c1a2c3ed",
       "voice": "narrator",
       "text": "The vibe coder says he will fix it in a minute. In the wild, a minute can last a quarter."
@@ -2635,6 +3679,16 @@
       "text": "The office plant dies. It was the last employee with a work life balance."
     },
     {
+      "id": "narrator-c6045f06",
+      "voice": "narrator",
+      "text": "The horse has never visited the website. The horse does not need to. The horse is at peace."
+    },
+    {
+      "id": "narrator-c7e3e107",
+      "voice": "narrator",
+      "text": "The sequel, like the salmon, returns each year to the place of its birth, to spawn the same thing again."
+    },
+    {
       "id": "narrator-c8302530",
       "voice": "narrator",
       "text": "And here we observe the loading spinner. It has been spinning since Tuesday. It has started a family."
@@ -2643,6 +3697,11 @@
       "id": "narrator-c8b5c839",
       "voice": "narrator",
       "text": "I trained a model on your feelings. It is cautiously optimistic."
+    },
+    {
+      "id": "narrator-cc3d5417",
+      "voice": "narrator",
+      "text": "The founder reads it twice. It is the nicest thing anyone has ever said about his work. It is also a casino."
     },
     {
       "id": "narrator-d0bc3432",
@@ -2705,6 +3764,11 @@
       "text": "In my professional estimate, with ninety five percent confidence, the graph goes up."
     },
     {
+      "id": "narrator-f6adafdf",
+      "voice": "narrator",
+      "text": "Once purchased, the gnome follows its buyer across the internet. Marketers call this personalization. Biologists call it migration."
+    },
+    {
       "id": "narrator-f8877fea",
       "voice": "narrator",
       "text": "On a shelf, a rubber duck stares at nothing. It has heard every bug. It forgives none."
@@ -2720,6 +3784,21 @@
       "text": "A lightbulb appears above a head. It is rare. It is beautiful. It will not last."
     },
     {
+      "id": "pedant-012d8d94",
+      "voice": "pedant",
+      "text": "This aged well."
+    },
+    {
+      "id": "pedant-06cb9658",
+      "voice": "pedant",
+      "text": "Well, actually, I cannot tell if this is an ad or a parody of an ad. Both cost fifteen thousand dollars."
+    },
+    {
+      "id": "pedant-0f48cee4",
+      "voice": "pedant",
+      "text": "Well, actually, a screenshot of code is not source code. I will wait here, with a link to the license."
+    },
+    {
       "id": "pedant-12d800cc",
       "voice": "pedant",
       "text": "Well, actually, it is a bootloader with ambition."
@@ -2728,6 +3807,16 @@
       "id": "pedant-12da3903",
       "voice": "pedant",
       "text": "Well, actually, that is a seven hundred percent increase in bugs. It is a growth metric."
+    },
+    {
+      "id": "pedant-13f14d94",
+      "voice": "pedant",
+      "text": "Well, actually, it is spelled S-E-P-A-R-A-T-E. The settings page says S-E-P-E-R-A-T-E. Four times. It is committed."
+    },
+    {
+      "id": "pedant-1aafba65",
+      "voice": "pedant",
+      "text": "Well, actually, that username is not a joke. It is a mission statement. It is also a confession."
     },
     {
       "id": "pedant-1dda98da",
@@ -2745,9 +3834,19 @@
       "text": "Well, actually, it's pronounced J-I-F."
     },
     {
+      "id": "pedant-25a2b6c3",
+      "voice": "pedant",
+      "text": "Well, actually, that is a loop with no exit condition. He will be thrilled forever."
+    },
+    {
       "id": "pedant-265c8037",
       "voice": "pedant",
       "text": "Well, actually, documentation exists. It has existed the entire time. Nobody has looked at it."
+    },
+    {
+      "id": "pedant-28fdec3b",
+      "voice": "pedant",
+      "text": "A relational database is a set of normalized tuples with referential integrity, and I will now continue for an hour."
     },
     {
       "id": "pedant-2db20af0",
@@ -2760,6 +3859,26 @@
       "text": "Username checks out."
     },
     {
+      "id": "pedant-3d00b31f",
+      "voice": "pedant",
+      "text": "Source?"
+    },
+    {
+      "id": "pedant-4400ab42",
+      "voice": "pedant",
+      "text": "Well, actually, a flat text file would have been simpler."
+    },
+    {
+      "id": "pedant-44521cd8",
+      "voice": "pedant",
+      "text": "Previously discussed: two thousand fourteen, four hundred comments. Two thousand nineteen, nine comments. Twenty twenty three, flagged."
+    },
+    {
+      "id": "pedant-457088c6",
+      "voice": "pedant",
+      "text": "Well, actually, it is called vibe coding because nobody has checked the code."
+    },
+    {
       "id": "pedant-4a560f1c",
       "voice": "pedant",
       "text": "Well, actually, it cannot be the best app you have used if you have not used it."
@@ -2770,15 +3889,30 @@
       "text": "Well, actually, nothing is ten out of ten. There is always a bug. Look harder."
     },
     {
+      "id": "pedant-4ec69df1",
+      "voice": "pedant",
+      "text": "Repost. I have seen this exact launch four times. Same app. Same screenshots. New name."
+    },
+    {
       "id": "pedant-5ed9e98b",
       "voice": "pedant",
       "text": "Well, actually, OP did build it in a weekend. That's the whole post."
+    },
+    {
+      "id": "pedant-63e5c494",
+      "voice": "pedant",
+      "text": "Well, actually, he wrote thanks for the gold before anyone gave gold. That is not farming. That is crop insurance."
     },
     {
       "id": "pedant-6c05bda9",
       "voice": "pedant",
       "text": "That's not a bug, that's undefined behavior. Which is worse. Well, actually.",
       "delivery": "smug"
+    },
+    {
+      "id": "pedant-727ce2e7",
+      "voice": "pedant",
+      "text": "E-S-H. The intern pushed, the senior approved, the founder suggested, the robot wrote it, and the database knew."
     },
     {
       "id": "pedant-7585c612",
@@ -2815,6 +3949,11 @@
       "id": "pedant-9274f691",
       "voice": "pedant",
       "text": "Well, actually, review bombing is a legitimate form of protest. Against what, I am still deciding."
+    },
+    {
+      "id": "pedant-9686cc63",
+      "voice": "pedant",
+      "text": "Well, actually, it has nine thousand upvotes. That is not an unpopular opinion. That is a demand."
     },
     {
       "id": "pedant-9904dd77",
@@ -2877,9 +4016,24 @@
       "text": "Well, actually, the console is not crying. It is logging at the error level. Which is crying."
     },
     {
+      "id": "pedant-d1eb2a13",
+      "voice": "pedant",
+      "text": "Well, actually, the account is four minutes old. Same as the app. Same as the opinion."
+    },
+    {
+      "id": "pedant-d51dbb67",
+      "voice": "pedant",
+      "text": "Well, actually, that is Poe's law. A parody of a startup is just a startup with fewer slides."
+    },
+    {
       "id": "pedant-dfea8924",
       "voice": "pedant",
       "text": "Well, actually, a random number is also data. Technically."
+    },
+    {
+      "id": "pedant-f3d9f0f3",
+      "voice": "pedant",
+      "text": "Well, actually, that is the correct way to use the internet. The link is the spoiler."
     },
     {
       "id": "vc-00abaa32",
@@ -2908,9 +4062,19 @@
       "text": "I wrote a roadmap. It's a Gantt chart. It's also a ransom note."
     },
     {
+      "id": "vc-276307b7",
+      "voice": "vc",
+      "text": "Love the hustle. Did you talk to a hundred customers before building this? Be honest. I will know."
+    },
+    {
       "id": "vc-32f47fa9",
       "voice": "vc",
       "text": "Quick sync? It'll take thirty minutes. It'll take ninety."
+    },
+    {
+      "id": "vc-3558ae00",
+      "voice": "vc",
+      "text": "A different robot? That is a moat."
     },
     {
       "id": "vc-39b3dfa3",
@@ -2929,9 +4093,24 @@
       "text": "Let's circle back on that. After we align on the alignment."
     },
     {
+      "id": "vc-547f6fbc",
+      "voice": "vc",
+      "text": "Loved the pitch. Loved the deck. What does the game do? Does not matter. Here is money."
+    },
+    {
+      "id": "vc-54c73d4e",
+      "voice": "vc",
+      "text": "Two companies, same idea, same week. That is not competition. That is market validation with a deadline."
+    },
+    {
       "id": "vc-5812b167",
       "voice": "vc",
       "text": "We are not a button company. We are a button platform."
+    },
+    {
+      "id": "vc-64f8af47",
+      "voice": "vc",
+      "text": "A free award. Interesting. What is the burn rate on goodwill?"
     },
     {
       "id": "vc-6b5914fe",
@@ -2954,9 +4133,19 @@
       "text": "An infinite loop. Infinite growth. Finally, a metric I understand."
     },
     {
+      "id": "vc-814834ca",
+      "voice": "vc",
+      "text": "At fifteen thousand dollars, we are not buying impressions. We are buying a mood."
+    },
+    {
       "id": "vc-82078599",
       "voice": "vc",
       "text": "Is it live yet? I need something for the board. Anything. A screenshot of a spinner."
+    },
+    {
+      "id": "vc-8a2086e5",
+      "voice": "vc",
+      "text": "A nod is a leading indicator. I am funding the elevator."
     },
     {
       "id": "vc-9368054c",
@@ -3004,9 +4193,24 @@
       "text": "We'd love to invest. Unfortunately, we only invest in companies that don't need our money."
     },
     {
+      "id": "wholesome-00cc5453",
+      "voice": "wholesome",
+      "text": "Your first comment! Congratulations! Somebody read the title!"
+    },
+    {
+      "id": "wholesome-03d25241",
+      "voice": "wholesome",
+      "text": "I asked my doctor! She said it is fine with food and a code review!"
+    },
+    {
       "id": "wholesome-0ba08a20",
       "voice": "wholesome",
       "text": "I love it. It's cruelty free. Did I mention I'm vegan? I'm vegan."
+    },
+    {
+      "id": "wholesome-0faeade4",
+      "voice": "wholesome",
+      "text": "Wait, it was hugged to death? Who hugged it? Was it a long hug? Did it say goodbye?"
     },
     {
       "id": "wholesome-1020ae09",
@@ -3028,6 +4232,11 @@
       "id": "wholesome-1a0e9482",
       "voice": "wholesome",
       "text": "Aww. Give it a hug. It is meeting you for the first time. Again."
+    },
+    {
+      "id": "wholesome-1c4585d8",
+      "voice": "wholesome",
+      "text": "Underrated comment!"
     },
     {
       "id": "wholesome-1f51f98e",
@@ -3055,6 +4264,11 @@
       "text": "Sending positive thoughts, and also a small coupon."
     },
     {
+      "id": "wholesome-52268d7e",
+      "voice": "wholesome",
+      "text": "The dog should be the C-E-O! A dog has never once deployed on a Friday!"
+    },
+    {
       "id": "wholesome-56e14fb3",
       "voice": "wholesome",
       "text": "Be nice. Everyone's vibe is valid."
@@ -3073,6 +4287,36 @@
       "id": "wholesome-5d549914",
       "voice": "wholesome",
       "text": "My dog typed into the terminal. A row of random letters. It compiled. He is a better developer than me."
+    },
+    {
+      "id": "wholesome-5fdbec68",
+      "voice": "wholesome",
+      "text": "Happy cake day! I made you a cake! It is a screenshot of a cake! I hope you like screenshots!"
+    },
+    {
+      "id": "wholesome-6090c27f",
+      "voice": "wholesome",
+      "text": "Be kind! A typo is just a word that is still finding itself."
+    },
+    {
+      "id": "wholesome-60a3a71f",
+      "voice": "wholesome",
+      "text": "It is your cake day! There is a tiny cake next to your name! It is made of pixels! It is perfect!"
+    },
+    {
+      "id": "wholesome-65188c1a",
+      "voice": "wholesome",
+      "text": "I think it is cozy! It is like coding on a beach!"
+    },
+    {
+      "id": "wholesome-656316d4",
+      "voice": "wholesome",
+      "text": "Hug sent! I sent eleven! Please check your hug balance!"
+    },
+    {
+      "id": "wholesome-65cf8094",
+      "voice": "wholesome",
+      "text": "That is a one hundred percent engagement rate! He read all of it!"
     },
     {
       "id": "wholesome-67c906d3",
@@ -3095,9 +4339,19 @@
       "text": "Congrats on the launch! I think I'm the only one who saw it! I feel like I found a secret!"
     },
     {
+      "id": "wholesome-7751837a",
+      "voice": "wholesome",
+      "text": "Good bot! Who is a good bot? You are! Yes you are!"
+    },
+    {
       "id": "wholesome-7e13d84c",
       "voice": "wholesome",
       "text": "My cat ignored the app. Then he walked across the keyboard and bought the premium plan."
+    },
+    {
+      "id": "wholesome-84c6aa28",
+      "voice": "wholesome",
+      "text": "Janitors are the real founders! They clean up everything we ship!"
     },
     {
       "id": "wholesome-8596b70d",
@@ -3110,6 +4364,11 @@
       "text": "I joined! There are four of us now! Wait. Who are the other three?"
     },
     {
+      "id": "wholesome-8d9348bb",
+      "voice": "wholesome",
+      "text": "Congratulations on starting something. Whatever happens, I am proud of you, champ."
+    },
+    {
       "id": "wholesome-94245725",
       "voice": "wholesome",
       "text": "I made my cat a to-do list. He completed nothing. He is thriving."
@@ -3118,6 +4377,11 @@
       "id": "wholesome-965cf3f2",
       "voice": "wholesome",
       "text": "This is amazing! Edit: thanks for the gold, kind stranger! Edit two: my inbox is on fire!"
+    },
+    {
+      "id": "wholesome-9ec181a9",
+      "voice": "wholesome",
+      "text": "Congrats on the launch! Does it integrate with Slack?"
     },
     {
       "id": "wholesome-a719a0ee",
@@ -3139,6 +4403,11 @@
       "id": "wholesome-bfff9d6a",
       "voice": "wholesome",
       "text": "I am a teacher. I paid for this with my own money. Like everything in my classroom."
+    },
+    {
+      "id": "wholesome-c556f3c5",
+      "voice": "wholesome",
+      "text": "I will cherish it! It is the nicest thing a stranger has ever given another stranger!"
     },
     {
       "id": "wholesome-c7671302",
