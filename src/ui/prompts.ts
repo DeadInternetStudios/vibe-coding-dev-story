@@ -524,8 +524,9 @@ function paydayPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'payday' }>, done: Don
   ctx.sfx('payday');
   m.add(label(scene, w / 2, 20, r.headline, { font: F.body, tint: C.ink3, origin: [0.5, 0], maxWidth: w - 16, align: 'center' }));
   let y = 36 + (textHeight(ctx, r.headline, F.body, w - 16) > 9 ? 8 : 0);
-  const row = (name: string, amount: number, delay: number, bold = false) => {
-    const t = label(scene, 10, y, name, { font: bold ? F.caps : F.body, tint: C.ink1 });
+  const row = (name: string, amount: number, delay: number, style: 'plain' | 'bold' | 'note' = 'plain') => {
+    const bold = style === 'bold';
+    const t = label(scene, 10, y, name, { font: bold ? F.caps : F.body, tint: style === 'note' ? C.ink3 : C.ink1 });
     const a = label(scene, w - 10, y, signedMoney(amount), { font: bold ? F.caps : F.body, tint: amount >= 0 ? C.green1 : C.berry1, origin: [1, 0] });
     m.add(t);
     m.add(a);
@@ -538,17 +539,17 @@ function paydayPrompt(ctx: UiCtx, p: Extract<Prompt, { t: 'payday' }>, done: Don
     y += rowH;
   };
   let d = 120;
-  row('Income this month', r.income, d);
-  d += 110;
   for (const l of lines) {
     row(l.label, l.amount, d);
     d += 110;
   }
   y += 3;
-  rect(scene, 8, y, w - 16, 1, C.ink3, 1);
   m.add(rect(scene, 8, y, w - 16, 1, C.ink3, 1));
   y += 5;
-  row('TOTAL', r.total, d + 80, true);
+  // what is drawn above the rule is what the total adds up: the bills, and Mom's wire when there was one
+  row(lines.some((l) => l.amount > 0) ? 'TOTAL' : 'TOTAL BILLS', r.total, d + 80, 'bold');
+  // the month's income is not in that sum: it came in day by day and is already in the cash below
+  row('Income this month (already in cash)', r.income, d + 190, 'note');
   const cash = label(scene, w - 10, y + 2, `Cash: ${money(r.cashAfter)}`, { font: F.caps, tint: r.cashAfter < 5000 ? C.berry1 : C.ink1, origin: [1, 0] });
   m.add(cash);
   y += 16;
