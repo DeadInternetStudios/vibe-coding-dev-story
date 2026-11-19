@@ -160,13 +160,15 @@ export function rankFor(score: number): EndingResult['rank'] {
   return 'F';
 }
 
+/** Which of the endings for a rank. Two ranks have two: a famous A needs karma, an F with a founder still in the building becomes a podcast. */
 export function pickEnding(ctx: Ctx, bankrupt: boolean): EndingResult {
   const { s, c, rng } = ctx;
   const score = finalScore(ctx);
   const rank = bankrupt ? 'F' : rankFor(score);
-  const pool = c.endings.filter((e) => (bankrupt ? e.id.startsWith('bankrupt') : e.rank === rank && !e.id.startsWith('bankrupt')));
-  const fallback = c.endings.filter((e) => e.rank === rank);
-  const chosen = pool.length ? rng.pick(pool) : fallback.length ? rng.pick(fallback) : c.endings[0];
+  const pool = c.endings.filter((e) => e.rank === rank);
+  const founderHere = s.staff.some((m) => m.archetype === 'founder');
+  const wanted = rank === 'A' ? (s.company.karma >= 9000 ? 'famous' : 'acquired') : rank === 'F' ? (founderHere && rng.chance(0.6) ? 'podcast' : 'runway') : '';
+  const chosen = pool.find((e) => e.id === wanted) ?? (pool.length ? rng.pick(pool) : c.endings[0]);
   return {
     endingId: chosen?.id ?? 'none',
     rank,

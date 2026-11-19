@@ -49,7 +49,10 @@ export class Speech {
     this.typed = false;
     this.shown = 0;
     if (line && !this.cancelled) this.handle = await audio.voice(line);
-    if (this.cancelled) return;
+    if (this.cancelled) {
+      this.handle?.stop();
+      return;
+    }
     const chars = wrapped.length;
     this.dur = this.handle ? Math.max(0.6, this.handle.dur * (this.handle.real ? 0.92 : 1)) : chars / SILENT_CPS;
     if (!this.handle) this.dur = chars / SILENT_CPS;

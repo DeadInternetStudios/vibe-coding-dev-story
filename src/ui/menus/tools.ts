@@ -28,7 +28,7 @@ export function openTools(ctx: UiCtx, onClose: () => void): Modal {
   const w = Math.min(L.W - 4, wide ? 410 : 246);
   const h = Math.min(L.H - 4, wide ? 246 : 340);
   const m = new Modal(scene, { w, h, title: 'AI TOOLS', style: 'paper', closable: true, hold: ctx.hold, onClose });
-  beat(ctx, 'tools');
+  beat(ctx, 'tool');
   const cash = label(scene, w - 8, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
   m.add(cash);
   let tabIndex = 0;

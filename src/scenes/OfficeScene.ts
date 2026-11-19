@@ -6,17 +6,24 @@ import { C, DEPTH, F } from '../core/theme';
 import { Room } from '../game/room';
 import type { Session } from '../game/session';
 import { monthName } from '../sim/format';
+import { PHASES, TOKEN_PLANS } from '../sim/config';
+import { unlocked, type Game } from '../sim/game';
+import type { Content } from '../sim/content';
+import { Rng } from '../sim/rng';
 import type { Notice, Tone } from '../sim/types';
 import type { SfxId } from '../audio';
+import type { VoiceLine } from '../content/vo';
+import type { DialogueStep } from '../content/types';
 import { Hud, type MenuId } from '../ui/hud';
 import { label, panel, pop, rect } from '../ui/kit';
 import { layoutOf, responsive } from '../ui/layout';
 import type { Modal } from '../ui/modal';
+import { Chatter } from '../ui/chatter';
 import { Toasts } from '../ui/toasts';
 import type { UiCtx } from '../ui/ctx';
 import { openMenu } from '../ui/menus';
 import { openPrompt } from '../ui/prompts';
-import { showIntro } from '../ui/story';
+import { beat, showIntro } from '../ui/story';
 import { fadeTo } from '../ui/layout';
 import { shortMoney } from '../sim/format';
 
@@ -35,6 +42,18 @@ export class OfficeScene extends Phaser.Scene {
   private bannerObj: Phaser.GameObjects.Container | null = null;
   private introDone = false;
   private launching = false;
+  private chatter!: Chatter;
+  /** seconds of play until the office says something */
+  private ambientIn = 14;
+  /** quiet time after any remark, so nothing talks over the last one */
+  private hush = 0;
+  private ambientBag: VoiceLine[] = [];
+  private narrationBag: DialogueStep[] = [];
+  /** one-time teaching moments waiting for a calm second */
+  private beats: string[] = [];
+  private beatOpen = false;
+  private karmaSeen = 0;
+  private directorIn = 1;
 
   constructor() {
     super('Office');
@@ -54,6 +73,9 @@ export class OfficeScene extends Phaser.Scene {
     this.launching = false;
     this.menuModal = null;
     this.promptOpen = false;
+    this.beats = [];
+    this.beatOpen = false;
+    this.karmaSeen = karmaUnlocks(session.game, app.content);
     this.ctx = this.makeCtx();
     responsive(this, () => this.build(), () => this.teardown());
     audio.music(session.s.company.crunch ? 'crunch' : 'office');
@@ -67,6 +89,7 @@ export class OfficeScene extends Phaser.Scene {
 
   private teardown(): void {
     this.session.clearHolds();
+    this.chatter?.stop();
     this.hud?.destroy();
     this.room?.destroy();
     this.menuModal = null;
@@ -114,6 +137,7 @@ export class OfficeScene extends Phaser.Scene {
     };
     this.hud.build(L);
     this.toasts = new Toasts(this, L, this.hud.topH + 1);
+    this.chatter = new Chatter(this, L, L.H - this.hud.bottomH - 2);
     this.room = new Room(this, this.session);
     this.room.root.setDepth(DEPTH.room);
     this.room.onStaff = (id) => this.openStaff(id);
@@ -245,13 +269,15 @@ export class OfficeScene extends Phaser.Scene {
       case 'idea':
         this.room.showIdea(n.staffId);
         audio.sfx('hot_idea');
+        this.queueBeat('hotidea');
         break;
       case 'ideaGone':
         this.room.showIdea(null);
         break;
       case 'phase': {
-        const names = ['PLAN', 'PROMPT', 'FIX', 'SHIP'];
-        this.banner(`PHASE ${n.phase + 1}: ${names[n.phase] ?? ''}`, n.project, 'info');
+        // phase 4 is the finish line: the launch popup that follows says it better than a banner
+        const name = PHASES[n.phase]?.label.toUpperCase();
+        if (name) this.banner(`PHASE ${n.phase + 1}: ${name}`, n.project, 'info');
         audio.sfx('phase_done');
         this.room.cheerAll();
         break;
@@ -278,6 +304,7 @@ export class OfficeScene extends Phaser.Scene {
       }
       case 'newMonth':
         this.toasts.push(`${monthName(n.month)} begins. Rent is a state of mind.`, 'info', 'calendar');
+        this.narrate();
         break;
       case 'newYear':
         this.banner(`YEAR ${n.year}`, 'The market got smarter. So did your landlord.', 'wow');
@@ -298,6 +325,68 @@ export class OfficeScene extends Phaser.Scene {
     }
   }
 
+  /* ----------------------------------------------------- voices and lessons */
+
+  /** Nothing else wants the screen or the clock. */
+  private calm(): boolean {
+    return !this.promptOpen && !this.launching && this.introDone && !this.menuModal?.open && !this.session.held && !this.session.game.pending;
+  }
+
+  /** The narrator opens a month now and then, and more often when the game runs slowly enough to listen. */
+  private narrate(): void {
+    const pool = app.content.story.monthNarration;
+    if (!pool.length || this.chatter.busy || this.hush > 0 || !this.calm()) return;
+    if (Math.random() > (this.session.speedIdx >= 2 ? 0.25 : 0.6)) return;
+    if (this.narrationBag.length === 0) this.narrationBag = new Rng(Math.floor(Math.random() * 1e9)).shuffle(pool.slice());
+    const step = this.narrationBag.pop();
+    if (!step) return;
+    this.chatter.say(step.speaker as VoiceLine['voice'], step.line.text, step.line);
+    this.hush = 18;
+  }
+
+  /** Per frame: ambient office talk, the lessons, and clearing the screen for anything that matters. */
+  private talk(sec: number): void {
+    if (this.promptOpen || this.menuModal?.open || this.session.held) {
+      if (this.chatter.busy) this.chatter.stop();
+    } else if (this.session.ticking) {
+      this.hush = Math.max(0, this.hush - sec);
+      this.ambientIn -= sec;
+      const pool = app.content.ambient;
+      if (this.ambientIn <= 0 && pool.length && !this.chatter.busy && this.hush <= 0 && this.calm()) {
+        if (this.ambientBag.length === 0) this.ambientBag = new Rng(Math.floor(Math.random() * 1e9)).shuffle(pool.slice());
+        const line = this.ambientBag.pop();
+        if (line) this.chatter.say(line.voice, line.text, line);
+        this.ambientIn = 26 + Math.random() * 24;
+        this.hush = 10;
+      }
+    }
+    this.director(sec);
+  }
+
+  private queueBeat(key: string): void {
+    if (!this.session.s.tutorial.includes(key) && !this.beats.includes(key)) this.beats.push(key);
+  }
+
+  /** Watches for the moments the tutorial waits on, and plays the next one when the screen is calm. */
+  private director(sec: number): void {
+    this.directorIn -= sec;
+    if (this.directorIn > 0) return;
+    this.directorIn = 0.6;
+    const co = this.session.s.company;
+    const cap = Math.max(300, TOKEN_PLANS.find((t) => t.id === co.tokenPlan)?.tokens ?? 300);
+    if (co.tokens < cap * 0.12) this.queueBeat('tokens');
+    if (co.spaghetti > 40) this.queueBeat('spaghetti');
+    if (co.cash < 10000) this.queueBeat('cash');
+    const k = karmaUnlocks(this.session.game, app.content);
+    if (k > this.karmaSeen) this.queueBeat('karma');
+    this.karmaSeen = k;
+    if (this.beatOpen || this.beats.length === 0 || !this.calm()) return;
+    const key = this.beats.shift()!;
+    this.chatter.stop();
+    this.beatOpen = true;
+    if (!beat(this.ctx, key, () => (this.beatOpen = false))) this.beatOpen = false;
+  }
+
   /* ------------------------------------------------------------- frame */
 
   update(_time: number, dt: number): void {
@@ -310,6 +399,7 @@ export class OfficeScene extends Phaser.Scene {
     this.room.update(dt);
     this.hud.update(dt);
     this.toasts.update(dt);
+    this.talk(dt / 1000);
 
     // anything the game waits on gets a popup
     if (!this.promptOpen && !this.launching && this.introDone && this.session.game.pending) {
@@ -338,6 +428,13 @@ export class OfficeScene extends Phaser.Scene {
       fadeTo(this, 'Ending');
     }
   }
+}
+
+/** How many things that need karma are open to the player right now. */
+function karmaUnlocks(game: Game, c: Content): number {
+  let n = 0;
+  for (const list of [c.kinds, c.niches, c.tools, c.channels]) for (const it of list) if (it.unlock?.karma && unlocked(game, it.unlock)) n += 1;
+  return n;
 }
 
 declare global {

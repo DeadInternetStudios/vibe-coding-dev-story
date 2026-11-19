@@ -5,7 +5,6 @@ import { dateLabel, money, shortMoney } from '../../sim/format';
 import { bar, button, iconImg, label, panel } from '../kit';
 import { fadeTo, layoutOf } from '../layout';
 import { Modal } from '../modal';
-import { beat } from '../story';
 import { tabs } from './common';
 import type { UiCtx } from '../ctx';
 
@@ -20,7 +19,6 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
   const w = Math.min(L.W - 4, wide ? 410 : 246);
   const h = Math.min(L.H - 4, wide ? 246 : 330);
   const m = new Modal(scene, { w, h, title: 'THE OFFICE', style: 'paper', closable: true, hold: ctx.hold, onClose });
-  beat(ctx, 'room');
   const cash = label(scene, w - 8, 6, '', { font: F.caps, tint: C.mint, origin: [1, 0] });
   m.add(cash);
   let tabIndex = startTab;

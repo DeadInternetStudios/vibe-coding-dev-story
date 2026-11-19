@@ -44,6 +44,21 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, NewGameScene, OfficeScene, ThreadScene, EndingScene],
 });
 
+// Phaser asks for the next frame only after the current one finished. One error thrown inside a scene would end the loop
+// and freeze the game for good, so the error is reported (a few times) and the loop goes on.
+const stepsFailed = new Map<string, number>();
+const phaserStep = game.step.bind(game);
+game.step = (time: number, delta: number) => {
+  try {
+    phaserStep(time, delta);
+  } catch (e) {
+    const key = e instanceof Error ? e.message : String(e);
+    const n = (stepsFailed.get(key) ?? 0) + 1;
+    stepsFailed.set(key, n);
+    if (n <= 3) queueMicrotask(() => { throw e; });
+  }
+};
+
 let pending = 0;
 function onResize() {
   cancelAnimationFrame(pending);
