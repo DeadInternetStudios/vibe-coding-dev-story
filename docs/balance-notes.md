@@ -9,9 +9,9 @@ How the money is tuned, what the bots prove, and how to move it without breaking
 
 | bot | plays like |
 |---|---|
-| smart | picks the best scope and plan cards, refactors, never deploys on a Friday, hires for the gaps |
-| casual | the smart bot with about a third of its choices random |
-| yolo | weekend hacks and MVPs only, speed cards, always deploys on Friday, takes the VC money |
+| smart | reads what it can afford, picks the best project and plan cards, hires for the gaps, avoids Friday, takes the angel check |
+| casual | the smart bot with 35 percent of its choices made without thinking and a coin flip on Friday deploys |
+| yolo | weekend hacks and MVPs only, speed cards, hires early, never refactors, always deploys on Friday, takes the VC money |
 | random, idle | button masher, does nothing |
 
 The bar for a change: smart beats casual, casual is not behind yolo, yolo is not the best way to play, random and idle go bankrupt.
