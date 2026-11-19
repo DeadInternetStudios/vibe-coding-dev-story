@@ -17,6 +17,7 @@ voices.json  +  lines.json / lines.seed.json  ->  generate.py  ->  public/audio/
 ## Quick start
 
 ```sh
+npm run vo:export                 # repo root: the game's own exporter writes tools/tts/lines.json (every voiced line)
 cd tools/tts
 ./setup.sh                        # builds .venv from scratch with pinned versions (needs uv and ffmpeg)
 .venv/bin/python idtest.py        # prints dave-f3434638, the contract's test vector
@@ -109,9 +110,18 @@ cd "$TOOLS" && .venv/bin/python generate.py \
 `manifest.json` and `render-state.json` are generated files. If a merge conflicts on them, take either
 side and run `generate.py` again: it converges (valid MP3s are kept, missing entries are adopted).
 
-To keep the shop open without babysitting it, `watch.sh` polls another checkout's `lines.json` and renders what
-is new into this one (`tools/tts/watch.sh /path/to/game/checkout 600 --commit`). It does nothing, and loads no model,
-while there is no new work.
+To keep the shop open without babysitting it, `watch.sh` renders what is missing into this checkout, in batches
+that it commits on the current branch (plain message, MP3s and manifest). It reads the game checkout's
+`tools/tts/lines.json`, or with `--ref REF` it runs the game's own exporter (`tools/vo-export.ts`) on a scratch copy
+of that git ref, so the lines are what the content says right now even when nobody committed `lines.json`:
+
+```sh
+tools/tts/watch.sh /path/to/game/checkout 300 --ref main --batch 50 --commit --polish --refresh-identity
+```
+
+It does nothing, and loads no model, while there is no new work. `--polish` gives weak lines their second chance
+once the queue is empty, `--refresh-identity` rebuilds `ident.json` before that. To stop it, send TERM to the
+script, then to its `generate.py` child: bash waits for the child, which finishes its current take first.
 
 ### Bands, own lines, and the polish pass
 
@@ -251,6 +261,7 @@ numbers. Only open the gallery when a human is at the machine.
 | `ttslib/` | `lineid` (contract id), `tts` (model), `stt` (speech to text, WER, word timings), `audio` (trim, loudness, MP3, measurements), `qa` (take scoring), `ident` (speaker-embedding identity gate), `manifest` (atomic writes, state, lock) |
 | `tune.py`, `calibrate.py`, `spike.py` | measurement tools: voice tuning, band calibration from tuning runs, and the spike that picked the approach |
 | `selftest.py`, `verify.py`, `castcheck.py` | checks: logic, contract, cast separation |
+| `castreport.py` | the cast in numbers as a Markdown table (lines, pitch, pace, WER, loudness, weak, identifiable) |
 | `idtest.py` | contract test vector, standard library only |
 | `gallery.html` | static page to browse voices and lines |
 | `setup.sh`, `requirements*.txt` | recreate the venv |

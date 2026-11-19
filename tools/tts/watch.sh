@@ -86,7 +86,8 @@ while true; do
   fi
   after="$(count_lines)"
   if [ "$COMMIT" = 1 ] && [ -n "$(git -C "$REPO" status --porcelain -- public/audio/vo tools/tts/render-state.json tools/tts/ident.json)" ]; then
-    git -C "$REPO" add public/audio/vo tools/tts/render-state.json tools/tts/ident.json
+    git -C "$REPO" add public/audio/vo tools/tts/render-state.json
+    [ -e "$HERE/ident.json" ] && git -C "$REPO" add tools/tts/ident.json
     git -C "$REPO" commit -q -m "Render voice lines: $after in the manifest"
   fi
   if [ "$after" != "$before" ]; then

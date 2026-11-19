@@ -60,7 +60,7 @@
     "role": "Entitled customer",
     "description": "A harsh, strident American woman in her late forties with a nasal, clipped, indignant voice at a normal adult pitch, a low mezzo alto, not high-pitched. Talks fast and escalates, getting louder and sharper with every sentence, outraged, entitled and exasperated, suburban accent. Close microphone.",
     "trim": 0.5,
-    "target": {"f0": [235, 370], "wps": [2.16, 4.02]}
+    "target": {"f0": [265, 430], "wps": [1.92, 3.56]}
   },
   "bro": {
     "name": "Crypto Bro",

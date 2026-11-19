@@ -1,12 +1,13 @@
 """The cast in numbers, as a Markdown table: one row per voice, from the manifest and render-state.json.
 
-    .venv/bin/python castreport.py                                  # table on stdout
-    .venv/bin/python castreport.py --identity scratch/castcheck.json   # add the "identifiable" column
+    .venv/bin/python castreport.py                                     # table on stdout
+    .venv/bin/python castreport.py --identity scratch/castcheck.json   # identifiable share from a fresh castcheck
 
-`--identity` takes the file that `castcheck.py --json` writes. Columns: lines in the manifest, minutes of
-audio, median pitch (Hz), median pace (words per second), mean WER, mean loudness (LUFS), the share of lines
-inside the voice's pitch band, the lines the gate still calls weak, the share of lines nearest to their own
-voice's centroid, and a one-line description of how the voice sounds.
+Columns: lines in the manifest, minutes of audio, median pitch (Hz), median pace (words per second), mean WER,
+mean loudness (LUFS), the share of lines inside the voice's pitch band, the lines the gate still calls weak,
+the share of lines nearest to their own voice's centroid, and a one-line description of how the voice sounds.
+The "identifiable" share comes from the `idm` scores that `castcheck.py --annotate-state` (or generate.py's
+identity gate) wrote into render-state.json; `--identity` takes the file `castcheck.py --json` writes instead.
 """
 import argparse
 import json
@@ -72,6 +73,9 @@ def main() -> int:
         total += len(ids)
         weak_total += weak
         known = ident.get(vid, {}).get("identifiable")
+        margins = [r["idm"] for r in recs if "idm" in r]
+        if known is None and margins:
+            known = sum(1 for m in margins if m >= 0) / len(margins)
         print("| `%s` %s | %d | %.1f | %.0f | %.2f | %.3f | %.1f | %.0f%% | %d | %s | %s |" % (
             vid, voice["name"], len(ids), sum(lines[i]["dur"] for i in ids) / 60,
             st.median(f0) if f0 else 0, st.median(wps) if wps else 0,
