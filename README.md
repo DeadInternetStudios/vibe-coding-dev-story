@@ -2,8 +2,8 @@
 
 A Game Dev Story style management game about vibe coding, made for people who live on Reddit.
 
-You run a tiny startup out of a garage. You hire, you prompt apps into existence with an AI called Clod,
-you ship on a fake Reddit, and the launch thread **reads itself out loud, every commenter in their own voice**,
+You run a tiny startup out of a garage. You hire a team and prompt apps into existence with an AI called Clod.
+Then you ship on a fake Reddit, and the launch thread **reads itself out loud, every commenter in their own voice**,
 while the karma counter spins. Survive three years, or get acquired for a number nobody believes.
 
 Pixel art, one-screen office, a button for everything. Phaser 4, Vite, TypeScript. No server, no account, no tracking.
@@ -18,7 +18,8 @@ npm run dev          # serves the game on the address it prints, usually http://
 A phone works as well as a desktop: portrait, landscape and tablets each get their own layout.
 Add it to the home screen and it runs offline.
 
-Keyboard on desktop: `SPACE` pauses, `1` to `4` set the speed, `H` `T` `S` `O` `R` `P` open Hire, Team, Shop, Tools, Room and Project, `C` crunches, `I` grabs an idea, `ESC` opens the menu, number keys pick the answer in a popup.
+Keyboard on desktop: `SPACE` pauses and `1` to `4` set the speed. `H` `T` `S` `O` `R` `P` open Hire, Team, Shop, Tools, Room and Project.
+`C` crunches, `I` grabs an idea, `ESC` opens the menu, and the number keys pick the answer in a popup.
 
 ### The loop
 
@@ -73,10 +74,10 @@ npm run vo:export    # list every voiced line (tools/tts renders the ones that a
 ## The voices
 
 The game never calls a model. `tools/tts` turns `src/content` into `public/audio/vo/*.mp3` once, on a laptop,
-with a speech-to-text check on every clip (the words you read are the words you hear). The commenters:
+with a speech-to-text check on every clip (the words you read are the words you hear). The cast:
 a coding assistant that agrees with everything, a founder who ships on Fridays, a senior dev who has seen it all,
 an AutoModerator, a crypto bro, a pedant, a doomer, a LinkedIn poster, a rubber duck and more.
-Nobody listened to them while they were made: quality was measured, not heard. Please do listen.
+We measured the voices and never heard them. Please do listen.
 
 ## Credits
 
