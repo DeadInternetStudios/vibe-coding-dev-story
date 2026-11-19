@@ -43,9 +43,17 @@ async function renderForNode(job: RenderJob, sampleRate: number, seed: number): 
   };
 }
 
+/** Milliseconds one render takes, without the cost of shipping the samples out. */
+async function timeJob(job: RenderJob, sampleRate: number, seed: number): Promise<number> {
+  const t0 = performance.now();
+  await renderJob(OfflineAudioContext as unknown as OfflineCtor, job, sampleRate, seed);
+  return performance.now() - t0;
+}
+
 declare global {
   interface Window {
     __renderJob: typeof renderForNode;
+    __timeJob: typeof timeJob;
     __probeWaves: () => ReturnType<typeof probeWaves>;
     __probeStarts: (wave: string, mode: StartMode) => ReturnType<typeof probeStarts>;
     __ready: boolean;
@@ -53,6 +61,7 @@ declare global {
 }
 
 window.__renderJob = renderForNode;
+window.__timeJob = timeJob;
 window.__probeWaves = () => probeWaves(OfflineAudioContext as unknown as OfflineCtor);
 window.__probeStarts = (wave, mode) => probeStarts(OfflineAudioContext as unknown as OfflineCtor, wave, 24, mode);
 window.__ready = true;
