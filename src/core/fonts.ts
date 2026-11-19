@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { handGlyph } from './handGlyph';
 
 /**
  * Pixel fonts, baked once at boot into bitmap fonts so every label is made of
@@ -24,7 +25,7 @@ export interface PixelFontSpec {
   threshold?: number;
   /** move the glyphs down (positive) or up (negative) inside the line */
   yShift?: number;
-  /** redraw single glyphs by hand, rows joined with "/", same size as the one they replace. For letters the font draws too oddly to read at this size. */
+  /** redraw single glyphs by hand, rows joined with "/", the same height as the one they replace (see handGlyph). For letters the font draws too oddly to read at this size. */
   patch?: Record<string, string>;
 }
 
@@ -92,14 +93,17 @@ function rasterize(spec: PixelFontSpec): { glyphs: Glyph[]; ascent: number; desc
       glyphs.push({ ch, adv, left: 0, top: 0, w: 0, h: 0, bits: new Uint8Array(0) });
       continue;
     }
-    const w = maxX - minX + 1;
+    const rasterW = maxX - minX + 1;
     const h = maxY - minY + 1;
-    const bits = new Uint8Array(w * h);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) bits[y * w + x] = on[(minY + y) * cellW + (minX + x)] ?? 0;
-    const hand = spec.patch?.[ch]?.split('/');
-    if (hand && hand.length === h && hand.every((row) => row.length === w)) hand.forEach((row, y) => [...row].forEach((cell, x) => (bits[y * w + x] = cell === '#' ? 1 : 0)));
+    const hand = handGlyph(spec.patch?.[ch], h);
+    const w = hand?.w ?? rasterW;
+    const bits = hand?.bits ?? new Uint8Array(w * h);
+    if (!hand) for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) bits[y * w + x] = on[(minY + y) * cellW + (minX + x)] ?? 0;
+    const left = minX - pad;
+    // a hand drawn letter wider than the one it replaces pushes the next letter along, so they do not touch
+    const advance = hand && w > rasterW ? Math.max(adv, left + w + 1) : adv;
     // left is relative to the pen x, top is relative to the baseline row (negative above it)
-    glyphs.push({ ch, adv, left: minX - pad, top: minY - pad - ascent, w, h, bits });
+    glyphs.push({ ch, adv: advance, left, top: minY - pad - ascent, w, h, bits });
   }
   return { glyphs, ascent, descent };
 }

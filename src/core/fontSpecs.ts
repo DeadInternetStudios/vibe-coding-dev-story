@@ -9,5 +9,17 @@ export const FONT_SPECS: PixelFontSpec[] = [
   // Jersey 15 draws its 6 with no hole in the bowl and its 9 with a bowl at the bottom: 62 read as 02
   { key: 'j15', family: 'Jersey 15', size: 15, patch: { '6': '.#####/######/###.../#####./######/###.##/###.##/######/.####.', '9': '.####./######/##.###/##.###/######/.#####/...###/######/#####.' } },
   { key: 'j20', family: 'Jersey 20', size: 20 },
-  { key: 'vt16', family: 'VT323', size: 16 },
+  // VT323 at 16 px has strokes about two pixels thick and no room for three of them: m and M come out as solid blocks, w and W as
+  // smudges, so "I'm in." read as "I'# in.". These four are drawn by hand a little wider, with a gap between the strokes.
+  {
+    key: 'vt16',
+    family: 'VT323',
+    size: 16,
+    patch: {
+      m: '#######./########/##.##.##/##.##.##/##.##.##/##.##.##/##.##.##',
+      w: '##....##/##....##/##.##.##/##.##.##/##.##.##/########/.######.',
+      M: '##....##/###..###/########/########/##.##.##/##.##.##/##.##.##/##.##.##/##.##.##',
+      W: '##....##/##....##/##.##.##/##.##.##/##.##.##/##.##.##/##.##.##/########/.######.',
+    },
+  },
 ];
