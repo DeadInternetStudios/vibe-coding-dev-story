@@ -14,7 +14,7 @@ import { BIG_ICON_NAMES, ICON_NAMES, iconPx } from '../../src/art/sprites/icons'
 import { DECOR, decorPx } from '../../src/art/sprites/decor';
 import { PORTRAIT_LOOKS, portraitPx } from '../../src/art/sprites/portraits';
 import { SHOP } from '../../src/sim/shop';
-import { bounds, lintDistinct, lintSprite, type Finding } from './lint';
+import { bounds, lintDistinct, lintSprite, type Finding, type LintOpts } from './lint';
 
 export const BIG_PREFIXES = ['kind_', 'niche_', 'tool_', 'chan_', 'card_'] as const;
 
@@ -59,6 +59,12 @@ export function checkIcons(): Finding[] {
   return out;
 }
 
+/** Thin effect lines drawn after the outline on purpose: the couch smell and the chair hum. */
+const DECOR_LINT: Record<string, LintOpts> = {
+  couch: { looseInks: ['green2'], allowStray: true },
+  massage: { looseInks: ['sky'], allowStray: true },
+};
+
 export function checkDecor(): Finding[] {
   const out: Finding[] = [];
   const all: { name: string; px: Px }[] = [];
@@ -70,7 +76,7 @@ export function checkDecor(): Finding[] {
     }
     const max = DECOR_MAX[item.spot]!;
     out.push(...sizeFinding(item.art, p, max.w, max.h, false));
-    out.push(...lintSprite(item.art, p, { minColors: 5, minFill: 0.3 }));
+    out.push(...lintSprite(item.art, p, { minColors: 5, minFill: 0.3, ...DECOR_LINT[item.art] }));
     const b = bounds(p)!;
     // anchors: floor and desk things stand on the bottom row, wall things hang from the top row
     if (item.spot === 'wall' && b.y0 !== 0) out.push({ sprite: item.art, level: 'error', msg: `wall item must touch the top row, starts at y ${b.y0}` });

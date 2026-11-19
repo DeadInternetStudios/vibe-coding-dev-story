@@ -7,11 +7,33 @@
  *   desk              bottom center sits on a desk top, up to 12 wide and 10 tall
  */
 import type { Px } from '../pixel';
+import { arcade, barista, massage, rack } from './decorBig';
+import { chair, key, keyboard, monitor, standing } from './decorDesk';
+import { beanbag, coffee, cooler, couch, fridge, pingpong } from './decorFloor';
+import { neon, trophy, whiteboard } from './decorWall';
 import { duck, plant } from './office';
 
 export const DECOR: Record<string, () => Px> = {
   plant,
   duck,
+  monitor,
+  keyboard,
+  standing,
+  key,
+  chair,
+  whiteboard,
+  neon,
+  trophy,
+  coffee,
+  cooler,
+  fridge,
+  beanbag,
+  couch,
+  pingpong,
+  arcade,
+  massage,
+  rack,
+  barista,
 };
 
 export function decorPx(id: string): Px | null {

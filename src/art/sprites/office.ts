@@ -3,7 +3,7 @@
  * lighting is consistent: light from the top left, shadows lean plum, every
  * object has a dark outline, tops are lighter than fronts.
  */
-import { Px, px, type Ink, ink } from '../pixel';
+import { Px, px, type Ink, type InkName, ink } from '../pixel';
 
 export const TILE = 16;
 
@@ -188,38 +188,45 @@ export function mug(): Px {
   ], { o: 'orange2' }).halo('ink0');
 }
 
-/** A rubber duck, 7 x 7. */
+/** A rubber duck, 7 x 7 and 9 x 9 with its outline. */
 export function duck(): Px {
   return px([
     '...yy..',
     '..yyyy.',
     '..ykyyy',
     '.rryyy.',
-    'yyyyyyy',
-    '.yyyyy.',
-    '..yyy..',
-  ], { y: 'yellow', r: 'orange2', K: 'ink1' }).halo('ink0');
+    'yyyyyYy',
+    '.yyyyY.',
+    '..YYY..',
+  ], { y: 'yellow', r: 'orange2', K: 'ink1', Y: 'orange3' }).outline('ink0');
 }
 
-/** A potted plant, 12 x 22. */
+/** A sad potted plant. One leaf has already given up, and the pot knows. */
 export function plant(): Px {
   const c = new Px(14, 24);
-  // leaves
-  const leaf = (x: number, y: number, w: number, h: number) => {
-    c.ellipse(x, y, w / 2, h / 2, 'green1');
-    c.ellipse(x - 1, y - 1, w / 3, h / 3, 'green2');
+  const leaf = (x: number, y: number, w: number, h: number, dark: InkName = 'green1', light: InkName = 'green2') => {
+    c.ellipse(x, y, w / 2, h / 2, dark);
+    c.ellipse(x - 1, y - 1, w / 3, h / 3, light);
   };
   leaf(7, 5, 8, 8);
   leaf(3, 9, 6, 6);
-  leaf(11, 9, 6, 6);
   leaf(5, 13, 6, 5);
-  leaf(10, 13, 6, 5);
+  // the one that gave up: yellow and hanging low on the right
+  leaf(12, 12, 4, 8, 'orange3', 'yellow');
+  c.set(12, 16, 'wood2');
   c.vline(7, 12, 5, 'green0');
   // pot
-  c.rect(3, 16, 8, 6, 'orange1');
+  c.rect(3, 16, 8, 7, 'orange1');
   c.hline(2, 16, 10, 'orange2');
   c.hline(2, 17, 10, 'orange0');
-  c.vline(10, 18, 4, 'orange0');
-  c.hline(3, 21, 8, 'orange0');
-  return c.halo('ink0');
+  c.vline(10, 18, 5, 'orange0');
+  c.hline(3, 22, 8, 'orange0');
+  // a sad face on the pot, eyes well above the frown
+  c.set(5, 18, 'ink0');
+  c.set(8, 18, 'ink0');
+  c.set(6, 20, 'ink0');
+  c.set(7, 20, 'ink0');
+  c.set(5, 21, 'ink0');
+  c.set(8, 21, 'ink0');
+  return c.crop(0, 1, 14, 22).outline('ink0');
 }

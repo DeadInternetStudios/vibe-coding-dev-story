@@ -5,7 +5,8 @@
 import type { Px, RoleColors } from './pixel';
 import { TILE, carpetTile, desk, duck, laptop, mug, plant, wallTile, windowCity, woodTile } from './sprites/office';
 import { Px as PxClass } from './pixel';
-import { ICON_NAMES, iconPx } from './sprites/icons';
+import { BIG_ICON_NAMES, ICON_NAMES, iconPx } from './sprites/icons';
+import { decorPx } from './sprites/decor';
 import { BOX_STYLES, box, type BoxName } from './sprites/ui';
 import { ACCESSORIES, HAIR, buildPerson, roleColorsFor, type Face, type Look, type Pose } from './sprites/people';
 
@@ -62,8 +63,25 @@ function mockOffice(floor: 'carpet' | 'wood' = 'carpet'): Px {
   return c;
 }
 
+function decorGroup(ids: string[]): CatalogItem[] {
+  return ids.map((name) => ({ name, make: () => decorPx(name)! }));
+}
+
+function bigGroup(prefix: string): CatalogItem[] {
+  return BIG_ICON_NAMES.filter((n) => n.startsWith(prefix)).map((name) => ({ name, make: () => iconPx(name)! }));
+}
+
 export const CATALOG: Record<string, CatalogItem[]> = {
   icons: ICON_NAMES.map((name) => ({ name, make: () => iconPx(name)! })),
+  kinds: bigGroup('kind_'),
+  niches: bigGroup('niche_'),
+  tools: bigGroup('tool_'),
+  channels: bigGroup('chan_'),
+  cards: bigGroup('card_'),
+  decorDesk: decorGroup(['duck', 'monitor', 'keyboard', 'standing', 'key', 'chair']),
+  decorWall: decorGroup(['whiteboard', 'neon', 'trophy']),
+  decorFloor: decorGroup(['plant', 'coffee', 'cooler', 'beanbag', 'fridge', 'couch', 'arcade', 'pingpong', 'massage']),
+  decorCorner: decorGroup(['rack', 'barista']),
   boxes: (Object.keys(BOX_STYLES) as BoxName[]).map((name) => ({ name, make: () => box(28, 16, BOX_STYLES[name]) })),
   mock: [{ name: 'office-carpet', make: () => mockOffice('carpet') }, { name: 'office-wood', make: () => mockOffice('wood') }],
   people: LOOKS.map((look, i) => person(`look${i}`, look, 'stand', 'normal')),
