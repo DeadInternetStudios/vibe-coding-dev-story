@@ -33,10 +33,13 @@ const NAME_TIDIED = 'PLAIN LETTERS ONLY. TIDIED.';
 const NAME_REFUSED = 'TYPE LETTERS OR NUMBERS.';
 const NAME_HINT_MS = 3200;
 
-/** height of the two lines that explain the daily challenge, above its button */
-const DAILY_NOTE = 23;
-/** the width its whole name needs on the button, with the icon. Narrower buttons say DAILY. */
-const DAILY_FULL_W = 112;
+/** height of the note above the daily button: the date over what it is, or both on one line when the screen is short */
+const DAILY_NOTE_TWO = 23;
+const DAILY_NOTE_ONE = 12;
+/** air kept between the form and that note */
+const DAILY_NOTE_AIR = 3;
+/** the width the whole name DAILY CHALLENGE needs on its button, with the icon and a little air */
+const DAILY_BUTTON_W = 112;
 
 
 interface Form {
@@ -220,26 +223,29 @@ export class NewGameScene extends Phaser.Scene {
     const blurb = label(this, dX, dY, DIFFICULTIES[f.difficulty]!.blurb, { font: F.body, tint: C.cream, maxWidth: dTotal });
     dY += 12;
     if (!wide) ry = dY;
-    const contentBottom = wide ? dY : ry;
 
     // ------------------------------------------------------ start, and the daily challenge beside it
     // the start row keeps its old place on every screen. The daily takes the left of it, and wide screens
     // have the empty corner under the avatar for it.
     const startY = wide ? L.H - 30 : Math.max(ry + 6, L.H - 34);
     const withDaily = feature('daily');
-    const dailyW = !withDaily ? 0 : wide ? leftW : Math.floor((cw - 4) * 0.46);
+    const dailyW = !withDaily ? 0 : wide ? leftW : Math.max(DAILY_BUTTON_W, Math.floor((cw - 4) * 0.46));
     const startX = wide ? rightX : withDaily ? x0 + dailyW + 4 : x0;
     const startW = wide ? rightW : withDaily ? cw - dailyW - 4 : cw;
     const start = button(this, startX, startY, startW, 24, "LET'S VIBE", () => this.start(), { kind: 'orange', icon: 'bolt' });
     this.tweens.add({ targets: start, y: start.y - 1, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     if (withDaily) {
-      button(this, x0, startY, dailyW, 24, dailyW >= DAILY_FULL_W ? 'DAILY CHALLENGE' : 'DAILY', () => this.start(true), { kind: 'violet', icon: 'calendar' });
-      // two lines above it say what it is, if the screen has the room
-      if (startY - DAILY_NOTE >= contentBottom + 2) {
-        const today = dailyKey();
-        const best = loadDailyBest(today);
-        label(this, x0, startY - DAILY_NOTE, dailyTag(today), { font: F.caps, tint: C.yellow });
+      button(this, x0, startY, dailyW, 24, 'DAILY CHALLENGE', () => this.start(true), { kind: 'violet', icon: 'calendar' });
+      // above it: the date and what it is. Two lines if the screen has the room, else both on one line.
+      const room = startY - (blurb.y + blurb.height + DAILY_NOTE_AIR);
+      const today = dailyKey();
+      const best = loadDailyBest(today);
+      if (room >= DAILY_NOTE_TWO) {
+        label(this, x0, startY - DAILY_NOTE_TWO, dailyTag(today), { font: F.caps, tint: C.yellow });
         label(this, x0, startY - 12, best ? `A full run. Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'A full 3-year run. Same market for all.', { font: F.body, tint: best ? C.mint : C.cream, maxWidth: wide ? leftW : cw });
+      } else if (room >= DAILY_NOTE_ONE) {
+        const tag = label(this, x0, startY - DAILY_NOTE_ONE, dailyTag(today), { font: F.caps, tint: C.yellow });
+        label(this, x0 + tag.width + 5, startY - DAILY_NOTE_ONE, best ? `Best: ${best.score.toLocaleString('en-US')} (${best.rank})` : 'Same market for all.', { font: F.body, tint: best ? C.mint : C.cream });
       }
     }
     const back = button(this, 4, 4, 30, 14, 'BACK', () => {
