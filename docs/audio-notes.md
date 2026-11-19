@@ -346,8 +346,9 @@ factor is close to x1.00.
 
 ## 6. Things the backends do differently
 
-Both found while chasing a number that would not agree. Both are fixed in the engine and guarded
-by a test, because the unit tests run on node and cannot see a browser.
+The first three were found while chasing a number that would not agree. Each is fixed (in the
+engine, or in the harness for the third) and guarded by a test, because the unit tests run on node
+and cannot see a browser. The fourth is a check, not a bug.
 
 **node-web-audio-api ignores `disableNormalization`.** A browser plays a custom `PeriodicWave` at
 the level its Fourier series says; node peak-normalizes every one to 1.0 even when told not to
@@ -392,6 +393,16 @@ audits every pump (count and lateness), re-renders a tainted job up to 8 times a
 `src/audio/harness.test.ts` forces the failure. `analyze.py` also flags any hole over 150 ms. Two
 renders of the same job differ by float noise only (largest 2.4e-7, about -150 dBFS).
 
+**44.1 kHz.** Everything in this file was measured at 48 kHz, and a browser gives a game whatever
+the sound card runs at, often 44.1 kHz. So all 65 renders were repeated at 44.1 kHz on Chromium
+and compared with the 48 kHz ones (`render.ts ... --sr 44100`, then `crosscheck.py` on the two
+analyses). Songs: loudness identical to 0.1 LU, peaks within 0.15 dB, loop correlation 0.95 to
+1.00, worst seam click ratio 0.24 (limit 1.5), no flags. Sound effects: loudness within 0.2 dB
+for 63 of 65; `type` is 0.82 dB louder and `type2` 0.43, both 20 ms noise ticks whose noise is a
+different draw at each rate. Peaks within 0.6 dB for 59 of 65; the rest are `type` (+1.9 dB),
+`type2` (+1.4), `keyboard_burst` (-1.1), `upvote` (-0.9) and `phone` and `hire` (0.6). Highest
+peak anywhere is `title` at -3.26 dBFS, nothing clips, nothing is over the -3 dBFS limit.
+
 ## 7. How to check things
 
 Setup, once: `npm install` (adds `node-web-audio-api`, which only the tools and tests use), then
@@ -411,6 +422,7 @@ npx tsx tools/audio/render.ts sfx click coin   render sounds (or `sfx all`) to t
 npx tsx tools/audio/render.ts music office --intensity 1 --loops 2
 npx tsx tools/audio/render.ts music office --solo bass,kit      only those layers
   add --backend chromium --out tools/audio/out/chromium         render on Chromium instead of node
+  add --sr 44100                                                render at another sample rate (default 48000)
 
 tools/audio/.venv/bin/python tools/audio/analyze.py             analyze everything rendered, write the tables above
 tools/audio/sfx.sh measure|flagged|calibrate|settle            all sounds, one line each
