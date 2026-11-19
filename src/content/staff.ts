@@ -24,7 +24,7 @@ export const ARCHETYPES: StaffArchetype[] = [
     skills: skills([8, 8], [8, 8], [6, 6], [5, 5], [10, 10]),
     salary: [3000, 3000],
     traits: ['overconfident'],
-    names: [],
+    names: ['Chad'],
     intro: [
       vo('chad', "Listen. We're not just building an app. We're building a feeling."),
       vo('chad', 'Rise and grind, baby! Another day, another pivot!'),

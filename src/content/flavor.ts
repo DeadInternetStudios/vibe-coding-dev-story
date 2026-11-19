@@ -328,7 +328,7 @@ export const AMBIENT: VoiceLine[] = [
   vo('chad', "We're not behind schedule. We're ahead of a schedule that doesn't exist.", 'confident, upbeat'),
   vo('chad', "Can we make the logo bigger? No reason. It just feels like it wants to be bigger.", 'casual, not looking up'),
   vo('clod', "Perfect! Now let's run the tests. Oh no. Oh no, no, no. Let me fix that."),
-  vo('clod', 'Here is the full file! The rest of your code goes here! That is the full file!', 'cheerful, very helpful'),
+  vo('clod', "I commented every line! Each comment says: this is a line of code. You're welcome!", 'cheerful, very helpful'),
   vo('clod', "I can't see your files. I have read all of them. The one called secrets is very brave.", 'warm, reassuring'),
   vo('clod', "I've rewritten the function! It's four hundred lines now! I'm very proud of the line count!"),
   vo('dave', "I have a bad feeling about this deploy. It's the same bad feeling as the last forty.", 'tired, flat'),
