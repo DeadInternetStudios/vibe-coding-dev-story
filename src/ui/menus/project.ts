@@ -12,6 +12,7 @@ import { qualityOf } from '../../sim/views';
 import { bar, button, hoverFrame, iconImg, label, panel, rect } from '../kit';
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
+import { FACE_H, FACE_PITCH, FACE_ROW_H, NAME_H, START_FROM_BOTTOM, START_H, wizardRows } from './projectLayout';
 import { beat } from '../story';
 import type { UiCtx } from '../ctx';
 import { STAT_WORD_7 } from '../text';
@@ -33,7 +34,12 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const s = ctx.session.s;
   const wide = !L.portrait && L.W >= 380;
   const w = Math.min(L.W - 4, wide ? 410 : 246);
-  const h = popupH(L, wide ? 246 : 372);
+  const lw = wide ? 196 : w - 12;
+  const rx = wide ? lw + 14 : 6;
+  const rw = wide ? w - rx - 6 : w - 12;
+  const rows = wizardRows(wide, s.staff.length, lw, rx, rw);
+  const { fy } = rows;
+  const h = popupH(L, rows.want);
   const m = new Modal(scene, { w, h, title: 'NEW PROJECT', style: 'paper', closable: true, hold: ctx.hold, onClose });
   beat(ctx, 'idea');
 
@@ -48,10 +54,6 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     nameSeed: Math.floor(Math.random() * 1e9),
   };
   const rngName = () => productName(new Rng(st.nameSeed), c.kinds[st.kind]!, c.niches[st.niche]!, s.shipped.map((a) => a.name));
-
-  const lw = wide ? 196 : w - 12;
-  const rx = wide ? lw + 14 : 6;
-  const rw = wide ? w - rx - 6 : w - 12;
 
   // ------------------------------------------------------------ cyclers
   const cycler = (y: number, title: string, text: () => string, sub: () => string, subTint: () => number, step: (d: number) => void, icon: () => string) => {
@@ -169,21 +171,20 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   m.add(scopeHint);
 
   // ------------------------------------------------------------ team
-  m.add(label(scene, 6, 190, 'WHO BUILDS (tap to toggle)', { font: F.caps, tint: C.ink3 }));
+  m.add(label(scene, rows.faceX, rows.teamY, 'WHO BUILDS (tap to toggle)', { font: F.caps, tint: C.ink3 }));
   const faces: { id: string; img: Phaser.GameObjects.Image; ring: Phaser.GameObjects.Image }[] = [];
-  const per = Math.min(s.staff.length, Math.floor((lw - 4) / 19));
   s.staff.forEach((mem, i) => {
-    const col = i % Math.max(1, per);
-    const row = Math.floor(i / Math.max(1, per));
-    const fx = 6 + col * 19;
-    const fy = 200 + row * 24;
-    const ring = rect(scene, fx, fy, 18, 22, C.ink0, 1);
-    const bg = rect(scene, fx + 1, fy + 1, 16, 20, C.sky, 1);
-    const img = scene.add.image(fx + 9, fy + 21, bakePerson(scene, mem.look, 'stand', 'normal')).setOrigin(0.5, 1).setScale(1);
+    const col = i % rows.perRow;
+    const row = Math.floor(i / rows.perRow);
+    const tx = rows.faceX + col * FACE_PITCH;
+    const ty = rows.faceY + row * FACE_ROW_H;
+    const ring = rect(scene, tx, ty, 18, FACE_H, C.ink0, 1);
+    const bg = rect(scene, tx + 1, ty + 1, 16, 20, C.sky, 1);
+    const img = scene.add.image(tx + 9, ty + 21, bakePerson(scene, mem.look, 'stand', 'normal')).setOrigin(0.5, 1).setScale(1);
     m.add(ring);
     m.add(bg);
     m.add(img);
-    const z = scene.add.zone(fx, fy, 18, 22).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    const z = scene.add.zone(tx, ty, 18, FACE_H).setOrigin(0, 0).setInteractive({ useHandCursor: true });
     z.on('pointerup', () => {
       if (st.team.has(mem.id)) st.team.delete(mem.id);
       else st.team.add(mem.id);
@@ -191,14 +192,13 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
       repaint();
     });
     m.add(z);
-    m.add(hoverFrame(scene, z, fx, fy, 18, 22));
+    m.add(hoverFrame(scene, z, tx, ty, 18, FACE_H));
     faces.push({ id: mem.id, img, ring: ring as unknown as Phaser.GameObjects.Image });
     void bg;
   });
 
   // ------------------------------------------------------------ forecast
   const fx = rx;
-  const fy = wide ? 21 : 246;
   m.add(label(scene, fx, fy, 'FORECAST', { font: F.caps, tint: C.ink3 }));
   const qLabel = label(scene, fx + rw - 2, fy - 2, '', { font: F.title, tint: C.teal1, origin: [1, 0] });
   m.add(qLabel);
@@ -219,18 +219,18 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   });
   const tickNote = label(scene, fx, fy + 66, '', { font: F.body, tint: C.ink3, maxWidth: rw });
   m.add(tickNote);
-  const timeLabel = label(scene, fx, fy + 74, '', { font: F.caps, tint: C.ink1 });
+  const timeLabel = label(scene, fx, fy + 77, '', { font: F.caps, tint: C.ink1 });
   m.add(timeLabel);
-  const noteLabel = label(scene, fx, fy + 86, '', { font: F.body, tint: C.ink3, maxWidth: rw });
+  const noteLabel = label(scene, fx, fy + 89, '', { font: F.body, tint: C.ink3, maxWidth: rw });
   m.add(noteLabel);
-  const nameLabel = label(scene, fx, fy + 112, '', { font: F.caps, tint: C.orange1, maxWidth: rw - 22 });
+  const nameLabel = label(scene, rows.nameX, rows.nameY + 4, '', { font: F.caps, tint: C.orange1, maxWidth: rows.nameW - 22 });
   m.add(nameLabel);
-  m.add(button(scene, fx + rw - 19, fy + 108, 19, 14, '', () => {
+  m.add(button(scene, rows.nameX + rows.nameW - 19, rows.nameY, 19, NAME_H, '', () => {
     st.nameSeed = Math.floor(Math.random() * 1e9);
     ctx.sfx('select');
     repaint();
   }, { kind: 'violet', icon: 'dice' }));
-  const startBtn = button(scene, fx, h - 26, rw, 20, 'START BUILDING', () => go(), { kind: 'orange', icon: 'ship' });
+  const startBtn = button(scene, fx, h - START_FROM_BOTTOM, rw, START_H, 'START BUILDING', () => go(), { kind: 'orange', icon: 'ship' });
   m.add(startBtn);
 
   const plan = () => ({ kind: c.kinds[st.kind]!.id, niche: c.niches[st.niche]!.id, tool: ownedTools[st.tool]?.id ?? s.company.activeTool, scope: st.scope, team: [...st.team], name: st.name });
