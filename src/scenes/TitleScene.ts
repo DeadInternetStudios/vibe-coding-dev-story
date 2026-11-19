@@ -75,12 +75,14 @@ export class TitleScene extends Phaser.Scene {
     const buttons = save ? 4 : 3;
     const menuH = buttons * 27 + (save ? 9 : 0);
     const stripH = 13;
-    const fits = (sc: number) => 6 + LOGO_H * sc + 14 + 14 + menuH + stripH + 6 <= H;
+    // the top band belongs to the sound switch, its hint and the best-rank chip: the logo starts under it
+    const band = 22;
+    const fits = (sc: number) => band + LOGO_H * sc + 14 + 14 + menuH + stripH + 6 <= H;
     let scale = Math.max(1, Math.min(3, Math.floor((W - 16) / LOGO_W)));
     while (scale > 1 && !fits(scale)) scale--;
     const logoH = LOGO_H * scale;
-    const free = H - stripH - logoH - 14 - menuH;
-    const logoY = Math.max(4, Math.floor(free * 0.32));
+    const free = H - stripH - logoH - 14 - menuH - band;
+    const logoY = band + Math.max(0, Math.floor(free * 0.32));
     this.buildLogo(L.cx, logoY, scale);
     const subY = logoY + logoH + 4;
     const sub = label(this, L.cx, subY, 'a startup sim where the AI writes the code', { font: F.body, tint: C.cream, outline: true, origin: [0.5, 0], depth: DEPTH.hud });

@@ -14,6 +14,7 @@ import { Session } from '../game/session';
 import { button, hoverFrame, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { editText } from '../ui/domInput';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
+import { SKILL_WORD } from '../ui/text';
 import { wipeIn } from '../ui/wipe';
 import { nightSky } from '../art/sprites/scenery';
 import { bake } from '../core/bake';
@@ -31,7 +32,6 @@ const DAILY_NOTE = 23;
 /** the width its whole name needs on the button, with the icon. Narrower buttons say DAILY. */
 const DAILY_FULL_W = 112;
 
-const ORIGIN_SKILL_NAMES: Record<string, string> = { prompt: 'PROMPT', taste: 'TASTE', debug: 'DEBUG', paranoia: 'PARANOIA', hustle: 'HUSTLE' };
 
 interface Form {
   company: string;
@@ -166,7 +166,7 @@ export class NewGameScene extends Phaser.Scene {
     FOUNDER_ORIGINS.forEach((o, i) => {
       const on = i === f.origin;
       const box = panel(this, rightX, ry, rightW, cardH, on ? 'btnTeal' : 'paperDim');
-      const top = Object.entries(o.skills).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => `+${ORIGIN_SKILL_NAMES[k] ?? k}`);
+      const top = Object.entries(o.skills).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => `+${SKILL_WORD[k as keyof typeof SKILL_WORD] ?? k}`);
       label(this, rightX + 5, ry + 4, o.name.toUpperCase(), { font: F.caps, tint: on ? C.white : C.ink1 });
       label(this, rightX + rightW - 5, ry + 4, top.join(' '), { font: F.body, tint: on ? C.yellow : C.teal1, origin: [1, 0] });
       label(this, rightX + 5, ry + 14, o.blurb, { font: F.body, tint: on ? C.cream : C.ink2, maxWidth: rightW - 10 });

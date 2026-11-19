@@ -28,7 +28,8 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
   m.add(deskLabel);
   const paintDesks = () => {
     const f = game.freeDesks();
-    deskLabel.setText(f > 0 ? `${f} FREE DESK${f === 1 ? '' : 'S'}` : 'NO FREE DESK');
+    // a phone's job board has no room beside the title for the long form
+    deskLabel.setText(wide ? (f > 0 ? `${f} FREE DESK${f === 1 ? '' : 'S'}` : 'NO FREE DESK') : f > 0 ? `${f} DESK${f === 1 ? '' : 'S'}` : 'NO DESKS');
     deskLabel.setTint(f > 0 ? C.mint : C.pink);
   };
   paintDesks();

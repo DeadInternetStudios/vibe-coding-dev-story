@@ -9,3 +9,6 @@ export function fit(text: string, max: number): string {
 export const STAT_WORD = { vibes: 'VIBES', features: 'FEATURES', polish: 'POLISH', stability: 'STABILITY', security: 'SECURITY' } as const;
 /** The same, trimmed to seven letters for narrow rows. */
 export const STAT_WORD_7 = { vibes: 'VIBES', features: 'FEATURE', polish: 'POLISH', stability: 'STABLE', security: 'SECURE' } as const;
+
+/** The five skills of a person, spelled out. */
+export const SKILL_WORD = { prompt: 'PROMPT', taste: 'TASTE', debug: 'DEBUG', paranoia: 'PARANOIA', hustle: 'HUSTLE' } as const;

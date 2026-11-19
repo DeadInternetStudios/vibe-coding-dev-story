@@ -9,6 +9,7 @@ import { bar, button, hoverFrame, iconImg, label, panel, rect, type ButtonKind }
 import { layoutOf, popupH } from '../layout';
 import { Modal } from '../modal';
 import { beat } from '../story';
+import { SKILL_WORD } from '../text';
 import type { UiCtx } from '../ctx';
 
 const SKILL_COLORS: Record<SkillKey, number> = { prompt: C.sky, taste: C.pink, debug: C.mint, paranoia: C.violet2, hustle: C.yellow };
@@ -103,9 +104,9 @@ export function openTeam(ctx: UiCtx, focus: string | undefined, onClose: () => v
     let y = dy + 62;
     for (const k of SKILL_KEYS) {
       detail.add(iconImg(scene, k, px, y - 1));
-      detail.add(label(scene, px + 10, y, k.slice(0, 5).toUpperCase(), { font: F.body, tint: C.ink2 }));
-      detail.add(rect(scene, px + 40, y + 1, dw - 110, 5, C.ink1, 1));
-      detail.add(rect(scene, px + 41, y + 2, Math.max(1, Math.round((Math.min(40, mem.skills[k]) / 40) * (dw - 112))), 3, SKILL_COLORS[k], 1));
+      detail.add(label(scene, px + 10, y, SKILL_WORD[k], { font: F.body, tint: C.ink2 }));
+      detail.add(rect(scene, px + 54, y + 1, dw - 124, 5, C.ink1, 1));
+      detail.add(rect(scene, px + 55, y + 2, Math.max(1, Math.round((Math.min(40, mem.skills[k]) / 40) * (dw - 126))), 3, SKILL_COLORS[k], 1));
       detail.add(label(scene, px + dw - 58, y, `${mem.skills[k]}`, { font: F.body, tint: C.ink1, origin: [1, 0] }));
       const cost = game.trainCost(mem, k);
       const tb = button(scene, px + dw - 52, y - 2, 44, 10, `+ ${shortMoney(cost)}`, () => {
