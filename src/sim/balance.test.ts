@@ -40,6 +40,16 @@ describe('balance on the shipped content', () => {
     }
   }, TIMEOUT);
 
+  it('keeps the comment threads fresh: a whole game rarely reads the same comment twice', () => {
+    const fractions = play('smart').map((r) => {
+      const ids = r.game.s.shipped.flatMap((app) => app.thread.vignettes.map((v) => v.id));
+      const seen = new Set(ids);
+      expect(ids.length).toBeGreaterThan(40);
+      return 1 - seen.size / ids.length;
+    });
+    expect(mean(fractions)).toBeLessThan(0.2);
+  }, TIMEOUT);
+
   it('loses the company of a bot that does nothing, and of most that mash buttons', () => {
     expect(play('idle').every((r) => r.bankrupt)).toBe(true);
     expect(play('random').filter((r) => r.bankrupt).length).toBeGreaterThanOrEqual(SEEDS.length / 2);
