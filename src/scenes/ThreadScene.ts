@@ -902,16 +902,17 @@ export class ThreadScene extends Phaser.Scene {
     const lx = 8;
     card.add(label(this, lx, 20, 'THREAD SCORE', { font: F.caps, tint: C.ink3 }));
     const big = label(this, lx, 29, '0', { font: F.title, tint: col });
-    big.setScale(wide ? 3 : 2.5);
+    // whole pixels only, and air between the digits: this face draws its digits edge to edge, so 38 read as one blob
+    big.setScale(3).setLetterSpacing(2);
     card.add(big);
     // the "/40" sits right after the number it belongs to
     big.setText(`${score}`);
     const bigW = Math.round(big.displayWidth);
     big.setText('0');
-    card.add(label(this, lx + bigW + 3, wide ? 56 : 52, '/40', { font: F.head, tint: C.ink2 }));
+    card.add(label(this, lx + bigW + 3, 56, '/40', { font: F.head, tint: C.ink2 }));
     // the verdict is a word you can read from across the room; the long one gets the smaller face
     const vFont = verdict.length > 10 ? F.head : F.title;
-    const verdictT = label(this, lx, vFont === F.title ? (wide ? 75 : 71) : wide ? 79 : 75, '', { font: vFont, tint: col });
+    const verdictT = label(this, lx, vFont === F.title ? (wide ? 75 : 74) : wide ? 79 : 78, '', { font: vFont, tint: col });
     card.add(verdictT);
     // the four ratings the thread handed out, in words
     const rec2 = this.rec.thread.vignettes;
