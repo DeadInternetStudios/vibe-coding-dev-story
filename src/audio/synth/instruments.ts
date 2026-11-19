@@ -82,6 +82,13 @@ export const INSTRUMENTS = {
     gate: 0.85,
   },
   bassStep: { layers: [{ wave: 'tri4' }], env: { a: 0.003, d: 0.07, s: 0.8, r: 0.06 }, vol: 0.5, gate: 0.88 },
+  // an upright style pluck: a warm body, plus a quiet pulse an octave up so the pitch carries on small speakers
+  bassPizz: {
+    layers: [{ wave: 'warm' }, { wave: 'p25', ratio: 2, vol: 0.22 }],
+    env: { a: 0.002, d: 0.16, s: 0.2, r: 0.06 },
+    vol: 0.5,
+    gate: 0.8,
+  },
   // ---- mallets and bells
   bell: {
     layers: [{ wave: 'sine' }, { wave: 'sine', ratio: 2.76, vol: 0.3 }, { wave: 'sine', ratio: 5.4, vol: 0.12 }],

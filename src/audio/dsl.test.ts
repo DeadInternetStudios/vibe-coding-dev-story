@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CHORD_QUALITIES, compileSong, normalizeBars, parseChord, scaleOf, type SongSpec } from './songs/dsl';
+import { cat, every4, hold, place, rep, rests } from './songs/helpers';
 
 const R16 = '. . . . . . . . . . . . . . . .';
 
@@ -181,5 +182,29 @@ describe('compileSong: mistakes name the exact place', () => {
         }),
       ),
     ).toThrow(/duplicate track id "a"/);
+  });
+});
+
+describe('bar helpers', () => {
+  it('place puts tokens on the given steps and rests everywhere else', () => {
+    expect(place({ 4: 'x', 12: 'X' })).toBe('. . . . x . . . . . . . X . . .');
+    expect(place({}, 4)).toBe('. . . .');
+  });
+
+  it('place refuses a step outside the bar', () => {
+    expect(() => place({ 16: 'x' })).toThrow(/outside 0..15/);
+    expect(() => place({ [-1]: 'x' })).toThrow(/outside/);
+  });
+
+  it('a placed bar always has the right number of steps', () => {
+    for (const steps of [8, 12, 16]) expect(place({ 0: 'x' }, steps).split(' ')).toHaveLength(steps);
+  });
+
+  it('hold, rep, cat, rests and every4 build bar lists of the right length', () => {
+    expect(hold('C4', 4)).toBe('C4 - - -');
+    expect(rep('a', 3)).toEqual(['a', 'a', 'a']);
+    expect(cat('a', ['b', 'c'], rep('d', 2))).toEqual(['a', 'b', 'c', 'd', 'd']);
+    expect(rests(2)).toEqual([R16, R16]);
+    expect(every4('n', 'f', 2)).toEqual(['n', 'n', 'n', 'f', 'n', 'n', 'n', 'f']);
   });
 });

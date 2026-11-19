@@ -20,10 +20,11 @@ import math
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
-from scipy import signal
+from scipy import ndimage, signal
 from scipy.io import wavfile
 
 import matplotlib
@@ -137,6 +138,14 @@ def ffmpeg_ebur128(path: Path) -> dict:
 # ------------------------------------------------------------------- spectrum
 
 
+def ebur128_of(data: np.ndarray, sr: int) -> float | None:
+    """Integrated loudness (LUFS) of an array, measured by ffmpeg like a file would be."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "segment.wav"
+        wavfile.write(path, sr, data.astype(np.float32))
+        return ffmpeg_ebur128(path).get("lufs_i")
+
+
 def stft_power(mono: np.ndarray, sr: int, nfft: int, hop: int):
     f, t, z = signal.stft(mono, fs=sr, nperseg=nfft, noverlap=nfft - hop, window="hann", boundary=None, padded=False)
     return f, t, np.abs(z)
@@ -206,27 +215,42 @@ def tempo_match(declared: float, detected: float | None) -> str:
     return "MISMATCH"
 
 
-def detect_key(mono: np.ndarray, sr: int) -> dict:
-    nfft, hop = 8192, 4096
+def pitch_chroma(mono: np.ndarray, sr: int, fmin: float = 130.0, fmax: float = 2100.0) -> np.ndarray:
+    """
+    A chroma vector (12 pitch classes, sums to 1) built to ignore drums and noise:
+    the spectrogram is split into a harmonic part (steady along time) and a percussive part
+    (steady along frequency) by median filtering, and only bins within 30 cents of a
+    semitone centre are counted, so spectral splatter between notes does not vote.
+    """
+    nfft, hop = 16384, 4096
     if len(mono) < nfft:
         mono = np.pad(mono, (0, nfft - len(mono)))
     f, _t, mag = stft_power(mono, sr, nfft, hop)
-    sel = (f >= 65) & (f <= 2100)
-    freqs = f[sel]
-    pc = (np.round(12 * np.log2(freqs / 440.0) + 69).astype(int)) % 12
-    power = (mag[sel] ** 2).sum(axis=1)
+    harm = ndimage.median_filter(mag, size=(1, 9))
+    perc = ndimage.median_filter(mag, size=(25, 1))
+    mask = harm**2 / (harm**2 + perc**2 + 1e-20)
+    tonal = mag * mask
+    sel = (f >= fmin) & (f <= fmax)
+    semis = 12 * np.log2(f[sel] / 440.0) + 69
+    near = np.abs(semis - np.round(semis)) < 0.3
+    pc = np.round(semis).astype(int) % 12
+    weights = np.sqrt(tonal[sel].sum(axis=1))  # square root: a few loud bins do not outvote the rest
     chroma = np.zeros(12)
-    np.add.at(chroma, pc, power)
+    np.add.at(chroma, pc[near], weights[near])
+    return chroma / chroma.sum() if chroma.sum() > 0 else chroma
+
+
+def detect_key(mono: np.ndarray, sr: int) -> dict:
+    chroma = pitch_chroma(mono, sr)
     if chroma.sum() <= 0:
-        return {"key": None, "score": 0.0, "top3": []}
-    chroma = chroma / chroma.sum()
+        return {"key": None, "score": 0.0, "top3": [], "ranked": []}
     scores = []
     for tonic in range(12):
         for mode, prof in (("major", KS_MAJOR), ("minor", KS_MINOR)):
             r = np.corrcoef(chroma, np.roll(prof, tonic))[0, 1]
             scores.append((float(r), f"{NOTE_NAMES[tonic]} {mode}"))
     scores.sort(reverse=True)
-    return {"key": scores[0][1], "score": scores[0][0], "top3": [s[1] for s in scores[:3]]}
+    return {"key": scores[0][1], "score": scores[0][0], "top3": [s[1] for s in scores[:3]], "ranked": [s[1] for s in scores]}
 
 
 def norm_key(k: str) -> str:
@@ -247,6 +271,20 @@ def relative_key(k: str) -> str | None:
     return f"{NOTE_NAMES[(i + 3) % 12]} major"
 
 
+# A pulse wave's upper partials smear a chroma, and loops like I vi ii V lean on the relative minor,
+# so a key finder cannot be strict. The declared key must still rank in the better third of the 24
+# candidates; a wrong key or a transposition lands far below that. The data tests check the notes themselves.
+KEY_RANK_OK = 8
+# the seam step may be at most this many times the 99th percentile step of the loop itself
+SEAM_CLICK_MAX = 1.5
+
+
+def key_rank(declared: str, det: dict) -> int | None:
+    ranked = det.get("ranked") or []
+    d = norm_key(declared)
+    return ranked.index(d) + 1 if d in ranked else None
+
+
 def key_match(declared: str, det: dict) -> str:
     if not det.get("key"):
         return "none"
@@ -257,6 +295,9 @@ def key_match(declared: str, det: dict) -> str:
         return "top3"
     if det["key"] == relative_key(d):
         return "relative"
+    rank = key_rank(declared, det)
+    if rank is not None and rank <= KEY_RANK_OK:
+        return f"rank {rank}"
     return "MISMATCH"
 
 
@@ -290,9 +331,10 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
         return float(np.max(np.abs(np.diff(seg)))) if len(seg) > 1 else 0.0
 
     def jump_db(t: float) -> float:
+        # silence on one side is a jump of "a lot", not of infinity
         i = int(round(t * sr))
         a, b = rms(mono[max(i - h, 0) : i]), rms(mono[i : i + h])
-        return db(b) - db(a) if a > 1e-6 and b > 1e-6 else 0.0
+        return float(np.clip(db(b + 1e-5) - db(a + 1e-5), -60.0, 60.0))
 
     total = len(mono) / sr
     bars = []
@@ -302,13 +344,24 @@ def loop_seam(mono: np.ndarray, sr: int, meta: dict, start: float = 0.06) -> dic
         if all(abs(t - s) > 0.01 for s in seams):
             bars.append(t)
         j += 1
-    bar_steps = [step(t) for t in bars] or [1e-9]
     bar_jumps = [jump_db(t) for t in bars] or [0.0]
     seam_steps = [step(t) for t in seams]
     seam_jumps = [jump_db(t) for t in seams]
 
+    # A click is a sample step bigger than anything the loop does anywhere else, so the
+    # yardstick is the 99th percentile of the largest step in every 4 ms window of one loop.
+    # (Bar lines themselves can be silent before a note, so they make a poor yardstick.)
+    second = start + loop
+    first_t = second if second + loop <= total + 0.05 else start
+    lo = int(round(first_t * sr))
+    one_loop = mono[lo : lo + int(round(loop * sr))]
+    win = max(int(0.004 * sr), 4)
+    n = len(one_loop) // win * win
+    window_steps = np.abs(np.diff(one_loop[:n].reshape(-1, win), axis=1)).max(axis=1) if n else np.array([1e-9])
+    typical_max = float(np.percentile(window_steps, 99)) + 1e-9
+
     out = {
-        "seam_click_ratio": max(seam_steps) / max(float(np.median(bar_steps)), 1e-9),
+        "seam_click_ratio": max(seam_steps) / typical_max,
         "seam_step_db": max(seam_jumps, key=abs),
         "bar_step_db_median": float(np.median(bar_jumps)),
         "bar_step_db_spread": float(np.std(bar_jumps)),
@@ -484,6 +537,7 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
         res["key_detected"] = key["key"]
         res["key_declared"] = meta.get("key")
         res["key_match"] = key_match(str(meta.get("key")), key) if meta.get("key") else "none"
+        res["key_rank"] = key_rank(str(meta.get("key")), key) if meta.get("key") else None
         res["key_score"] = key["score"]
         seam = loop_seam(mono, sr, meta)
         if seam:
@@ -497,8 +551,14 @@ def analyze_file(wav: Path, meta: dict, out_png: Path) -> dict:
                 t0 = 0.06 + k * loop
                 if t0 + loop <= total + 0.05:
                     a, b = int(t0 * sr), int(min((t0 + loop) * sr, len(mono)))
-                    res["lufs_loop"] = event_lufs(data[a:b], sr)[0]
-                    res["peak_loop_db"] = db(np.abs(data[a:b]).max())
+                    seg = data[a:b]
+                    res["lufs_loop"] = ebur128_of(seg, sr)
+                    res["peak_loop_db"] = db(np.abs(seg).max())
+                    # how often is the soft knee of the limiter (it starts at -6 dBFS) in play? 95% of 10 ms frames sit below this
+                    fr = max(int(0.01 * sr), 1)
+                    peaks = np.abs(seg).max(axis=1)
+                    nfr = len(peaks) // fr * fr
+                    res["peak_p95_db"] = db(float(np.percentile(peaks[:nfr].reshape(-1, fr).max(axis=1), 95)))
                     break
     else:
         lufs, act = event_lufs(data, sr)
@@ -534,7 +594,7 @@ def flags_for(r: dict) -> list[str]:
             fl.append("TEMPO")
         if r.get("key_match") in ("MISMATCH",):
             fl.append("KEY")
-        if r.get("seam_click_ratio", 0) > 2.5:
+        if r.get("seam_click_ratio", 0) > SEAM_CLICK_MAX:
             fl.append("SEAM")
         if r.get("loop_env_corr") is not None and r["loop_env_corr"] < 0.9:
             fl.append("LOOP")
