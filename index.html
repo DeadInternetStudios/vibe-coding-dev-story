@@ -27,8 +27,22 @@
     </style>
   </head>
   <body>
-    <div id="boot">booting vibes...</div>
+    <div id="boot"><span id="boot-line">booting vibes...</span></div>
     <div id="game"></div>
+    <script>
+      // the page is a blank screen for a second while the fonts bake: give it a joke or two
+      (function () {
+        var lines = ['booting vibes...', 'asking the AI to write the game...', 'accepting all changes...', 'npm install (2,314 packages)...', 'deleting the failing tests...', 'you are absolutely right...', 'hallucinating a loading bar...', 'warming up the tokens...'];
+        var el = document.getElementById('boot-line');
+        var boot = document.getElementById('boot');
+        var i = 0;
+        var timer = setInterval(function () {
+          if (!el || !boot || boot.classList.contains('done')) return clearInterval(timer);
+          i = (i + 1) % lines.length;
+          el.textContent = lines[i];
+        }, 700);
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
