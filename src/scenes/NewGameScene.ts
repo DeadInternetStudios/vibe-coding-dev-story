@@ -13,6 +13,7 @@ import type { Look } from '../sim/types';
 import { Session } from '../game/session';
 import { button, hoverFrame, label, panel, rect, type ButtonObj } from '../ui/kit';
 import { editText } from '../ui/domInput';
+import { tidyName } from '../ui/nameText';
 import { fadeTo, layoutOf, responsive } from '../ui/layout';
 import { SKILL_WORD } from '../ui/text';
 import { wipeIn } from '../ui/wipe';
@@ -26,6 +27,11 @@ const LOOK_ROWS: { key: keyof Look; name: string; count: () => number }[] = [
   { key: 'outfit', name: 'OUTFIT', count: () => CLOTH_RAMPS.length },
   { key: 'accessory', name: 'EXTRA', count: () => ACCESSORIES.length },
 ];
+
+/** What the title above a name says for a moment when the font could not draw what was typed. */
+const NAME_TIDIED = 'PLAIN LETTERS ONLY. TIDIED.';
+const NAME_REFUSED = 'TYPE LETTERS OR NUMBERS.';
+const NAME_HINT_MS = 3200;
 
 /** height of the two lines that explain the daily challenge, above its button */
 const DAILY_NOTE = 23;
@@ -89,21 +95,34 @@ export class NewGameScene extends Phaser.Scene {
     // ---------------------------------------------------------- left: names
     let y = 22;
     const field = (title: string, value: string, onEdit: () => void, onDice: () => void, yy: number) => {
-      label(this, x0, yy, title, { font: F.caps, tint: C.cream });
+      const heading = label(this, x0, yy, title, { font: F.caps, tint: C.cream });
       const box = panel(this, x0, yy + 9, leftW - 22, 14, 'paper');
       const t = label(this, x0 + 4, yy + 13, value, { font: F.caps, tint: C.ink1, maxWidth: leftW - 30 });
       const z = this.add.zone(x0, yy + 9, leftW - 22, 14).setOrigin(0, 0).setInteractive({ useHandCursor: true });
       z.on('pointerup', onEdit);
       const dice = button(this, x0 + leftW - 20, yy + 9, 20, 14, '', onDice, { kind: 'violet', icon: 'dice' });
-      return { box, t, z, dice };
+      let hintTimer: Phaser.Time.TimerEvent | undefined;
+      /** The title says what happened to what was typed for a moment, then goes back to being the title. No words: back at once. */
+      const say = (words?: string) => {
+        hintTimer?.remove();
+        heading.setText(words ?? title).setTint(words ? C.yellow : C.cream);
+        if (words) hintTimer = this.time.delayedCall(NAME_HINT_MS, () => say());
+      };
+      return { box, t, z, dice, say };
+    };
+    /** What was typed, as the font can draw it. Nothing usable keeps the old name. Anything the player will see differently is said out loud. */
+    const take = (typed: string, maxLen: number, shown: ReturnType<typeof field>, set: (name: string) => void) => {
+      const { name, changed } = tidyName(typed, maxLen);
+      if (name) {
+        set(name);
+        shown.t.setText(name);
+      }
+      shown.say(changed ? (name ? NAME_TIDIED : NAME_REFUSED) : undefined);
     };
     const companyField = field(
       'COMPANY',
       f.company,
-      () => editText(this, { x: x0, y: y + 9, w: leftW - 22, h: 14 }, f.company, 22, (v) => {
-        f.company = v;
-        companyField.t.setText(v);
-      }),
+      () => editText(this, { x: x0, y: y + 9, w: leftW - 22, h: 14 }, f.company, 22, (typed) => take(typed, 22, companyField, (v) => (f.company = v))),
       () => {
         f.company = new Rng(Math.floor(Math.random() * 1e9)).pick(app.content.companyNames);
         companyField.t.setText(f.company);
@@ -114,10 +133,7 @@ export class NewGameScene extends Phaser.Scene {
     const founderField = field(
       'FOUNDER',
       f.founder,
-      () => editText(this, { x: x0, y: y + 9, w: leftW - 22, h: 14 }, f.founder, 14, (v) => {
-        f.founder = v;
-        founderField.t.setText(v);
-      }),
+      () => editText(this, { x: x0, y: y + 9, w: leftW - 22, h: 14 }, f.founder, 14, (typed) => take(typed, 14, founderField, (v) => (f.founder = v))),
       () => {
         f.founder = new Rng(Math.floor(Math.random() * 1e9)).pick(app.content.firstNames);
         founderField.t.setText(f.founder);
