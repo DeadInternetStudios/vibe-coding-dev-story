@@ -10,7 +10,7 @@ import { button, iconImg, label, panel, rect, type PanelObj } from '../ui/kit';
 import { fadeTo, layoutOf } from '../ui/layout';
 import { Speech } from '../ui/speech';
 import { beat } from '../ui/story';
-import type { UiCtx } from '../ui/ctx';
+import type { StageCtx } from '../ui/ctx';
 
 const AWARD_ICON: Record<AwardId, string> = {
   gold: 'awardGold',
@@ -275,7 +275,7 @@ export class ThreadScene extends Phaser.Scene {
   }
 
   private async play(): Promise<void> {
-    const sctx = { scene: this, session: current(), hold: () => () => undefined } as unknown as UiCtx;
+    const sctx: StageCtx = { scene: this, session: current(), hold: () => () => undefined };
     await this.addOp();
     if (!this.instant && !this.replay) {
       await new Promise<void>((res) => {

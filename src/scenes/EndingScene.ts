@@ -166,11 +166,14 @@ export class EndingScene extends Phaser.Scene {
       if (!alive()) return;
       await this.wait(250);
     }
-    const bodyH = bodyT.height || 40;
+    // measure the finished text on a probe, so the stamp and the numbers sit below the last line however it wrapped
+    const probe = label(this, -999, -999, text, { font: F.read, maxWidth: bodyW });
+    const bodyH = probe.height || 40;
+    probe.destroy();
 
     // the rank stamp
     const sx = wide ? w - 54 : w / 2;
-    const sy = wide ? 52 : bodyY + bodyH + 24;
+    const sy = wide ? 52 : bodyY + bodyH + 38;
     const stamp = this.add.container(sx, sy);
     stamp.add(rect(this, -27, -30, 54, 60, C.ink0, 1));
     stamp.add(rect(this, -26, -29, 52, 58, col, 1));

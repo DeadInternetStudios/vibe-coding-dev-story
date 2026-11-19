@@ -283,7 +283,7 @@ function readyPrompt(ctx: UiCtx, done: Done): void {
   }
   const wide = !L.portrait && L.W >= 360;
   const w = Math.min(L.W - 4, wide ? 392 : 246);
-  const h = Math.min(L.H - 4, wide ? 232 : 300);
+  const h = Math.min(L.H - 4, wide ? 232 : 408);
   const m = new Modal(scene, { w, h, title: 'READY TO LAUNCH', style: 'paper' });
   ctx.sfx('fanfare_small');
   const view = projectView(c, p);

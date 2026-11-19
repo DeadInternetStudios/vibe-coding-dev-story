@@ -35,3 +35,9 @@ export interface UiCtx {
   /** shake the camera a little */
   shake(power?: number): void;
 }
+
+/**
+ * What the talking-head box needs. The thread screen has no office behind it, so the room is optional:
+ * with one the box sits above it, without one it takes the lower part of the screen.
+ */
+export type StageCtx = Pick<UiCtx, 'scene' | 'session' | 'hold'> & { room?: Room };

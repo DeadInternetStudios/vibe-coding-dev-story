@@ -7,13 +7,13 @@ import { VOICE_NAMES } from '../content/voiceNames';
 import { label, panel, rect } from './kit';
 import { layoutOf } from './layout';
 import { Speech } from './speech';
-import type { UiCtx } from './ctx';
+import type { StageCtx } from './ctx';
 
 /**
  * Talking heads. A box at the bottom with a face, a name, and words that
  * arrive as they are spoken. Tap to show it all, tap again for the next line.
  */
-export function dialogue(ctx: UiCtx, steps: DialogueStep[], onDone: () => void, opts: { title?: string; skippable?: boolean } = {}): void {
+export function dialogue(ctx: StageCtx, steps: DialogueStep[], onDone: () => void, opts: { title?: string; skippable?: boolean } = {}): void {
   const scene = ctx.scene;
   const L = layoutOf(scene);
   const release = ctx.hold('dialogue');
@@ -24,7 +24,8 @@ export function dialogue(ctx: UiCtx, steps: DialogueStep[], onDone: () => void, 
   const h = L.portrait ? 74 : 62;
   const x = Math.floor((L.W - w) / 2);
   // portrait: sit over the repo and revenue panels so the staff stay in view while they talk
-  const y = L.portrait ? Math.max(6, Math.round(ctx.room.root.y - h - 6)) : L.H - h - 66;
+  const roomTop = ctx.room?.root.y;
+  const y = L.portrait ? (roomTop === undefined ? L.H - h - 128 : Math.max(6, Math.round(roomTop - h - 6))) : L.H - h - 66;
   const box = panel(scene, x, y, w, h, 'paper');
   root.add(box);
   const face = scene.add.image(x + 8, y + 8, bakePortrait(scene, 'system')).setOrigin(0, 0).setScale(2);
