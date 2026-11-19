@@ -653,11 +653,11 @@ def fmt(v, spec: str = ".1f", none: str = "-") -> str:
 
 
 def music_table(rows: list[dict]) -> str:
-    head = "| Song | BPM set/found | Key set/found | Bars | Loop s | LUFS-I | LUFS loop | Peak dBFS | TP dBTP | Centroid Hz | Roll-off 95% | Seam click x | Seam dB | Loop corr | Flags |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+    head = "| Song | BPM set/found | Key set/found | Bars | Loop s | LUFS-I | LUFS loop | Peak dBFS | TP dBTP | Centroid Hz | Roll-off 95% | Seam click x | Seam dB | Bar line dB | Loop corr | Flags |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
     lines = []
     for r in rows:
         lines.append(
-            "| {n} | {bs}/{bf} {bm} | {ks}/{kf} {km} | {bars} | {loop} | {li} | {ll} | {pk} | {tp} | {ce} | {ro} | {sc} | {sd} | {lc} | {fl} |".format(
+            "| {n} | {bs}/{bf} {bm} | {ks}/{kf} {km} | {bars} | {loop} | {li} | {ll} | {pk} | {tp} | {ce} | {ro} | {sc} | {sd} | {bd} | {lc} | {fl} |".format(
                 n=r["name"],
                 bs=fmt(r.get("tempo_declared"), ".0f"),
                 bf=fmt(r.get("tempo_detected"), ".0f"),
@@ -675,6 +675,7 @@ def music_table(rows: list[dict]) -> str:
                 ro=fmt(r["roll95"], ".0f"),
                 sc=fmt(r.get("seam_click_ratio"), ".2f"),
                 sd=fmt(r.get("seam_step_db"), "+.1f"),
+                bd=fmt(r.get("bar_step_db_median"), "+.1f"),
                 lc=fmt(r.get("loop_env_corr"), ".3f"),
                 fl=", ".join(flags_for(r)) or "ok",
             )
