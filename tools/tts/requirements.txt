@@ -1,0 +1,11 @@
+# Direct dependencies of the offline voice pipeline. `setup.sh` installs the exact frozen set from
+# requirements.lock.txt; `setup.sh --latest` resolves these instead (newer, untested).
+# Python 3.12 (3.11 to 3.13 work; the default python on the dev machine is too new for wheels).
+mlx-audio==0.6.6          # Qwen3-TTS VoiceDesign and Base on MLX (pulls mlx, transformers, huggingface-hub)
+parakeet-mlx==0.7.0       # speech to text check and word timestamps (NVIDIA Parakeet TDT 0.6B v2 on MLX)
+soundfile>=0.13           # wav and flac io
+praat-parselmouth>=0.4.5  # F0 (pitch) measurements
+pyloudnorm>=0.1.1         # BS.1770 loudness matching
+num2words>=0.5.13         # spoken numbers in the WER normalizer
+scipy>=1.11
+numpy>=2.0

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice gallery · Vibe Coding Dev Story</title>
+<!--
+  Static page, no build step. Serve the REPO ROOT and open /tools/tts/gallery.html:
+
+      python3 -m http.server 8000        (from the repo root)
+
+  It reads ../../public/audio/vo/manifest.json (what exists), ./voices.json (who the voices are)
+  and, when present, ./lines.json, ./lines.seed.json, ./lines.extra.json (for delivery notes).
+  Nothing here plays by itself. Press play on a line.
+-->
+<style>
+  :root {
+    --bg: #14110f; --panel: #1d1916; --panel2: #25201c; --ink: #f1e8dc; --dim: #a89a89;
+    --line: #342d27; --accent: #ff8a3d; --good: #6fd08c; --warn: #f0c24b; --bad: #ff6b5e;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header.top { padding: 28px 24px 12px; max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
+  .sub { color: var(--dim); max-width: 70ch; }
+  .stats { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; color: var(--dim); font-size: 13px; }
+  .stats b { color: var(--ink); font-weight: 600; }
+  nav.chips { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line); padding: 10px 24px; }
+  nav .inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 3px 11px; font-size: 13px; text-decoration: none; }
+  .chip:hover { border-color: var(--accent); }
+  .chip small { color: var(--dim); margin-left: 4px; }
+  .tools { margin-left: auto; display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--dim); }
+  .tools input[type=search] { background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 5px 9px; width: 180px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 8px 24px 80px; }
+  section.voice { margin-top: 26px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow: hidden; }
+  section.voice > header { padding: 16px 18px 12px; background: var(--panel2); border-bottom: 1px solid var(--line); }
+  .vname { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+  .vname h2 { margin: 0; font-size: 19px; }
+  .vid { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }
+  .role { color: var(--dim); font-size: 13px; }
+  .desc { margin: 8px 0 0; color: #d9cdbd; font-size: 13.5px; max-width: 90ch; }
+  .meta { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--dim); }
+  .meta b { color: var(--ink); font-weight: 600; }
+  button.small { background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 3px 10px; cursor: pointer; font-size: 12px; }
+  button.small:hover { border-color: var(--accent); }
+  ul.lines { list-style: none; margin: 0; padding: 0; }
+  li.row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 6px 18px; padding: 12px 18px; border-top: 1px solid var(--line); align-items: center; }
+  li.row:first-child { border-top: 0; }
+  li.row.playing { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .text { font-size: 16px; }
+  .text .w { transition: color .08s, background .08s; border-radius: 3px; padding: 0 1px; }
+  .text .w.on { background: var(--accent); color: #1a1208; }
+  .delivery { font-size: 12.5px; color: var(--dim); margin-top: 2px; }
+  .delivery em { color: var(--warn); font-style: normal; }
+  .nums { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font: 11.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--dim); align-items: center; }
+  .badge { border-radius: 6px; padding: 1px 7px; border: 1px solid var(--line); background: var(--bg); }
+  .badge.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
+  .badge.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+  .badge.bad  { color: var(--bad);  border-color: color-mix(in srgb, var(--bad) 50%, var(--line)); }
+  canvas.env { width: 100%; height: 22px; display: block; margin-top: 5px; opacity: .9; }
+  audio { width: 100%; height: 34px; }
+  .id { color: #6d6256; }
+  .empty, .error { padding: 24px; color: var(--dim); }
+  .error { color: var(--bad); }
+  .error code, .empty code, .sub code { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+  .hidden { display: none !important; }
+  @media (max-width: 760px) { li.row { grid-template-columns: 1fr; } .tools { margin-left: 0; width: 100%; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Voice gallery</h1>
+  <div class="sub">Every voice is invented by Qwen3-TTS-12Hz-1.7B-VoiceDesign from a text description, rendered offline, checked by speech to text, and shipped as a small MP3.
+    Lines are grouped by voice. Nothing plays by itself: press play. The highlighted word follows the manifest's word timings, the strip under each line is the loudness envelope the game uses for mouth movement.</div>
+  <div class="stats" id="stats"></div>
+</header>
+<nav class="chips"><div class="inner" id="chips">
+  <div class="tools">
+    <label><input type="checkbox" id="weak"> only weak (WER &gt; 0.1)</label>
+    <input type="search" id="q" placeholder="filter text or id">
+  </div>
+</div></nav>
+<main id="main"><div class="empty">Loading the manifest…</div></main>
+
+<script>
+"use strict";
+const BASE = "../../public/audio/vo/";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function getJson(url, required) {
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error(url + " answered " + r.status);
+    return await r.json();
+  } catch (e) {
+    if (required) throw e;
+    return null;
+  }
+}
+
+function werClass(w) { return w <= 0.05 ? "good" : w <= 0.25 ? "warn" : "bad"; }
+function mean(a) { return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0; }
+
+function drawEnv(canvas, env) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  const g = canvas.getContext("2d");
+  g.scale(dpr, dpr);
+  const n = env.length, bw = w / n;
+  g.fillStyle = "#ff8a3d";
+  for (let i = 0; i < n; i++) {
+    const v = parseInt(env[i], 16) / 15;
+    const bh = Math.max(1, v * (h - 2));
+    g.globalAlpha = 0.35 + 0.65 * v;
+    g.fillRect(i * bw + 0.5, h - bh, Math.max(1, bw - 1), bh);
+  }
+}
+
+let rafId = 0;
+function trackWords(audio, row, words) {
+  cancelAnimationFrame(rafId);
+  const spans = row.querySelectorAll(".w");
+  const tick = () => {
+    const t = audio.currentTime;
+    spans.forEach((s, i) => {
+      const w = words && words[i];
+      s.classList.toggle("on", !!w && t >= w[0] && t < Math.max(w[1], w[0] + 0.05));
+    });
+    if (!audio.paused && !audio.ended) rafId = requestAnimationFrame(tick);
+    else spans.forEach((s) => s.classList.remove("on"));
+  };
+  tick();
+}
+
+function rowHtml(id, e, delivery) {
+  const words = e.text.split(/\s+/).filter(Boolean);
+  const wspans = words.map((w) => `<span class="w">${esc(w)}</span>`).join(" ");
+  const cls = werClass(e.wer);
+  return `
+  <li class="row" data-id="${esc(id)}" data-text="${esc((e.text + " " + id).toLowerCase())}" data-wer="${e.wer}">
+    <div>
+      <div class="text">${wspans}</div>
+      ${delivery ? `<div class="delivery">delivery: <em>${esc(delivery)}</em></div>` : ""}
+      <div class="nums">
+        <span class="badge ${cls}">WER ${e.wer.toFixed(2)}</span>
+        <span class="badge">${e.dur.toFixed(2)} s</span>
+        <span class="badge">${words.length} words</span>
+        <span class="badge">${e.words ? "word timings" : "no word timings"}</span>
+        <span class="id">${esc(id)}</span>
+      </div>
+    </div>
+    <div>
+      <audio controls preload="none" src="${BASE}${esc(e.file)}"></audio>
+      <canvas class="env"></canvas>
+    </div>
+  </li>`;
+}
+
+async function main() {
+  const root = $("#main");
+  let manifest, voices;
+  try {
+    [manifest, voices] = await Promise.all([getJson(BASE + "manifest.json", true), getJson("./voices.json", true)]);
+  } catch (e) {
+    root.innerHTML = `<div class="error">Could not load the manifest or voices.json: ${esc(e.message)}.<br>
+      Serve the repo root and open this page from there: <code>python3 -m http.server 8000</code>, then <code>http://localhost:8000/tools/tts/gallery.html</code>.
+      Opening the file directly (file://) blocks fetch.</div>`;
+    return;
+  }
+  const deliveryById = {};
+  for (const f of ["lines.json", "lines.seed.json", "lines.extra.json"]) {
+    const doc = await getJson("./" + f, false);
+    for (const l of (doc && doc.lines) || []) if (l.delivery) deliveryById[l.id] = l.delivery;
+  }
+
+  const byVoice = {};
+  for (const [id, e] of Object.entries(manifest.lines)) (byVoice[e.voice] = byVoice[e.voice] || []).push([id, e]);
+  const order = Object.keys(voices);
+  for (const v of Object.keys(byVoice)) if (!order.includes(v)) order.push(v);
+
+  const all = Object.values(manifest.lines);
+  $("#stats").innerHTML = [
+    `<span><b>${all.length}</b> lines</span>`,
+    `<span><b>${Object.keys(byVoice).length}</b> voices with audio of <b>${Object.keys(voices).length}</b> in the cast</span>`,
+    `<span><b>${mean(all.map((e) => e.wer)).toFixed(3)}</b> mean WER</span>`,
+    `<span><b>${all.filter((e) => e.wer > 0.1).length}</b> lines above 0.1</span>`,
+    `<span><b>${all.reduce((a, e) => a + e.dur, 0).toFixed(0)}</b> s of speech</span>`,
+  ].join("");
+
+  const chips = $("#chips");
+  const tools = $(".tools", chips);
+  let html = "";
+  const sections = [];
+  for (const vid of order) {
+    const v = voices[vid] || { name: (manifest.voices[vid] || {}).name || vid, description: "(not in voices.json)" };
+    const items = (byVoice[vid] || []).sort((a, b) => a[1].text.localeCompare(b[1].text));
+    const t = v.target || {};
+    const meta = [
+      `<span>trim <b>${(v.trim || 0) > 0 ? "+" : ""}${(v.trim || 0).toFixed(1)} dB</b></span>`,
+      `<span>lines <b>${items.length}</b></span>`,
+      items.length ? `<span>mean WER <b>${mean(items.map(([, e]) => e.wer)).toFixed(3)}</b></span>` : "",
+      items.length ? `<span>mean length <b>${mean(items.map(([, e]) => e.dur)).toFixed(1)} s</b></span>` : "",
+      t.f0 ? `<span>intended F0 <b>${t.f0[0]}–${t.f0[1]} Hz</b></span>` : "",
+      t.wps ? `<span>intended pace <b>${t.wps[0]}–${t.wps[1]} words/s</b></span>` : "",
+      v.route === "clone" ? `<span>route <b>clone</b></span>` : "",
+    ].join("");
+    sections.push(`
+    <section class="voice" id="v-${esc(vid)}">
+      <header>
+        <div class="vname"><h2>${esc(v.name)}</h2><span class="vid">${esc(vid)}</span><span class="role">${esc(v.role || "")}</span>
+          <button class="small" data-playall="${esc(vid)}">play all in order</button></div>
+        <p class="desc">${esc(v.description)}</p>
+        <div class="meta">${meta}</div>
+      </header>
+      ${items.length ? `<ul class="lines">${items.map(([id, e]) => rowHtml(id, e, deliveryById[id])).join("")}</ul>` : `<div class="empty">No lines rendered for this voice yet.</div>`}
+    </section>`);
+    chips.insertBefore(Object.assign(document.createElement("a"), {
+      className: "chip", href: "#v-" + vid, innerHTML: `${esc(v.name)}<small>${items.length}</small>`,
+    }), tools);
+  }
+  root.innerHTML = sections.join("");
+
+  // envelopes need layout, draw after insertion
+  for (const row of root.querySelectorAll("li.row")) {
+    const e = manifest.lines[row.dataset.id];
+    drawEnv($("canvas.env", row), e.env);
+  }
+
+  // one player at a time, word highlight, play-all queue
+  let queue = [];
+  root.addEventListener("play", (ev) => {
+    const a = ev.target;
+    if (!(a instanceof HTMLAudioElement)) return;
+    root.querySelectorAll("audio").forEach((o) => { if (o !== a) o.pause(); });
+    const row = a.closest("li.row");
+    root.querySelectorAll("li.row.playing").forEach((r) => r.classList.remove("playing"));
+    row.classList.add("playing");
+    trackWords(a, row, manifest.lines[row.dataset.id].words);
+  }, true);
+  root.addEventListener("ended", (ev) => {
+    const a = ev.target;
+    if (!(a instanceof HTMLAudioElement)) return;
+    a.closest("li.row").classList.remove("playing");
+    const next = queue.shift();
+    if (next) { next.scrollIntoView({ block: "center", behavior: "smooth" }); next.play(); }
+  }, true);
+  root.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-playall]");
+    if (!btn) return;
+    const rows = [...$("#v-" + btn.dataset.playall).querySelectorAll("li.row:not(.hidden) audio")];
+    queue = rows.slice(1);
+    if (rows[0]) rows[0].play();
+  });
+
+  // filters
+  const apply = () => {
+    const q = $("#q").value.trim().toLowerCase();
+    const weak = $("#weak").checked;
+    root.querySelectorAll("li.row").forEach((r) => {
+      const hide = (q && !r.dataset.text.includes(q)) || (weak && parseFloat(r.dataset.wer) <= 0.1);
+      r.classList.toggle("hidden", hide);
+    });
+  };
+  $("#q").addEventListener("input", apply);
+  $("#weak").addEventListener("change", apply);
+}
+main();
+</script>
+</body>
+</html>

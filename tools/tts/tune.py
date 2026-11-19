@@ -106,6 +106,8 @@ def main():
     args = ap.parse_args()
 
     voices = json.loads(Path(args.voices_file).read_text())
+    if "all" in args.voice:
+        args.voice = list(voices)
     variants = [parse_variant(v) for v in (args.variant or ["base"])]
     tag = args.tag or time.strftime("%H%M%S")
     wavdir = OUT / tag

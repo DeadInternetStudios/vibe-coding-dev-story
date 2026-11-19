@@ -65,29 +65,43 @@ def dump(doc):
     return '{\n "version": %d,\n "lines": [\n%s\n ]\n}\n' % (doc["version"], rows)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--cast", default=os.path.join(HERE, "cast.seed.md"))
-    ap.add_argument("--out", default=os.path.join(HERE, "lines.seed.json"))
-    ap.add_argument("--check", action="store_true")
-    args = ap.parse_args()
+PAIRS = [("cast.seed.md", "lines.seed.json"), ("cast.extra.md", "lines.extra.json")]
 
-    text = dump(build(args.cast))
-    if args.check:
-        have = open(args.out, encoding="utf-8").read() if os.path.exists(args.out) else ""
+
+def build_one(cast, out, check):
+    text = dump(build(cast))
+    name = os.path.basename(out)
+    if check:
+        have = open(out, encoding="utf-8").read() if os.path.exists(out) else ""
         if have != text:
-            print("lines.seed.json is out of date, run build_seed.py", file=sys.stderr)
-            sys.exit(1)
-        print("lines.seed.json is up to date")
-        return
-    with open(args.out, "w", encoding="utf-8") as fh:
+            print("%s is out of date, run build_seed.py --all" % name, file=sys.stderr)
+            return False
+        print("%s is up to date" % name)
+        return True
+    with open(out, "w", encoding="utf-8") as fh:
         fh.write(text)
     doc = json.loads(text)
     per = {}
     for r in doc["lines"]:
         per[r["voice"]] = per.get(r["voice"], 0) + 1
-    print("wrote %s: %d lines, %d voices" % (args.out, len(doc["lines"]), len(per)))
-    print(", ".join("%s=%d" % kv for kv in per.items()))
+    print("wrote %s: %d lines, %d voices" % (name, len(doc["lines"]), len(per)))
+    return True
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--cast", default=None, help="markdown cast file (default cast.seed.md)")
+    ap.add_argument("--out", default=None, help="json file to write (default lines.seed.json)")
+    ap.add_argument("--all", action="store_true", help="cast.seed.md -> lines.seed.json and cast.extra.md -> lines.extra.json")
+    ap.add_argument("--check", action="store_true", help="exit 1 if a json file is out of date")
+    args = ap.parse_args()
+
+    if args.all:
+        pairs = [(os.path.join(HERE, c), os.path.join(HERE, o)) for c, o in PAIRS]
+    else:
+        pairs = [(args.cast or os.path.join(HERE, PAIRS[0][0]), args.out or os.path.join(HERE, PAIRS[0][1]))]
+    ok = all([build_one(c, o, args.check) for c, o in pairs])
+    sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":
