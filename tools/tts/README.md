@@ -155,12 +155,39 @@ It prints pitch (mean, variation, spread), spectral centroid, pace, WER and real
 the takes in `scratch/tune/` so you can compare them with other tools. After changing a description,
 `generate.py` re-renders that voice's lines on its own (the voice signature changed).
 
+When a description is final, set the bands from data instead of guessing. Two seed sets give 10 takes per voice
+(about 6 minutes for the whole cast on a quiet machine):
+
+```sh
+for s in 100 200; do .venv/bin/python tune.py --voice all --seed0 $s --variant "final:temperature=0.7,top_k=40" --tag final_$s --quiet; done
+.venv/bin/python calibrate.py scratch/tune/final_100.json scratch/tune/final_200.json --variant final          # look first
+.venv/bin/python calibrate.py scratch/tune/final_100.json scratch/tune/final_200.json --variant final --write  # store
+```
+
+`calibrate.py` centres each voice's pitch band (plus or minus 3 semitones) and pace band (plus or minus 30%)
+on the median of its probe takes and prints a cast map sorted by pitch, so voices that sit on top of each
+other show up. A voice with two modes (some takes much higher) gets its band by hand, on the mode you intend.
+
 Two facts from measuring this model, so you do not rediscover them:
 
 - Different seeds for the **same line** differ by about 3 semitones of median pitch, more than different
   lines differ from each other. The cure is selection (the retry gate), not a lower temperature.
 - Pitch trackers need a high enough ceiling. A child or cartoon voice measured with a 400 Hz ceiling
   reports half its real pitch. `ttslib/audio.py` tracks with a wide range and then narrows it.
+
+## Checks
+
+```sh
+.venv/bin/python selftest.py          # pure logic (ids, WER, word timing, gate, MP3 chain, manifest writer): seconds, no model
+python3 verify.py                     # manifest and MP3s against the contract, uses ffprobe, works with the stock macOS python
+.venv/bin/python generate.py --audit  # per voice: WER, pace, pitch median and spread, share of lines inside the pitch band, loudness, takes per line
+.venv/bin/python castcheck.py         # speaker embeddings: does each line sound closest to its own voice? (loads the Base model)
+```
+
+`verify.py` exits 1 on contract errors (wrong id, `dur` not matching the MP3, `env` or `words` of the wrong
+length, stereo, over 64 kbps) and only warns about WER above 0.25 or lines not rendered yet.
+`castcheck.py --list-misfits` names the lines that sound nearer another voice; retake one with
+`generate.py --redo-id ID`.
 
 ## Quiet machine
 
@@ -177,7 +204,8 @@ numbers. Only open the gallery when a human is at the machine.
 | `voices.json` | the cast: descriptions, loudness trims, intent bands |
 | `lines.seed.json`, `lines.extra.json` | lines built from `cast.seed.md` and `cast.extra.md` by `build_seed.py` |
 | `ttslib/` | `lineid` (contract id), `tts` (model), `stt` (speech to text, WER, word timings), `audio` (trim, loudness, MP3, measurements), `qa` (take scoring), `manifest` (atomic writes, state, lock) |
-| `tune.py`, `spike.py` | measurement tools: voice tuning, and the spike that picked the approach |
+| `tune.py`, `calibrate.py`, `spike.py` | measurement tools: voice tuning, band calibration from tuning runs, and the spike that picked the approach |
+| `selftest.py`, `verify.py`, `castcheck.py` | checks: logic, contract, cast separation |
 | `idtest.py` | contract test vector, standard library only |
 | `gallery.html` | static page to browse voices and lines |
 | `setup.sh`, `requirements*.txt` | recreate the venv |

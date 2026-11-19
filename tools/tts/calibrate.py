@@ -24,6 +24,21 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 
+def dump_voices(voices: dict) -> str:
+    """voices.json with one field per line and `target` and `sampling` kept on a single line."""
+    out = []
+    for vid, v in voices.items():
+        fields = []
+        for k, val in v.items():
+            if isinstance(val, dict):
+                inner = ", ".join("%s: %s" % (json.dumps(a), json.dumps(b)) for a, b in val.items())
+                fields.append("    %s: {%s}" % (json.dumps(k), inner))
+            else:
+                fields.append("    %s: %s" % (json.dumps(k), json.dumps(val, ensure_ascii=False)))
+        out.append("  %s: {\n%s\n  }" % (json.dumps(vid), ",\n".join(fields)))
+    return "{\n%s\n}\n" % ",\n".join(out)
+
+
 def usable(row: dict) -> bool:
     return (row["wer"] <= 0.10 and not row.get("capped") and row["f0_med"] > 0
             and row["dur"] * row["voiced_frac"] >= 0.5)
@@ -34,6 +49,7 @@ def main() -> int:
     ap.add_argument("runs", nargs="+", help="tune.py result files (scratch/tune/<tag>.json)")
     ap.add_argument("--voices", default=str(HERE / "voices.json"))
     ap.add_argument("--voice", action="append", help="only these voices")
+    ap.add_argument("--exclude", action="append", default=[], help="skip these voices (their description changed since this run)")
     ap.add_argument("--variant", default=None, help="only rows of this variant label")
     ap.add_argument("--st", type=float, default=3.0, help="pitch band half width in semitones")
     ap.add_argument("--rate-pct", type=float, default=30.0, help="pace band half width in percent")
@@ -47,7 +63,7 @@ def main() -> int:
             for r in blk["rows"]:
                 if args.variant and r["variant"] != args.variant:
                     continue
-                if args.voice and r["voice"] not in args.voice:
+                if (args.voice and r["voice"] not in args.voice) or r["voice"] in args.exclude:
                     continue
                 if usable(r):
                     rows_by_voice.setdefault(r["voice"], []).append(r)
@@ -88,9 +104,7 @@ def main() -> int:
         print("  %-10s %6.0f Hz  %s%s" % (vid, m, "" if gap is None else "+%.1f st" % gap, twin))
 
     if args.write:
-        with open(args.voices, "w", encoding="utf-8") as fh:
-            json.dump(voices, fh, indent=2, ensure_ascii=False)
-            fh.write("\n")
+        Path(args.voices).write_text(dump_voices(voices), encoding="utf-8")
         print("\nwrote bands for %d voices to %s" % (len(stats), args.voices))
     return 0
 
