@@ -77,7 +77,7 @@ export function openHire(ctx: UiCtx, onClose: () => void): Modal {
       const sx = wide ? 140 : 25;
       const sy = wide ? 5 : 24;
       SKILL_KEYS.forEach((k, j) => {
-        const x = sx + j * (wide ? 26 : 38);
+        const x = sx + j * (wide ? 26 : 31);
         r.add(iconImg(scene, k, x, sy - 1));
         r.add(label(scene, x + 10, sy, `${cand.skills[k]}`, { font: F.body, tint: cand.skills[k] >= 14 ? C.green1 : C.ink2 }));
       });

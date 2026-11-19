@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { bakePerson } from '../../core/bake';
 import { C, F } from '../../core/theme';
 import { OFFICE_TIERS } from '../../sim/config';
 import { dateLabel, money, shortMoney } from '../../sim/format';
@@ -88,6 +89,22 @@ export function openRoom(ctx: UiCtx, onClose: () => void, startTab = 0): Modal {
       redraw();
     }, { kind: 'teal' }));
     content.add(label(scene, 6, ay + 22, 'Crunch: faster, grumpier. Refactor: cleaner code, five lost days.', { font: F.body, tint: C.ink3, maxWidth: iw }));
+
+    // the floor plan: one cell for each desk, a person where somebody sits
+    const fy = ay + 40;
+    const free = Math.max(0, cur.desks - s.staff.length);
+    content.add(label(scene, 6, fy, 'THE FLOOR', { font: F.caps, tint: C.ink3 }));
+    content.add(label(scene, 6 + iw, fy, free ? `${free} free ${free === 1 ? 'desk' : 'desks'}` : 'every desk taken', { font: F.body, tint: free ? C.green1 : C.ink3, origin: [1, 0] }));
+    const cell = 22;
+    const cols = Math.max(1, Math.floor(iw / cell));
+    for (let i = 0; i < cur.desks; i++) {
+      const cx = 6 + (i % cols) * cell;
+      const cy = fy + 12 + Math.floor(i / cols) * 28;
+      const who = s.staff[i];
+      content.add(panel(scene, cx, cy, cell - 2, 26, who ? 'chipLight' : 'paperDim', false));
+      if (who) content.add(scene.add.image(cx + (cell - 2) / 2, cy + 25, bakePerson(scene, who.look, 'stand', who.mood > 60 ? 'happy' : who.mood > 30 ? 'normal' : 'sad')).setOrigin(0.5, 1));
+      else content.add(iconImg(scene, 'plus', cx + 6, cy + 9).setAlpha(0.35));
+    }
   }
 
   function drawApps(content: Phaser.GameObjects.Container): void {
