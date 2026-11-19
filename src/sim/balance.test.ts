@@ -26,7 +26,16 @@ describe('balance on the shipped content', () => {
     const casual = mean(play('casual').map((r) => r.score));
     const yolo = mean(play('yolo').map((r) => r.score));
     expect(smart).toBeGreaterThan(casual * 1.05);
-    expect(smart).toBeGreaterThan(yolo * 1.15);
+    expect(smart).toBeGreaterThan(yolo * 1.6);
+  }, TIMEOUT);
+
+  it('does not pay for volume: the reckless bot ships twice the apps, they are worse, and it does not end richer', () => {
+    const smart = play('smart');
+    const yolo = play('yolo');
+    expect(mean(yolo.map((r) => r.apps))).toBeGreaterThan(mean(smart.map((r) => r.apps)) * 1.5);
+    expect(mean(yolo.map((r) => r.avgScore))).toBeLessThan(mean(smart.map((r) => r.avgScore)) - 3);
+    const cash = (rs: BotResult[]) => mean(rs.map((r) => r.game.s.company.cash));
+    expect(cash(yolo)).toBeLessThanOrEqual(cash(smart) * 1.05);
   }, TIMEOUT);
 
   it('does not let reckless play win the top rank', () => {

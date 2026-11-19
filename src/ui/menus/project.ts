@@ -2,7 +2,8 @@ import { hasIcon } from '../../art/sprites/icons';
 import { bakeIcon, bakePerson } from '../../core/bake';
 import { C, F } from '../../core/theme';
 import { STAT_KEYS, type StatKey } from '../../content/types';
-import { SCOPES, type Scope } from '../../sim/config';
+import { SCOPES, kneeOf, type Scope } from '../../sim/config';
+import { yearOf } from '../../sim/format';
 import { unlocked } from '../../sim/game';
 import { nicheFit, noveltyOf } from '../../sim/launch';
 import { productName } from '../../sim/names';
@@ -202,14 +203,22 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
   const qLabel = label(scene, fx + rw - 2, fy - 2, '', { font: F.title, tint: C.teal1, origin: [1, 0] });
   m.add(qLabel);
   const statBars = new Map<StatKey, ReturnType<typeof bar>>();
+  const barX = fx + 49;
+  const barW = rw - 71;
+  const ticks: Phaser.GameObjects.Image[] = [];
   STAT_KEYS.forEach((k, i) => {
     const y = fy + 14 + i * 11;
     m.add(iconImg(scene, k, fx, y - 1));
     m.add(label(scene, fx + 11, y, STAT_WORD_7[k], { font: F.body, tint: C.ink3 }));
-    const b = bar(scene, fx + 49, y, rw - 71, 6, COLORS[k], 0);
+    const b = bar(scene, barX, y, barW, 6, COLORS[k], 0);
     m.add(b);
     statBars.set(k, b);
+    const tick = rect(scene, barX, y - 1, 1, 8, C.white, 0.9);
+    m.add(tick);
+    ticks.push(tick);
   });
+  const tickNote = label(scene, fx, fy + 66, '', { font: F.body, tint: C.ink3, maxWidth: rw });
+  m.add(tickNote);
   const timeLabel = label(scene, fx, fy + 74, '', { font: F.caps, tint: C.ink1 });
   m.add(timeLabel);
   const noteLabel = label(scene, fx, fy + 86, '', { font: F.body, tint: C.ink3, maxWidth: rw });
@@ -246,6 +255,12 @@ export function openProject(ctx: UiCtx, onClose: () => void): Modal {
     const p = plan();
     const fc = game.forecast({ kind: p.kind, scope: p.scope, tool: p.tool, team: p.team });
     for (const key of STAT_KEYS) statBars.get(key)?.set(Math.min(1, fc.stats[key] / 100), true);
+    const kneeAt = kneeOf(st.scope, yearOf(s.day)).at;
+    for (const tick of ticks) {
+      tick.setVisible(kneeAt < 100);
+      tick.setX(Math.round(barX + 1 + (kneeAt / 100) * (barW - 2)));
+    }
+    tickNote.setText(kneeAt < 100 ? 'Small builds stall past the tick.' : '');
     const q = Math.round(qualityOf(c, k.id, fc.stats));
     qLabel.setText(`Q${q}`);
     const weeks = fc.days / 7;

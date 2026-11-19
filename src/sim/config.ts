@@ -68,6 +68,37 @@ export const STAT_SKILLS: Record<StatKey, readonly [SkillKey, number][]> = {
 export const STAT_GAIN_K = 0.128;
 /** Stats stop growing near this cap, with diminishing returns. */
 export const STAT_SOFT_CAP = 110;
+
+/**
+ * From year two the market stops being impressed by a small build: everyone has an AI, so a weekend hack or an MVP
+ * plateaus. Past its knee a stat grows at only a share of its pace, so a strong team cannot turn a hack into the full
+ * thing. Year one is untouched, so the first launches (the fun part, and the part that keeps a new company alive) are as kind as ever.
+ */
+export const SCOPE_KNEE: Record<Scope, { at: number; slope: number }> = {
+  hack: { at: 45, slope: 0.15 },
+  mvp: { at: 68, slope: 0.15 },
+  full: { at: STAT_SOFT_CAP, slope: 1 },
+};
+export const KNEE_FROM_YEAR = 2;
+
+/** The knee a project of this scope runs into in this year. Before KNEE_FROM_YEAR there is none. */
+export function kneeOf(scope: Scope, year: number): { at: number; slope: number } {
+  return year >= KNEE_FROM_YEAR ? SCOPE_KNEE[scope] : { at: STAT_SOFT_CAP, slope: 1 };
+}
+
+/** How much of its pace a stat of this size still grows at on a project of this scope. */
+export function scopeGrowth(scope: Scope, stat: number, year: number): number {
+  const knee = kneeOf(scope, year);
+  return stat < knee.at ? 1 : knee.slope;
+}
+
+/** The stat that `effort` (the stat gain a project would see with no cap, over the cap) builds up to on this scope. */
+export function scopedStat(effort: number, scope: Scope, year: number): number {
+  const knee = kneeOf(scope, year);
+  const reach = knee.at >= STAT_SOFT_CAP ? Infinity : -Math.log(1 - knee.at / STAT_SOFT_CAP);
+  if (effort <= reach) return STAT_SOFT_CAP * (1 - Math.exp(-effort));
+  return STAT_SOFT_CAP - (STAT_SOFT_CAP - knee.at) * Math.exp(-knee.slope * (effort - reach));
+}
 /** The AI does a share of the work for everyone, so a skill of 1 still counts for something. */
 export const SKILL_FLOOR = 8;
 /** Staff pay is the archetype's range times this. */

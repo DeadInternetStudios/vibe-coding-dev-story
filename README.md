@@ -88,14 +88,16 @@ each of the 20 voices. Until a person has done either and signed here, treat the
 ## Balance
 
 The bots in `src/sim/bot.ts` are the acceptance test for the money. `npx tsx tools/balance.ts 48 normal smart,casual,yolo` plays whole
-three year games: the careful bot finishes ahead of the casual one, which finishes ahead of the reckless one that spams weekend hacks,
-Friday deploys and VC money (48 seeds, normal: 39.6M, 36.7M and 30.0M; Ramen: 34.7M, 29.8M and 23.8M), and on Ramen the reckless one sometimes goes bankrupt.
+three year games: the careful bot finishes ahead of the casual one, which finishes far ahead of the reckless one that spams weekend hacks,
+Friday deploys and VC money (48 seeds, normal: 40.1M, 35.2M and 20.4M; Ramen: 34.5M, 28.4M and 15.9M). From year two a hack or an MVP stalls
+past a knee on each stat, so the spammer ships twice the apps and ends with worse ones and no more cash than the careful bot. On Ramen it sometimes goes bankrupt.
 Bots that only mash buttons or do nothing go bankrupt in most runs, usually inside the first year. `src/sim/balance.test.ts` fails if that order ever flips.
 
 ## Credits, licence, privacy
 
 Phaser 4 for the engine. Pixel fonts from the open Fontsource packages (Jersey, VT323, Tiny5, Silkscreen), all under the SIL Open Font License.
 Voices by Qwen3-TTS-12Hz-1.7B-VoiceDesign. Every joke is about you, kindly.
+It is a parody and a free game. It is not affiliated with Reddit, Hacker News, Product Hunt, LinkedIn or anyone else named in a joke, and every post and person in it is made up.
 
 The game's own code, art, music, writing and voices are covered by `LICENSE`. The parts it is built from keep their licences in
 `THIRD-PARTY-NOTICES.md`, which also ships with the game as `/third-party-notices.txt` and shows under Settings, About.

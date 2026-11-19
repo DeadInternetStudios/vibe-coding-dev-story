@@ -3,9 +3,9 @@
  */
 import { STAT_KEYS, type SkillKey, type StatKey } from '../content/types';
 import { CARDS, cardById, type Card } from './cards';
-import { COORDINATION, PHASES, PHASE_WEIGHTS, SCOPES, SKILL_FLOOR, STAT_GAIN_K, STAT_SKILLS, STAT_SOFT_CAP, WEEKS_SCALE, WORKDAYS_PER_WEEK, moodBugs, moodSpeed, phaseAt, type Scope } from './config';
+import { COORDINATION, PHASES, PHASE_WEIGHTS, SCOPES, SKILL_FLOOR, STAT_GAIN_K, STAT_SKILLS, STAT_SOFT_CAP, WEEKS_SCALE, WORKDAYS_PER_WEEK, moodBugs, moodSpeed, phaseAt, scopeGrowth, scopedStat, type Scope } from './config';
 import { addSpaghetti, bump, sound, toast, workers, type Ctx } from './ctx';
-import { clamp } from './format';
+import { clamp, yearOf } from './format';
 import { productName } from './names';
 import { gainXp, skillOf, traitMult } from './staff';
 import { itemBonus, itemStat } from './shop';
@@ -170,7 +170,7 @@ export function forecast(ctx: Ctx, plan: { kind: string; scope: Scope; tool: str
       sum += (paces[i]! / avgPace) * skillFor(ctx, m, k);
     });
     const x = (work * STAT_GAIN_K * STAT_SHARE[k] * coord * sum * itemStat(s, k)) / STAT_SOFT_CAP;
-    stats[k] = STAT_SOFT_CAP * (1 - Math.exp(-x));
+    stats[k] = scopedStat(x, plan.scope, yearOf(s.day));
   }
   const workdays = work / Math.max(0.2, avgPace);
   return { stats, days: Math.ceil((workdays * 7) / WORKDAYS_PER_WEEK), workdays };
@@ -219,7 +219,8 @@ export function devStep(ctx: Ctx): void {
         skillFor(ctx, m, k) *
         STAT_GAIN_K *
         itemStat(s, k) *
-        Math.max(0, 1 - p.stats[k] / STAT_SOFT_CAP);
+        Math.max(0, 1 - p.stats[k] / STAT_SOFT_CAP) *
+        scopeGrowth(p.scope, p.stats[k], yearOf(s.day));
       p.stats[k] += gain;
     }
     if (gainXp(m, 1 * traitMult(c, m, 'xp'), rng)) ctx.out.push({ t: 'levelUp', staffId: m.id, level: m.level });

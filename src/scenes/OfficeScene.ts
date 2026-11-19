@@ -8,7 +8,7 @@ import { recordTrophies } from '../core/trophies';
 import { Room } from '../game/room';
 import type { Session } from '../game/session';
 import { monthName } from '../sim/format';
-import { PHASES, TOKEN_PLANS } from '../sim/config';
+import { KNEE_FROM_YEAR, PHASES, TOKEN_PLANS } from '../sim/config';
 import { unlocked, type Game } from '../sim/game';
 import type { Content } from '../sim/content';
 import { Rng } from '../sim/rng';
@@ -453,7 +453,7 @@ export class OfficeScene extends Phaser.Scene {
         this.narrate();
         break;
       case 'newYear':
-        this.banner(`YEAR ${n.year}`, 'The market got smarter. So did your landlord.', 'wow');
+        this.banner(`YEAR ${n.year}`, n.year === KNEE_FROM_YEAR ? 'Everyone has an AI now. Small builds stall.' : 'The market got smarter. So did your landlord.', 'wow');
         audio.sfx('fanfare_small');
         break;
       case 'rateLimited':
