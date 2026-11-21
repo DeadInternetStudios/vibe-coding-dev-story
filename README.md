@@ -10,6 +10,9 @@ Pixel art, one-screen office, a button for everything. Phaser 4, Vite, TypeScrip
 
 ## Play
 
+**[deadinternetstudios.github.io/vibe-coding-dev-story](https://deadinternetstudios.github.io/vibe-coding-dev-story/)** runs in any modern browser, phone included.
+It is a static build that every push to `main` redeploys through GitHub Pages. To run it yourself:
+
 ```sh
 npm install
 npm run dev          # serves the game on the address it prints, usually http://127.0.0.1:5173
@@ -121,7 +124,7 @@ Phaser 4 for the engine. Pixel fonts from the open Fontsource packages (Jersey, 
 Voices by Qwen3-TTS-12Hz-1.7B-VoiceDesign. Every joke is about you, kindly.
 It is a parody and a free game. It is not affiliated with Reddit, Hacker News, Product Hunt, LinkedIn or anyone else named in a joke, and every post and person in it is made up.
 
-The game's own code, art, music, writing and voices are covered by `LICENSE`. The parts it is built from keep their licences in
+The game's own code, art, music, writing and voices are open source under the MIT License (`LICENSE`). The parts it is built from keep their licences in
 `THIRD-PARTY-NOTICES.md`, which also ships with the game as `/third-party-notices.txt` and shows under Settings, About.
 No accounts, no analytics, no requests to anyone but the server the game came from. Saves, settings and the hall of fame stay in your browser.
 A save from another version of the game is not opened, and the title says so. Changing `SAVE_VERSION` means writing the migration in `src/core/save.ts` first.

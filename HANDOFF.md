@@ -33,7 +33,11 @@ the new harness if that harness owns them; they were left untouched here.
 One more worktree: `/tmp/base` (detached HEAD 7865dce), scratch from this
 run, safe to remove with `git worktree remove /tmp/base --force`.
 
-No remote exists. Nothing was ever pushed. No stash.
+No stash. **Update 2026-11-21:** the owner asked for it to go public, so it now lives at
+`https://github.com/DeadInternetStudios/vibe-coding-dev-story` under the MIT License (`LICENSE`) and deploys to
+`https://deadinternetstudios.github.io/vibe-coding-dev-story/` from `.github/workflows/pages.yml` on every push to `main`.
+The "never push" house rule below was for the old harness run; the owner's explicit request overrides it for this repo.
+The F1 and F4 owner sign-offs are still open.
 
 ## Review state (4 rounds, all closed)
 

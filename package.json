@@ -2,6 +2,7 @@
   "name": "vibe-coding-dev-story",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "A Game Dev Story style management game about vibe coding. Phaser 4, Reddit humor, Qwen3-TTS VoiceDesign voices.",
   "scripts": {
